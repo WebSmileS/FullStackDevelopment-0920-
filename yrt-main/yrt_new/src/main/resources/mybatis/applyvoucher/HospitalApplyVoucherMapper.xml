@@ -1,0 +1,739 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.applyvoucher.mapper.HospitalApplyVoucherMapper">
+
+	<resultMap type="HospitalApplyVoucher" id="HospitalApplyVoucherResult">
+		<result property="hospital_inner_sn" column="hospital_inner_sn"/><!-- 医院内部编号 -->
+		<result property="hospital_name" column="hospital_name"/><!-- 医院名称 -->
+		<result property="voucher_inner_sn" column="voucher_inner_sn"/><!-- 单据内部编号 -->
+		<result property="voucher_sn" column="voucher_sn"/><!-- 单据编号 -->
+		<result property="proposer_inner_sn" column="proposer_inner_sn"/><!-- 申领人  -->
+		<result property="proposer_name" column="proposer_name"/><!-- 申领人名称  -->
+		<result property="department_inner_sn" column="department_inner_sn"/><!-- 部门内部编号  -->
+		<result property="department_name" column="department_name"/><!-- 6部门名称  -->
+		<result property="create_time" column="create_time"/><!-- 单据生成时间 -->
+		<result property="expect_date" column="expect_date"/><!-- 期望发放日期(之前) -->
+		<result property="status" column="status"/><!-- 状态 0-草稿 1-申领 2-部分发放 3-全部发放(自然终止) 4-申领终止(人为终止) -->
+		<result property="description" column="description"/><!-- 描述 -->
+		<result property="detail_count" column="detail_count"/><!-- 明细条目数 -->
+
+		<result property="warehouse_inner_sn" column="warehouse_inner_sn"/><!-- 仓库id -->
+		<result property="warehouse_inner_sn_name" column="warehouse_inner_sn_name"/><!-- 仓库名 -->
+	</resultMap>
+	
+	<sql id="selectHospitalApplyVoucher">
+		select
+		       v.warehouse_inner_sn,v.warehouse_inner_sn_name,
+			v.hospital_inner_sn,h.name as hospital_name,v.av_inner_sn as voucher_inner_sn,v.av_sn as voucher_sn,v.proposer_inner_sn,v.proposer_name,
+			v.department_inner_sn,v.department_name,v.create_time,v.expect_date,v.status,v.description,
+			(
+	          (select count(*) from hospital_apply_voucher_product_detail d1 where d1.hospital_inner_sn=v.hospital_inner_sn and d1.av_inner_sn=v.av_inner_sn)
+	          +
+	          (select count(*) from hospital_apply_voucher_dealer_product_detail d2 where d2.hospital_inner_sn=v.hospital_inner_sn and d2.av_inner_sn=v.av_inner_sn)
+	        ) as detail_count
+		from hospital_apply_voucher v
+		left join hospital h using(hospital_inner_sn)
+	</sql>
+	
+	<select id="h_add_hospital_apply_voucher" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         {call h_add_hospital_apply_voucher(
+            #{hospital_inner_sn_i,mode=IN},
+            #{department_inner_sn_i,mode=IN},
+            #{proposer_inner_sn_i,mode=IN},
+            #{status_i,mode=IN},
+            #{expect_date_i,mode=IN},
+            #{av_sn_i,mode=IN},
+            #{description_i,mode=IN},
+            #{department_name_i,mode=IN},
+            #{proposer_name_i,mode=IN},
+			#{warehouse_inner_sn_i,mode=IN},
+			#{warehouse_inner_sn_name_i,mode=IN},
+            #{av_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )}
+	</select>
+	
+	<select id="selectHospitalApplyVoucherInfo" parameterType="map" resultMap="HospitalApplyVoucherResult">
+		<include refid="selectHospitalApplyVoucher"/>
+		where v.is_delete = 0 and v.hospital_inner_sn = #{hospital_inner_sn} and v.av_inner_sn = #{av_inner_sn}
+	</select>
+	
+	<select id="searchHospitalApplyVoucherList" parameterType="map" resultMap="HospitalApplyVoucherResult">
+		<include refid="selectHospitalApplyVoucher"/>
+		where v.is_delete = 0 and v.hospital_inner_sn = #{hospital_inner_sn}
+		<if test="status != null">and v.status in (${status}) </if>
+		<if test="av_inner_sn != null and av_inner_sn != ''">and v.av_inner_sn =#{av_inner_sn}</if>
+		<if test="voucher_sn != null and voucher_sn != ''">and v.av_sn like concat('%', #{voucher_sn}, '%')</if>
+		<if test="proposer_name != null and proposer_name !=''">and v.proposer_name like concat('%', #{proposer_name}, '%')</if>
+		<if test="department_inner_sn != null">and v.department_inner_sn = #{department_inner_sn}</if>
+		<if test="department_name != null and department_name !=''">and v.department_name like concat('%', #{department_name}, '%')</if>
+		<if test="uid != null">and v.department_inner_sn in (
+			SELECT
+		    	department_inner_sn
+			FROM
+			    hospital_department
+			WHERE
+			    hospital_inner_sn = #{hospital_inner_sn}
+			AND department_inner_sn IN
+			    (
+			        SELECT
+			            department_inner_sn
+			        FROM
+			            hospital_employee_hospital_department
+			        WHERE
+			            hospital_inner_sn = #{hospital_inner_sn}
+			        AND employee_inner_sn = #{uid})
+		        )
+        </if>
+		order by v.create_time desc
+	</select>
+	
+	<select id="appSearchHospitalApplyVoucherList" parameterType="map" resultMap="HospitalApplyVoucherResult">
+		<include refid="selectHospitalApplyVoucher"/>
+		where v.is_delete = 0 and v.hospital_inner_sn = #{hospital_inner_sn}
+		<if test="status != null">and v.status in (${status}) </if>
+		<if test="voucher_sn != null and voucher_sn != ''">and (v.av_sn like concat('%', #{voucher_sn}, '%')</if>
+		<if test="proposer_name != null and proposer_name !=''">or v.proposer_name like concat('%', #{proposer_name}, '%')</if>
+		<if test="department_inner_sn != null">or v.department_inner_sn = #{department_inner_sn}</if>
+		<if test="department_name != null and department_name !=''">or v.department_name like concat('%', #{department_name}, '%'))</if>
+		<if test="uid != null">and v.department_inner_sn in (
+			SELECT
+		    	department_inner_sn
+			FROM
+			    hospital_department
+			WHERE
+			    hospital_inner_sn = #{hospital_inner_sn}
+			AND department_inner_sn IN
+			    (
+			        SELECT
+			            department_inner_sn
+			        FROM
+			            hospital_employee_hospital_department
+			        WHERE
+			            hospital_inner_sn = #{hospital_inner_sn}
+			        AND employee_inner_sn = #{uid})
+		        )
+        </if>
+		order by v.create_time desc
+	</select>
+	
+	<update id="updateHospitalApplyVoucher" parameterType="map">
+		update hospital_apply_voucher
+		<set>
+			<if test="warehouse_inner_sn != null">warehouse_inner_sn = #{warehouse_inner_sn},</if>
+			<if test="warehouse_inner_sn_name != null">warehouse_inner_sn_name = #{warehouse_inner_sn_name},</if>
+
+			<if test="voucher_sn != null">av_sn = #{voucher_sn},</if>
+			<if test="proposer_inner_sn != null and proposer_inner_sn != -1">proposer_inner_sn = #{proposer_inner_sn},</if>
+			<if test="proposer_inner_sn == -1">proposer_inner_sn = null,</if>
+			<if test="department_inner_sn != null and department_inner_sn != -1">department_inner_sn = #{department_inner_sn},</if>
+			<if test="department_inner_sn == -1">department_inner_sn = null,</if>
+			<if test="department_name != null">department_name = #{department_name},</if>
+			<if test="create_time != null">create_time = #{create_time},</if>
+			<if test="expect_date != null">expect_date = #{expect_date},</if>
+			<if test="expect_date == null and expect_date_null==1">expect_date = null,</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="description != null">description=#{description},</if>
+		</set>
+		where hospital_inner_sn = #{hospital_inner_sn} and av_inner_sn = #{av_inner_sn}
+	</update>
+	
+	<update id="trueDeleteHospitalApplyVoucher" parameterType="map">
+		delete from hospital_apply_voucher
+		where hospital_inner_sn = #{hospital_inner_sn} and av_inner_sn = #{av_inner_sn}
+	</update>
+	
+	<resultMap type="HospitalApplyVoucherDetail" id="HospitalApplyVoucherDetailResult">
+
+		<result property="id" column="id"></result>
+
+		<result property="hospital_inner_sn" column="hospital_inner_sn"/><!-- 厂商内部编号 -->
+		<result property="hospital_name" column="hospital_name"/><!-- 厂商名称 -->
+		<result property="voucher_inner_sn" column="voucher_inner_sn"/><!-- 单据内部编号 -->
+		<result property="detail_inner_sn" column="detail_inner_sn"/><!-- 明细内部编号 -->
+		<result property="dealer_inner_sn" column="dealer_inner_sn"/><!-- 经销商内部编号  -->
+		<result property="dealer_name" column="dealer_name"/><!-- 经销商名称  -->
+		<result property="vendor_inner_sn" column="vendor_inner_sn"/><!-- 厂商内部编号  -->
+		<result property="vendor_name" column="vendor_name"/><!-- 厂商名称  -->
+		<result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号  -->
+		<result property="product_name" column="product_name"/><!-- 产品名称  -->
+		<result property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号  -->
+		<result property="specification" column="specification"/><!-- 型号规格名称  -->
+		<result property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号  -->
+		<result property="unit_name" column="unit_name"/><!-- 单位名称  -->
+		<result property="sort_number" column="sort_number"/><!-- 排序号 -->
+		<result property="batch_number" column="batch_number"/><!-- 批号 -->
+		<result property="plan_quantity" column="plan_quantity"/><!-- 计划数量 -->
+		<!-- <result property="achieve_quantity" column="achieve_quantity"/> --><!-- 达成数量 -->
+		<result property="status" column="status"/><!-- 内部追踪码 -->
+		<result property="product_type" column="product_type"/><!-- 产品类型 0:经销商(自建)产品   1:厂商产品 -->
+		<result property="image" column="image"/><!-- 产品类型 0:经销商(自建)产品   1:厂商产品 -->
+		<result property="unit_price" column="unit_price"/><!-- 价格 -->
+	</resultMap>
+	
+	<sql id="selectHospitalApplyVoucherDetail">
+		select 
+			vp.hospital_inner_sn, h.name as hospital_name, vp.av_inner_sn as voucher_inner_sn, batch_number,
+			vp.detail_inner_sn, null as dealer_inner_sn, null as dealer_name, vp.product_vendor_inner_sn as vendor_inner_sn, vp.product_vendor_name as vendor_name,
+			vp.product_inner_sn, vp.product_name, vp.specification_inner_sn, vp.specification as specification, vp.unit_inner_sn, vp.unit as unit_name, 
+			vp.sort_number, vp.plan_quantity/1000 as plan_quantity, vp.status, 1 as product_type, unit_price/10000 as unit_price,
+			(select url from product_image where vendor_inner_sn = vp.product_vendor_inner_sn and product_inner_sn = vp.product_inner_sn limit 1) as image
+		from hospital_apply_voucher_product_detail vp
+		left join hospital h using(hospital_inner_sn)
+		union all
+		select 
+			vp.hospital_inner_sn, h.name as hospital_name, vp.av_inner_sn as voucher_inner_sn, batch_number,
+			vp.detail_inner_sn, vp.product_dealer_inner_sn as dealer_inner_sn, vp.product_dealer_name as dealer_name, null as vendor_inner_sn, null as vendor_name,
+			vp.product_inner_sn, vp.product_name, vp.specification_inner_sn, vp.specification as specification, vp.unit_inner_sn, vp.unit as unit_name, 
+			vp.sort_number, vp.plan_quantity/1000 as plan_quantity, vp.status, 0 as product_type, unit_price/10000 as unit_price,
+			(select url from dealer_product_image where dealer_inner_sn = vp.product_dealer_inner_sn and product_inner_sn = vp.product_inner_sn limit 1) as image
+		from hospital_apply_voucher_dealer_product_detail vp
+		left join hospital h using(hospital_inner_sn)
+	</sql>
+	
+	<select id="h_add_hospital_apply_voucher_dealer_product_detail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         {call h_add_hospital_apply_voucher_dealer_product_detail(
+            #{hospital_inner_sn_i,mode=IN},
+            #{av_inner_sn_i,mode=IN},
+            #{product_dealer_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{specification_inner_sn_i,mode=IN},
+            #{unit_inner_sn_i,mode=IN},
+            #{sort_number_i,mode=IN},
+            #{plan_quantity_i,mode=IN},
+            #{status_i,mode=IN},
+            #{product_dealer_name_i,mode=IN},
+            #{product_name_i,mode=IN},
+            #{specification_i,mode=IN},
+            #{unit_i,mode=IN},
+            #{batch_number_i,mode=IN},
+            #{unit_price_i,mode=IN},
+            #{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )}
+	</select>
+	
+	<select id="h_add_hospital_apply_voucher_product_detail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         {call h_add_hospital_apply_voucher_product_detail(
+            #{hospital_inner_sn_i,mode=IN},
+            #{av_inner_sn_i,mode=IN},
+            #{product_vendor_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{specification_inner_sn_i,mode=IN},
+            #{unit_inner_sn_i,mode=IN},
+            #{sort_number_i,mode=IN},
+            #{plan_quantity_i,mode=IN},
+            #{status_i,mode=IN},
+            #{product_vendor_name_i,mode=IN},
+            #{product_name_i,mode=IN},
+            #{specification_i,mode=IN},
+            #{unit_i,mode=IN},
+            #{batch_number_i,mode=IN},
+            #{unit_price_i,mode=IN},
+            #{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )}
+	</select>
+	
+	<select id="searchHospitalApplyVoucherDetailList" parameterType="map" resultMap="HospitalApplyVoucherDetailResult">
+		select 
+			vp.hospital_inner_sn, h.name as hospital_name, vp.av_inner_sn as voucher_inner_sn, batch_number,
+			vp.detail_inner_sn, null as dealer_inner_sn, null as dealer_name, vp.product_vendor_inner_sn as vendor_inner_sn, vp.product_vendor_name as vendor_name,
+			vp.product_inner_sn, vp.product_name, vp.specification_inner_sn, vp.specification as specification, vp.unit_inner_sn, vp.unit as unit_name, 
+			vp.sort_number, vp.plan_quantity/1000 as plan_quantity, vp.status, 1 as product_type, unit_price/10000 as unit_price,
+			(select url from product_image where vendor_inner_sn = vp.product_vendor_inner_sn and product_inner_sn = vp.product_inner_sn limit 1) as image
+		from hospital_apply_voucher_product_detail vp
+		left join hospital h using(hospital_inner_sn)
+		where vp.hospital_inner_sn = #{hospital_inner_sn} and vp.av_inner_sn = #{av_inner_sn}
+		<if test="onlyUnGrant != null">and vp.status in (${status})</if>
+		union all
+		select 
+			vp.hospital_inner_sn, h.name as hospital_name, vp.av_inner_sn as voucher_inner_sn, batch_number,
+			vp.detail_inner_sn, vp.product_dealer_inner_sn as dealer_inner_sn, vp.product_dealer_name as dealer_name, null as vendor_inner_sn, null as vendor_name,
+			vp.product_inner_sn, vp.product_name, vp.specification_inner_sn, vp.specification as specification, vp.unit_inner_sn, vp.unit as unit_name, 
+			vp.sort_number, vp.plan_quantity/1000 as plan_quantity, vp.status, 0 as product_type, unit_price/10000 as unit_price,
+			(select url from dealer_product_image where dealer_inner_sn = vp.product_dealer_inner_sn and product_inner_sn = vp.product_inner_sn limit 1) as image
+		from hospital_apply_voucher_dealer_product_detail vp
+		left join hospital h using(hospital_inner_sn)
+		where vp.hospital_inner_sn = #{hospital_inner_sn} and vp.av_inner_sn = #{av_inner_sn}
+		<if test="onlyUnGrant != null">and vp.status in (${status})</if>
+	</select>
+
+	<select id="searchHospitalApplyDetailListByOidAndDid" parameterType="map" resultMap="HospitalApplyVoucherDetailResult">
+		select
+		vp.hospital_inner_sn, h.name as hospital_name, vp.av_inner_sn as voucher_inner_sn, batch_number,
+		vp.detail_inner_sn, null as dealer_inner_sn, null as dealer_name, vp.product_vendor_inner_sn as vendor_inner_sn, vp.product_vendor_name as vendor_name,
+		vp.product_inner_sn, vp.product_name, vp.specification_inner_sn, vp.specification as specification, vp.unit_inner_sn, vp.unit as unit_name,
+		vp.sort_number, vp.plan_quantity/1000 as plan_quantity, vp.status, 1 as product_type, unit_price/10000 as unit_price,
+		(select url from product_image where vendor_inner_sn = vp.product_vendor_inner_sn and product_inner_sn = vp.product_inner_sn limit 1) as image
+		from hospital_apply_voucher_product_detail vp
+		left join hospital h using(hospital_inner_sn)
+		left join hospital_apply_voucher hv using(av_inner_sn)
+		where vp.hospital_inner_sn = #{hospital_inner_sn} AND hv.department_inner_sn = #{department_inner_sn}
+
+		union all
+		select
+		vp.hospital_inner_sn, h.name as hospital_name, vp.av_inner_sn as voucher_inner_sn, batch_number,
+		vp.detail_inner_sn, vp.product_dealer_inner_sn as dealer_inner_sn, vp.product_dealer_name as dealer_name, null as vendor_inner_sn, null as vendor_name,
+		vp.product_inner_sn, vp.product_name, vp.specification_inner_sn, vp.specification as specification, vp.unit_inner_sn, vp.unit as unit_name,
+		vp.sort_number, vp.plan_quantity/1000 as plan_quantity, vp.status, 0 as product_type, unit_price/10000 as unit_price,
+		(select url from dealer_product_image where dealer_inner_sn = vp.product_dealer_inner_sn and product_inner_sn = vp.product_inner_sn limit 1) as image
+		from hospital_apply_voucher_dealer_product_detail vp
+		left join hospital h using(hospital_inner_sn)
+		left join hospital_apply_voucher hv using(av_inner_sn)
+		where vp.hospital_inner_sn = #{hospital_inner_sn} AND hv.department_inner_sn = #{department_inner_sn}
+	</select>
+	
+	<select id="copyHospitalApplyVoucherDetailList" parameterType="map" resultMap="HospitalApplyVoucherDetailResult">
+				 select vp.hospital_inner_sn,
+						h.name                     as                 hospital_name,
+						vp.av_inner_sn             as                 voucher_inner_sn,
+						batch_number,
+						vp.detail_inner_sn,
+						null                       as                 dealer_inner_sn,
+						null                       as                 dealer_name,
+						vp.product_vendor_inner_sn as                 vendor_inner_sn,
+						vp.product_vendor_name     as                 vendor_name,
+						vp.product_inner_sn,
+						vp.product_name,
+						vp.specification_inner_sn,
+						vp.specification           as                 specification,
+						vp.unit_inner_sn,
+						vp.unit                    as                 unit_name,
+						vp.sort_number,
+						vp.plan_quantity / 1000    as                 plan_quantity,
+						0                          as                 status,
+						1                          as                 product_type,
+						unit_price / 10000         as                 unit_price,
+						(select url
+						 from product_image
+						 where vendor_inner_sn = vp.product_vendor_inner_sn
+						   and product_inner_sn = vp.product_inner_sn limit 1) as image from hospital_apply_voucher_product_detail vp
+		left join hospital h using(hospital_inner_sn)
+		where vp.hospital_inner_sn = #{hospital_inner_sn}
+		  and vp.av_inner_sn = #{av_inner_sn}
+		union all
+		select vp.hospital_inner_sn,
+			   h.name                     as                 hospital_name,
+			   vp.av_inner_sn             as                 voucher_inner_sn,
+			   batch_number,
+			   vp.detail_inner_sn,
+			   vp.product_dealer_inner_sn as                 dealer_inner_sn,
+			   vp.product_dealer_name     as                 dealer_name,
+			   null                       as                 vendor_inner_sn,
+			   null                       as                 vendor_name,
+			   vp.product_inner_sn,
+			   vp.product_name,
+			   vp.specification_inner_sn,
+			   vp.specification           as                 specification,
+			   vp.unit_inner_sn,
+			   vp.unit                    as                 unit_name,
+			   vp.sort_number,
+			   vp.plan_quantity / 1000    as                 plan_quantity,
+			   0                          as                 status,
+			   0                          as                 product_type,
+			   unit_price / 10000         as                 unit_price,
+			   (select url
+				from dealer_product_image
+				where dealer_inner_sn = vp.product_dealer_inner_sn
+				  and product_inner_sn = vp.product_inner_sn limit 1) as image
+		from hospital_apply_voucher_dealer_product_detail vp
+			left join hospital h using (hospital_inner_sn)
+		where vp.hospital_inner_sn = #{hospital_inner_sn}
+		  and vp.av_inner_sn = #{av_inner_sn}
+	</select>
+	
+	<update id="updateHospitalApplyVoucherDealerProduct" parameterType="map">
+		update hospital_apply_voucher_dealer_product_detail
+		<set>
+			<if test="product_inner_sn != null">product_inner_sn = #{product_inner_sn},</if>
+			<if test="specification_inner_sn != null">specification_inner_sn = #{specification_inner_sn},</if>
+			<if test="unit_inner_sn != null">unit_inner_sn = #{unit_inner_sn},</if>
+			<if test="sort_number != null">sort_number = #{sort_number},</if>
+			<if test="plan_quantity != null">plan_quantity=#{plan_quantity},</if>
+			<if test="batch_number != null">batch_number=#{batch_number},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="product_vendor_name != null">product_vendor_name = #{product_vendor_name},</if>
+			<if test="product_name != null">product_name = #{product_name},</if>
+			<if test="specification != null">specification = #{specification},</if>
+			<if test="unit != null">unit = #{unit},</if>
+			<if test="unit_price != null">unit_price = #{unit_price},</if>
+		</set>
+		where hospital_inner_sn = #{hospital_inner_sn} and av_inner_sn = #{av_inner_sn}
+		<if test="detail_inner_sn != null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</update>
+	
+	<update id="updateHospitalApplyVoucherProduct" parameterType="map">
+		update hospital_apply_voucher_product_detail
+		<set>
+			<if test="product_inner_sn != null">product_inner_sn = #{product_inner_sn},</if>
+			<if test="specification_inner_sn != null">specification_inner_sn = #{specification_inner_sn},</if>
+			<if test="unit_inner_sn != null">unit_inner_sn = #{unit_inner_sn},</if>
+			<if test="sort_number != null">sort_number = #{sort_number},</if>
+			<if test="plan_quantity != null">plan_quantity=#{plan_quantity},</if>
+			<if test="batch_number != null">batch_number=#{batch_number},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="product_vendor_name != null">product_vendor_name = #{product_vendor_name},</if>
+			<if test="product_name != null">product_name = #{product_name},</if>
+			<if test="specification != null">specification = #{specification},</if>
+			<if test="unit != null">unit = #{unit},</if>
+			<if test="unit_price != null">unit_price = #{unit_price},</if>
+		</set>
+		where hospital_inner_sn = #{hospital_inner_sn} and av_inner_sn = #{av_inner_sn}
+		<if test="detail_inner_sn != null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</update>
+	
+	<delete id="deleteHospitalApplyVoucherDealerProduct" parameterType="map">
+		delete from hospital_apply_voucher_dealer_product_detail
+		where 1=1
+		<if test="hospital_inner_sn != null">and hospital_inner_sn = #{hospital_inner_sn}</if>
+		<if test="av_inner_sn != null">and av_inner_sn = #{av_inner_sn}</if>
+		<if test="detail_inner_sn != null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</delete>
+	
+	<delete id="deleteHospitalApplyVoucherProduct" parameterType="map">
+		delete from hospital_apply_voucher_product_detail
+		where  1=1
+		<if test="hospital_inner_sn != null">and hospital_inner_sn = #{hospital_inner_sn}</if>
+		<if test="av_inner_sn != null">and av_inner_sn = #{av_inner_sn}</if>
+		<if test="detail_inner_sn != null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</delete>
+	
+	<!-- 获取有效合同中厂商产品列表 -->
+	<select id="selectContractVendorProductList" parameterType="map" resultType="ApplyResponseProductInfo">
+		select
+			hospital_inner_sn,
+			vendor_inner_sn,
+			vendor_name,
+			product_inner_sn,
+			mdrf_sn,
+			product_name,
+			specification_inner_sn,
+			specification,
+			product_type,
+			common_use_unit_inner_sn,
+			common_use_unit,
+			specification_vendor_sn,
+			min_unit_inner_sn,
+			min_unit,
+			image
+		from (
+		select DISTINCT
+		hospital_inner_sn, product_vendor_inner_sn as vendor_inner_sn, vendor_name, product_inner_sn, mdrf_sn, product_name, specification_inner_sn, specification,
+		product_type, common_use_unit_inner_sn, common_use_unit, specification_vendor_sn,
+		c_get_product_min_unit_inner_sn(product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn) as min_unit_inner_sn,
+		c_get_product_min_unit(product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn) as min_unit,
+		<!--(price/measure/10000) as min_unit_price,-->
+		(select url from product_image im where im.vendor_inner_sn=a.product_vendor_inner_sn and im.product_inner_sn=a.product_inner_sn limit 1) as image
+		from (
+		select
+		hospital_inner_sn, product_vendor_inner_sn, product_vendor_name as vendor_name, hp.product_inner_sn, p.newest_register_sn as mdrf_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification, 1 as product_type,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, ps.specification_vendor_sn, <!--average_price as price,-->
+		unit_inner_sn, unit, 1 as measure
+		from hospital_product_min_unit_inventory hp
+		left join product p on p.vendor_inner_sn=hp.product_vendor_inner_sn and p.product_inner_sn=hp.product_inner_sn
+		left join product_specification ps on ps.vendor_inner_sn = hp.product_vendor_inner_sn and ps.product_inner_sn = hp.product_inner_sn and ps.specification_inner_sn = hp.specification_inner_sn
+		where 1=1
+		and hospital_inner_sn = #{hospital_inner_sn}
+		and (select sum(quantity) from hospital_product_min_unit_inventory pp
+		where hp.hospital_inner_sn=pp.hospital_inner_sn and hp.warehouse_inner_sn=pp.warehouse_inner_sn
+		and hp.product_vendor_inner_sn=pp.product_vendor_inner_sn and hp.product_inner_sn=pp.product_inner_sn
+		and hp.specification_inner_sn=pp.specification_inner_sn) > 0
+		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+		<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+		<if test="name != null and name != ''">and (hp.product_name like concat('%', #{name}, '%') OR p.pinyin like concat('%', #{name}, '%'))</if>
+		<if test="vendor_inner_sn != null">and hp.product_vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="specification_vendor_sn != null and specification_vendor_sn!=''">and ps.specification_vendor_sn like concat('%', #{specification_vendor_sn}, '%')</if>
+		<if test="specification != null and specification !=''">and hp.specification like concat('%', #{specification}, '%')</if>
+		<if test="key != null and key != ''">and (hp.product_name like concat('%', #{key}, '%') or hp.specification like concat('%', #{key}, '%'))</if>
+		<!--<if test="key != null and key != ''">and (hp.product_vendor_name like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%') or ps.specification_vendor_sn like concat('%', #{key}, '%'))</if>-->
+		union DISTINCT
+		select
+		hp.hospital_inner_sn, hp.product_vendor_inner_sn, v.name as vendor_name, hp.product_inner_sn, p.newest_register_sn as mdrf_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification, 1 as product_type,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, ps.specification_vendor_sn, <!--price,-->
+		unit_inner_sn, unit, c_calculate_product_min_unit(hp.product_vendor_inner_sn, hp.product_inner_sn,hp.specification_inner_sn,unit_inner_sn) as measure
+		from hospital_dealer_contract_product hp
+		left join dealer d using(dealer_inner_sn)
+		left join vendor v on v.vendor_inner_sn=hp.product_vendor_inner_sn
+		left join product p on p.vendor_inner_sn=hp.product_vendor_inner_sn and p.product_inner_sn=hp.product_inner_sn
+		left join product_specification ps on ps.vendor_inner_sn=hp.product_vendor_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		where  1=1
+		and hp.hospital_inner_sn = #{hospital_inner_sn}
+		and (hp.hospital_inner_sn,hp.dealer_inner_sn,hp.contract_inner_sn) in(select hospital_inner_sn,dealer_inner_sn,contract_inner_sn from hospital_dealer_contract c where c.hospital_inner_sn = #{hospital_inner_sn} and c.status in (4,5,7))
+		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+		<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+		<if test="name != null and name != ''">and (hp.product_name like concat('%', #{name}, '%') OR p.pinyin like concat('%', #{name}, '%'))</if>
+		<if test="vendor_inner_sn != null">and hp.product_vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="specification_vendor_sn != null and specification_vendor_sn!=''">and ps.specification_vendor_sn like concat('%', #{specification_vendor_sn}, '%')</if>
+		<if test="specification != null and specification!=''">and hp.specification like concat('%', #{specification}, '%')</if>
+		<if test="key != null and key != ''">and (hp.product_name like concat('%', #{key}, '%') or hp.specification like concat('%', #{key}, '%'))</if>
+		<!--<if test="key != null and key != ''">and (hp.product_vendor_name like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%') or ps.specification_vendor_sn like concat('%', #{key}, '%'))</if>-->
+		union DISTINCT
+		select
+		hp.hospital_inner_sn, hp.product_vendor_inner_sn, v.name as vendor_name, hp.product_inner_sn, p.newest_register_sn as mdrf_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification, 1 as product_type,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, ps.specification_vendor_sn, <!--price,-->
+		unit_inner_sn, unit, c_calculate_product_min_unit(hp.product_vendor_inner_sn, hp.product_inner_sn,hp.specification_inner_sn,unit_inner_sn) as measure
+		from hospital_vendor_contract_product hp
+		left join vendor v on v.vendor_inner_sn=hp.product_vendor_inner_sn
+		left join product p on p.vendor_inner_sn=hp.product_vendor_inner_sn and p.product_inner_sn=hp.product_inner_sn
+		left join product_specification ps on ps.vendor_inner_sn=hp.product_vendor_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		where  1=1
+		and hp.hospital_inner_sn = #{hospital_inner_sn}
+		and (hp.hospital_inner_sn,hp.vendor_inner_sn,hp.contract_inner_sn) in(select hospital_inner_sn,vendor_inner_sn,contract_inner_sn from hospital_vendor_contract c where c.hospital_inner_sn = #{hospital_inner_sn} and c.status in (4,5,7))
+		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+		<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+		<if test="name != null and name != ''">and (hp.product_name like concat('%', #{name}, '%') OR p.pinyin like concat('%', #{name}, '%'))</if>
+		<if test="vendor_inner_sn != null">and hp.product_vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="specification_vendor_sn != null and specification_vendor_sn!=''">and ps.specification_vendor_sn like concat('%', #{specification_vendor_sn}, '%')</if>
+		<if test="specification != null and specification!=''">and hp.specification like concat('%', #{specification}, '%')</if>
+		<!--<if test="key != null and key != ''">and (hp.product_vendor_name like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%') or ps.specification_vendor_sn like concat('%', #{key}, '%'))</if>-->
+		<if test="key != null and key != ''">and (hp.product_name like concat('%', #{key}, '%') or hp.specification like concat('%', #{key}, '%'))</if>
+		) a
+		)b
+	</select>
+	
+	<!-- 获取有效合同中经销商自建产品列表 -->
+	<select id="selectContractDealerProductList" parameterType="map" resultType="ApplyResponseProductInfo">
+		select
+			hospital_inner_sn,
+			vendor_inner_sn,
+			vendor_name,
+			product_inner_sn,
+			product_name,
+			specification_inner_sn,
+			specification,
+			product_type,
+			common_use_unit_inner_sn,
+			common_use_unit,
+			min_unit_inner_sn,
+			min_unit,
+			image
+		from (
+		select DISTINCT
+		hospital_inner_sn, vendor_inner_sn, vendor_name, product_inner_sn, product_name, specification_inner_sn, specification,
+		product_type, common_use_unit_inner_sn, common_use_unit,
+		c_get_dealer_product_min_unit_inner_sn(vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn) as min_unit_inner_sn,
+		c_get_dealer_product_min_unit(vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn) as min_unit,
+		<!--(price/measure/10000) as min_unit_price,-->
+		(select url from dealer_product_image im where im.dealer_inner_sn=a.vendor_inner_sn and im.product_inner_sn=a.product_inner_sn limit 1) as image
+		from (
+		select
+		hp.hospital_inner_sn, product_dealer_inner_sn as vendor_inner_sn, product_dealer_name as vendor_name, hp.product_inner_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, 0 as product_type, <!--average_price as price,-->
+		unit_inner_sn, unit, 1 as measure
+		from hospital_dealer_product_min_unit_inventory hp
+		left join dealer_product p on p.dealer_inner_sn=hp.product_dealer_inner_sn and p.product_inner_sn=hp.product_inner_sn
+		left join dealer_product_specification ps on ps.dealer_inner_sn=hp.product_dealer_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		where 1=1
+		and hp.hospital_inner_sn = #{hospital_inner_sn}
+		and quantity > 0
+		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+		<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+		<if test="name != null and name != ''">and (hp.product_name like concat('%', #{name}, '%') OR p.pinyin like concat('%', #{name}, '%'))</if>
+		<if test="vendor_inner_sn != null">and hp.product_dealer_inner_sn = #{vendor_inner_sn}</if>
+		<if test="key != null and key != ''">and (hp.product_name like concat('%', #{key}, '%') or hp.specification like concat('%', #{key}, '%'))</if>
+		<!--<if test="key != null and key != ''">and (hp.product_dealer_name like concat('%', #{key}, '%') or p.name like concat('%', #{key}, '%'))</if>-->
+		union DISTINCT
+		select
+		hp.hospital_inner_sn, hp.dealer_inner_sn as vendor_inner_sn, d.name as vendor_name, hp.product_inner_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, 0 as product_type, <!--price,-->
+		unit_inner_sn, unit, c_calculate_dealer_product_min_unit(dealer_inner_sn, product_inner_sn,specification_inner_sn,unit_inner_sn) as measure
+		from hospital_dealer_contract_dealer_product hp
+		left join dealer d using(dealer_inner_sn)
+		left join dealer_product p using (dealer_inner_sn, product_inner_sn)
+		left join dealer_product_specification ps using (dealer_inner_sn, product_inner_sn,specification_inner_sn)
+		where  1=1
+		and hp.hospital_inner_sn = #{hospital_inner_sn}
+		and (hp.hospital_inner_sn,hp.dealer_inner_sn,hp.contract_inner_sn) in(select hospital_inner_sn,dealer_inner_sn,contract_inner_sn from hospital_dealer_contract where hospital_inner_sn = #{hospital_inner_sn} and status in (4,5,7))
+		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+		<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+		<if test="name != null and name != ''">and (hp.product_name like concat('%', #{name}, '%') OR p.pinyin like concat('%', #{name}, '%'))</if>
+		<if test="vendor_inner_sn != null">and hp.dealer_inner_sn = #{vendor_inner_sn}</if>
+		<if test="key != null and key != ''">and (hp.product_name like concat('%', #{key}, '%') or hp.specification like concat('%', #{key}, '%'))</if>
+		<!--<if test="key != null and key != ''">and (d.name like concat('%', #{key}, '%') or p.name like concat('%', #{key}, '%'))</if>-->
+		) a
+		)b
+	</select>
+	
+	<!-- 获取仓库中存在的产品批号列表 -->
+	<select id="selectVendorBatchNumberList" parameterType="map" resultType="string">
+		select distinct batch_number
+		from hospital_product_min_unit_inventory
+		where 1=1
+		and hospital_inner_sn = #{hospital_inner_sn}
+		and quantity >0
+		<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+	</select>
+	
+	<select id="selectDealerBatchNumberList" parameterType="map" resultType="string">
+		select distinct batch_number
+		from hospital_dealer_product_min_unit_inventory
+		where 1=1
+		and hospital_inner_sn = #{hospital_inner_sn}
+		and quantity >0
+		<if test="product_vendor_inner_sn != null">and product_dealer_inner_sn = #{product_vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+	</select>
+
+
+
+
+	<!-- 获取有效合同中厂商产品列表 -->
+	<select id="selectContractVendorProductListByIds" parameterType="map" resultType="ApplyResponseProductInfo">
+		select
+		hospital_inner_sn,
+		vendor_inner_sn,
+		vendor_name,
+		product_inner_sn,
+		mdrf_sn,
+		product_name,
+		specification_inner_sn,
+		specification,
+		product_type,
+		common_use_unit_inner_sn,
+		common_use_unit,
+		specification_vendor_sn,
+		min_unit_inner_sn,
+		min_unit,
+		image
+		from (
+		select DISTINCT
+		hospital_inner_sn, product_vendor_inner_sn as vendor_inner_sn, vendor_name, product_inner_sn, mdrf_sn, product_name, specification_inner_sn, specification,
+		product_type, common_use_unit_inner_sn, common_use_unit, specification_vendor_sn,
+		c_get_product_min_unit_inner_sn(product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn) as min_unit_inner_sn,
+		c_get_product_min_unit(product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn) as min_unit,
+		<!--(price/measure/10000) as min_unit_price,-->
+		(select url from product_image im where im.vendor_inner_sn=a.product_vendor_inner_sn and im.product_inner_sn=a.product_inner_sn limit 1) as image
+		from (
+		select
+		hospital_inner_sn, product_vendor_inner_sn, product_vendor_name as vendor_name, hp.product_inner_sn, p.newest_register_sn as mdrf_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification, 1 as product_type,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, ps.specification_vendor_sn, <!--average_price as price,-->
+		unit_inner_sn, unit, 1 as measure
+		from hospital_product_min_unit_inventory hp
+		left join product p on p.vendor_inner_sn=hp.product_vendor_inner_sn and p.product_inner_sn=hp.product_inner_sn
+		left join product_specification ps on ps.vendor_inner_sn = hp.product_vendor_inner_sn and ps.product_inner_sn = hp.product_inner_sn and ps.specification_inner_sn = hp.specification_inner_sn
+		where 1=1
+		and (select sum(quantity) from hospital_product_min_unit_inventory pp
+		where hp.hospital_inner_sn=pp.hospital_inner_sn and hp.warehouse_inner_sn=pp.warehouse_inner_sn
+		and hp.product_vendor_inner_sn=pp.product_vendor_inner_sn and hp.product_inner_sn=pp.product_inner_sn
+		and hp.specification_inner_sn=pp.specification_inner_sn) > 0
+		and (hp.product_inner_sn in (${key}))
+		union DISTINCT
+		select
+		hp.hospital_inner_sn, hp.product_vendor_inner_sn, v.name as vendor_name, hp.product_inner_sn, p.newest_register_sn as mdrf_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification, 1 as product_type,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, ps.specification_vendor_sn, <!--price,-->
+		unit_inner_sn, unit, c_calculate_product_min_unit(hp.product_vendor_inner_sn, hp.product_inner_sn,hp.specification_inner_sn,unit_inner_sn) as measure
+		from hospital_dealer_contract_product hp
+		left join dealer d using(dealer_inner_sn)
+		left join vendor v on v.vendor_inner_sn=hp.product_vendor_inner_sn
+		left join product p on p.vendor_inner_sn=hp.product_vendor_inner_sn and p.product_inner_sn=hp.product_inner_sn
+		left join product_specification ps on ps.vendor_inner_sn=hp.product_vendor_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		where  1=1
+		and (hp.product_inner_sn in (${key}))
+		union DISTINCT
+		select
+		hp.hospital_inner_sn, hp.product_vendor_inner_sn, v.name as vendor_name, hp.product_inner_sn, p.newest_register_sn as mdrf_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification, 1 as product_type,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, ps.specification_vendor_sn, <!--price,-->
+		unit_inner_sn, unit, c_calculate_product_min_unit(hp.product_vendor_inner_sn, hp.product_inner_sn,hp.specification_inner_sn,unit_inner_sn) as measure
+		from hospital_vendor_contract_product hp
+		left join vendor v on v.vendor_inner_sn=hp.product_vendor_inner_sn
+		left join product p on p.vendor_inner_sn=hp.product_vendor_inner_sn and p.product_inner_sn=hp.product_inner_sn
+		left join product_specification ps on ps.vendor_inner_sn=hp.product_vendor_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		where  1=1
+		and (hp.product_inner_sn in (${key}))
+		) a
+		)b
+	</select>
+
+	<!-- 获取有效合同中经销商自建产品列表 -->
+	<select id="selectContractDealerProductListByIds" parameterType="map" resultType="ApplyResponseProductInfo">
+		select
+		hospital_inner_sn,
+		vendor_inner_sn,
+		vendor_name,
+		product_inner_sn,
+		product_name,
+		specification_inner_sn,
+		specification,
+		product_type,
+		common_use_unit_inner_sn,
+		common_use_unit,
+		min_unit_inner_sn,
+		min_unit,
+		image
+		from (
+		select DISTINCT
+		hospital_inner_sn, vendor_inner_sn, vendor_name, product_inner_sn, product_name, specification_inner_sn, specification,
+		product_type, common_use_unit_inner_sn, common_use_unit,
+		c_get_dealer_product_min_unit_inner_sn(vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn) as min_unit_inner_sn,
+		c_get_dealer_product_min_unit(vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn) as min_unit,
+		<!--(price/measure/10000) as min_unit_price,-->
+		(select url from dealer_product_image im where im.dealer_inner_sn=a.vendor_inner_sn and im.product_inner_sn=a.product_inner_sn limit 1) as image
+		from (
+		select
+		hp.hospital_inner_sn, product_dealer_inner_sn as vendor_inner_sn, product_dealer_name as vendor_name, hp.product_inner_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, 0 as product_type, <!--average_price as price,-->
+		unit_inner_sn, unit, 1 as measure
+		from hospital_dealer_product_min_unit_inventory hp
+		left join dealer_product p on p.dealer_inner_sn=hp.product_dealer_inner_sn and p.product_inner_sn=hp.product_inner_sn
+		left join dealer_product_specification ps on ps.dealer_inner_sn=hp.product_dealer_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		where 1=1
+		and hp.hospital_inner_sn = #{hospital_inner_sn}
+		and quantity > 0
+		and (hp.product_inner_sn in (#{key}))
+		<!--<if test="key != null and key != ''">and (hp.product_dealer_name like concat('%', #{key}, '%') or p.name like concat('%', #{key}, '%'))</if>-->
+		union DISTINCT
+		select
+		hp.hospital_inner_sn, hp.dealer_inner_sn as vendor_inner_sn, d.name as vendor_name, hp.product_inner_sn,
+		hp.product_name, hp.specification_inner_sn, hp.specification,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, 0 as product_type, <!--price,-->
+		unit_inner_sn, unit, c_calculate_dealer_product_min_unit(dealer_inner_sn, product_inner_sn,specification_inner_sn,unit_inner_sn) as measure
+		from hospital_dealer_contract_dealer_product hp
+		left join dealer d using(dealer_inner_sn)
+		left join dealer_product p using (dealer_inner_sn, product_inner_sn)
+		left join dealer_product_specification ps using (dealer_inner_sn, product_inner_sn,specification_inner_sn)
+		where  1=1
+		and hp.hospital_inner_sn = #{hospital_inner_sn}
+		and (hp.hospital_inner_sn,hp.dealer_inner_sn,hp.contract_inner_sn) in(select hospital_inner_sn,dealer_inner_sn,contract_inner_sn from hospital_dealer_contract where hospital_inner_sn = #{hospital_inner_sn} and status in (4,5,7))
+		and (hp.product_inner_sn in (#{key}))
+		<!--<if test="key != null and key != ''">and (d.name like concat('%', #{key}, '%') or p.name like concat('%', #{key}, '%'))</if>-->
+		) a
+		)b
+	</select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</mapper>

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.VendorAllotVoucherMapper">
+
+	<insert id="addAllotVoucher" parameterType="map">
+		INSERT INTO `vendor_allot_voucher`
+		(
+			`vendor_inner_sn`,
+			`av_inner_sn`,
+			`av_sn`,
+			`source_warehouse_inner_sn`,
+			`target_warehouse_inner_sn`,
+			`poster_inner_sn`,
+			`poster_name`,
+			`create_time`,
+			`expect_date`,
+			`description`)
+		VALUES
+		(#{org_id},
+		 #{av_inner_sn} ,
+		 #{av_sn},
+		 #{source_warehouse_inner_sn},
+		 #{target_warehouse_inner_sn},
+		 #{poster_inner_sn},
+		 #{poster_name},
+		 NOW(),
+		 #{expect_date},
+		 #{description});
+	</insert>
+
+	<insert id="addAllotVoucherDetail" parameterType="map">
+		INSERT INTO `vendor_allot_voucher_product_detail` (
+			`vendor_inner_sn`,
+			`av_inner_sn`,
+			`detail_inner_sn`,
+			`vd_inner_sn`,
+			`vd_name`,
+			`product_type`,
+			`product_inner_sn`,
+			`product_name`,
+			`specification_inner_sn`,
+			`unit_inner_sn`,
+			`unit_name`,
+			`sort_number`,
+			`allot_quantity`,
+			`status`,
+			`specification`,
+			`batch_number`,
+			`unit_price`)
+		VALUES(
+				  #{org_id},
+				  #{av_inner_sn},
+				  #{detail_inner_sn},
+				  #{vd_inner_sn},
+				  #{vd_name},
+				  #{product_type},
+				  #{product_inner_sn},
+				  #{product_name},
+				  #{specification_inner_sn},
+				  #{unit_inner_sn},
+				  #{unit_name},
+				  #{sort_number},
+				  #{allot_quantity},
+				  #{status},
+				  #{specification},
+				  TRIM(#{batch_number}),
+				  #{unit_price});
+	</insert>
+
+	<select id="searchAllotVoucher" parameterType="map" resultType="allotVoucher">
+		SELECT
+		`av_inner_sn`,`vendor_inner_sn` AS org_id,`av_sn`,`source_warehouse_inner_sn`,`target_warehouse_inner_sn`,
+		(SELECT `name` FROM `vendor_warehouse_model` WHERE `vendor_inner_sn`=v.`vendor_inner_sn` AND `warehouse_model_inner_sn`=v.`source_warehouse_inner_sn`) AS source_warehouse_name,
+		(SELECT `name` FROM `vendor_warehouse_model` WHERE `vendor_inner_sn`=v.`vendor_inner_sn` AND `warehouse_model_inner_sn`=v.`target_warehouse_inner_sn`) AS target_warehouse_name,
+		`poster_inner_sn`,`poster_name`,`affirmant_inner_sn`,`affirmant_name`,`create_time`,`expect_date`,`description`
+		FROM `vendor_allot_voucher` v
+		WHERE `av_inner_sn`=#{av_inner_sn}
+		AND (
+		(v.`target_warehouse_inner_sn` IN
+		<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+			#{warehouseId}
+		</foreach>)
+		OR
+		(v.`source_warehouse_inner_sn` IN
+		<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+			#{warehouseId}
+		</foreach>)
+		)
+	</select>
+
+	<select id="searchAllotDetails" parameterType="long" resultType="allotVoucherDetail">
+		SELECT
+			`detail_inner_sn`,`av_inner_sn`,`vendor_inner_sn` AS org_id,`vd_inner_sn`,`vd_name`,`product_type`,
+			`product_inner_sn`,`product_name`,`specification_inner_sn`,`specification`,`unit_inner_sn`,`unit_name`,
+			`allot_quantity`,`status`,`batch_number`,`unit_price`,`sort_number`
+		FROM `vendor_allot_voucher_product_detail`
+		WHERE `av_inner_sn`=#{av_inner_sn}
+	</select>
+
+	<select id="getAllotDetailStatus" resultType="java.lang.Integer">
+		SELECT `status`
+		FROM `vendor_allot_voucher_product_detail`
+		WHERE	`detail_inner_sn`=#{detail_inner_sn}
+	</select>
+
+	<select id="searchAllotVoucherList" parameterType="map" resultType="allotVoucherDetail">
+		SELECT
+		v.`vendor_inner_sn` AS org_id ,h.`name` AS org_name,
+		v.`av_inner_sn` AS av_inner_sn ,v.`av_sn`,d.`detail_inner_sn`,
+		d.`vd_inner_sn`,d.`vd_name`,d.`product_type`,
+		v.`poster_inner_sn`,v.`poster_name`,
+		v.`affirmant_inner_sn`,v.`affirmant_name`,
+		v.`source_warehouse_inner_sn`,
+		(SELECT `name` FROM `vendor_warehouse_model` WHERE `vendor_inner_sn`=v.`vendor_inner_sn` AND `warehouse_model_inner_sn`=v.`source_warehouse_inner_sn`) AS source_warehouse_name,
+		v.`target_warehouse_inner_sn`,
+		(SELECT `name` FROM `vendor_warehouse_model` WHERE `vendor_inner_sn`=v.`vendor_inner_sn` AND `warehouse_model_inner_sn`=v.`target_warehouse_inner_sn`) AS target_warehouse_name,
+		d.`product_inner_sn`,d.`product_name`,d.`specification_inner_sn`,d.`specification`,d.`unit_inner_sn`,d.`unit_name`,d.`allot_quantity`,
+		d.`status`,v.`expect_date`
+		FROM `vendor_allot_voucher` v
+		INNER JOIN `vendor_allot_voucher_product_detail` d USING(`av_inner_sn`)
+		INNER JOIN `vendor` h ON h.`vendor_inner_sn`=v.`vendor_inner_sn`
+		<where>
+
+			<if test="tab_id == 0">
+				(
+				v.`source_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				OR
+				v.`target_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				)
+				AND d.`status` IN (0,1,2,3)
+			</if>
+
+			<if test="tab_id == 1">
+				v.`source_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				AND d.`status` IN (0,1)
+			</if>
+
+			<if test="tab_id == 2">
+				v.`target_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				AND d.`status` IN (0,1,2)
+			</if>
+
+			<if test="tab_id == 3">
+				v.`source_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				AND d.`status` IN (2,3)
+			</if>
+
+			<if test="tab_id == 4">
+				v.`target_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				AND d.`status` =3
+			</if>
+
+			AND v.`vendor_inner_sn`=#{org_id}
+			<if test="av_inner_sn != null and av_inner_sn != ''">AND v.`av_inner_sn`=#{av_inner_sn}</if>
+			<if test="av_sn != null and av_sn != ''">AND v.`av_sn` LIKE concat('%', #{av_sn}, '%')</if>
+			<if test="detail_inner_sn != null and detail_inner_sn != ''">AND d.`detail_inner_sn`=#{detail_inner_sn}</if>
+			<if test="product_name != null and product_name != ''">AND d.`product_name` LIKE concat('%', #{product_name}, '%')</if>
+			<if test="poster_inner_sn != null and poster_inner_sn !=''">AND v.`poster_inner_sn`= #{poster_inner_sn}</if>
+			<if test="poster_name != null and poster_name !=''">AND v.`poster_name` LIKE concat('%', #{poster_name}, '%')</if>
+			<if test="start_date != null"> AND DATE_FORMAT(v.`expect_date`,'%Y-%m-%d') &gt;= DATE_FORMAT(#{start_date},'%Y-%m-%d')</if>
+			<if test="end_date != null"> AND DATE_FORMAT(v.`expect_date`,'%Y-%m-%d') &lt;= DATE_FORMAT(#{end_date},'%Y-%m-%d')</if>
+			ORDER BY v.create_time DESC
+		</where>
+	</select>
+
+	<update id="updateAllotVoucher" parameterType="map">
+		UPDATE `vendor_allot_voucher`
+		<set>
+			<if test="av_sn != null">`av_sn` = #{av_sn},</if>
+			<if test="source_warehouse_inner_sn != null">`source_warehouse_inner_sn` = #{source_warehouse_inner_sn},</if>
+			<if test="target_warehouse_inner_sn != null">`target_warehouse_inner_sn` = #{target_warehouse_inner_sn},</if>
+
+			<if test="affirmant_inner_sn != null and affirmant_inner_sn != -1">`affirmant_inner_sn` = #{affirmant_inner_sn},</if>
+			<if test="affirmant_inner_sn == -1">`affirmant_inner_sn` = null,</if>
+
+			<if test="create_time != null">`create_time` = #{create_time},</if>
+			<if test="expect_date != null">`expect_date` = #{expect_date},</if>
+
+			<if test="description != null">`description`=#{description},</if>
+		</set>
+		WHERE `av_inner_sn` = #{av_inner_sn}
+	</update>
+
+	<delete id="deleteAllotDetails" parameterType="long">
+		DELETE FROM `vendor_allot_voucher_product_detail`
+		WHERE `av_inner_sn` = #{av_inner_sn}
+	</delete>
+
+	<delete id="deleteAllotVoucherDetail" parameterType="long">
+		DELETE FROM `vendor_allot_voucher_product_detail`
+		WHERE `detail_inner_sn` = #{detail_inner_sn}
+	</delete>
+
+</mapper>

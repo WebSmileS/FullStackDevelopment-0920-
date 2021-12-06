@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yrt.project.modular.organization.mapper.UserMapper">
+
+	<resultMap type="User" id="UserResult">
+		<id      property="id" column="god_inner_sn"/><!-- 内部编号 -->
+		<result  property="system_type" column="system_type"/><!-- 系统类别 -->
+		<result property="org_id" column="belong"/><!-- 注册机构ID -->
+		<result property="password_cycle" column="password_cycle"/><!-- 密码修改周期  -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<result  property="registered_time" column="registered_time"/><!-- 注册时间 -->
+		<result  property="longin_name" column="desembarco_nombre"/><!-- 登录名称* -->
+		<result  property="password" column="senha"/><!-- 密码 -->
+		<result  property="phone" column="telepon"/><!-- 登录电话 -->
+		<result  property="type" column="type"/><!-- 用户类型 -->
+	</resultMap>
+	<sql id="selectUser">
+        select god_inner_sn, system_type, belong, status, password_cycle, registered_time, desembarco_nombre, 
+        	senha, telepon
+		from god
+    </sql>
+	
+	<insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id" keyColumn="god_inner_sn" >
+		insert into god(system_type, belong, password_cycle, status, is_delete, registered_time, desembarco_nombre, senha, telepon, type)
+        values (
+        	#{system_type},
+        	#{org_id},
+        	#{password_cycle},
+        	1,
+        	0,
+        	sysdate(),
+        	#{longin_name},
+        	#{password},
+        	#{phone},
+        	#{type}
+       	)
+	</insert>
+	
+	<update id="updateUser" parameterType="User">
+        update god
+        <set>
+ 			<if test="status != null">status = #{status},</if>
+ 			<if test="longin_name != null and longin_name != ''">desembarco_nombre = #{longin_name},</if>
+ 			<if test="password != null">senha = #{password},</if>
+ 			<if test="phone != null and phone != ''">telepon = #{phone},</if>
+ 		</set>
+ 		where god_inner_sn = #{id}
+    </update>
+    
+    <update id="deleteUser" parameterType="Long">
+ 		update god set is_delete = 1 where god_inner_sn = #{id}
+ 	</update>
+ 	
+ 	<update id="deleteUserUnscoped" parameterType="Long">
+ 		delete from god where god_inner_sn = #{id}
+ 	</update>
+    
+	<select id="selectUserById" parameterType="Long" resultMap="UserResult">
+		<include refid="selectUser"/>
+		where 1=1 and is_delete=0
+			and god_inner_sn = #{id}
+	</select>
+	
+	<select id="selectUserByLoginName" parameterType="String" resultMap="UserResult">
+		<include refid="selectUser"/>
+		where 1=1 and desembarco_nombre = #{name}
+	</select>
+	
+	<select id="selectUserListByOrgId" parameterType="Long" resultMap="UserResult">
+		<include refid="selectUser"/>
+		where 1=1 and is_delete=0
+			and belong = #{id}
+	</select>
+	
+	<select id="selectUserListByOrgId4Dropdown" parameterType="map" resultType="map">
+		select god_inner_sn as uid, desembarco_nombre as uname
+		from god
+		where 1=1 and is_delete=0
+			and system_type = #{type} and belong = #{id}
+	</select>
+	
+	<select id="selectUserRefEmpListByHospital4Dropdown" parameterType="map" resultType="map">
+		select g.god_inner_sn as uid, e.name as uname
+		from god g
+		inner join hospital_employee e on e.user_inner_sn=g.god_inner_sn and hospital_inner_sn=#{id}
+		where g.is_delete=0
+	        and g.system_type=#{type} and g.belong=#{id}
+	</select>
+	
+	<select id="selectUserRefEmpListByDealer4Dropdown" parameterType="map" resultType="map">
+		select g.god_inner_sn as uid, e.name as uname
+		from god g
+		inner join dealer_employee e on e.user_inner_sn=g.god_inner_sn and dealer_inner_sn=#{id}
+		where g.is_delete=0
+	        and g.system_type=#{type} and g.belong=#{id}
+	</select>
+	
+	<select id="selectUserRefEmpListByVendor4Dropdown" parameterType="map" resultType="map">
+		select g.god_inner_sn as uid, e.name as uname
+		from god g
+		inner join vendor_employee e on e.user_inner_sn=g.god_inner_sn and vendor_inner_sn=#{id}
+		where g.is_delete=0
+	        and g.system_type=#{type} and g.belong=#{id}
+	</select>
+</mapper>

@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.applyvoucher.mapper.HospitalGrantVoucherMapper">
+
+	<resultMap type="HospitalGrantVoucher" id="HospitalGrantVoucherResult">
+		<result property="hospital_inner_sn" column="hospital_inner_sn"/><!-- 医院内部编号 -->
+		<result property="hospital_name" column="hospital_name"/><!-- 医院名称 -->
+		<result property="gv_inner_sn" column="gv_inner_sn"/><!-- 发放单内部编号 -->
+		<result property="gv_sn" column="gv_sn"/><!-- 发放单编号 -->
+		<!-- <result property="handler_inner_sn" column="handler_inner_sn"/>经手人内部编号 
+		<result property="handler_name" column="handler_name"/>经手人姓名(冗余)  -->
+		<result property="department_inner_sn" column="department_inner_sn"/><!-- 部门内部编号  -->
+		<result property="department_name" column="department_name"/><!-- 6部门名称  -->
+		<result property="approver_inner_sn" column="approver_inner_sn"/><!-- 批准人(发放人)内部编号  -->
+		<result property="approver_name" column="approver_name"/><!-- 批准人(发放人)姓名(冗余)  -->
+		<result property="warehouse_inner_sn" column="warehouse_inner_sn"/><!-- 部门内部编号  -->
+		<result property="warehouse_name" column="warehouse_name"/><!-- 6部门名称  -->
+		<result property="grant_time" column="grant_time"/><!-- 发放时间 -->
+		<result property="status" column="status"/><!-- 状态 0-可发放 1-已出库 2-已领取 -->
+		<result property="description" column="description"/><!-- 描述 -->
+		<result property="receiver_inner_sn" column="receiver_inner_sn"/><!-- 领取人内部编号 -->
+		<result property="receiver_name" column="receiver_name"/><!-- 领取人姓名(冗余) -->
+	</resultMap>
+	
+	<sql id="selectHospitalGrantVoucher">
+		select 
+			v.hospital_inner_sn, h.name as hospital_name, v.gv_inner_sn, v.gv_sn, v.warehouse_name, warehouse_inner_sn, warehouse_name,
+			v.department_inner_sn, v.department_name, v.approver_inner_sn, v.approver_name, v.grant_time, v.status, v.description, 
+			v.receiver_inner_sn, v.receiver_name
+		from hospital_grant_voucher v
+		left join hospital h using(hospital_inner_sn)
+	</sql>
+	
+	<select id="insertGrant" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         {call h_consumable_grant(
+            #{hospital_inner_sn_i,mode=IN},
+            #{av_inner_sn_i,mode=IN},
+            #{department_inner_sn_i,mode=IN},
+            #{approver_inner_sn_i,mode=IN},
+            #{gv_sn_i,mode=IN},
+            #{description_i,mode=IN},
+            #{department_name_i,mode=IN},
+            #{approver_name_i,mode=IN}, 
+            #{warehouse_inner_sn_i,mode=IN},
+            #{warehouse_name_i,mode=IN},
+            #{data_i,mode=IN},
+            #{gv_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{hospital_av_status_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )}
+	</select>
+	
+	<select id="selectGrantInfo" parameterType="map" resultMap="HospitalGrantVoucherResult">
+        select hospital_inner_sn, gv_inner_sn, department_inner_sn, approver_inner_sn, status, grant_time, gv_sn, description, 
+        	department_name, approver_name,warehouse_inner_sn, warehouse_name, receiver_inner_sn, receiver_name
+		from hospital_grant_voucher v
+		where 1=1
+		<if test="hospital_inner_sn != null">and v.hospital_inner_sn = #{hospital_inner_sn}</if>
+		<if test="gv_inner_sn != null">and v.gv_inner_sn = #{gv_inner_sn}</if>
+	</select>
+	
+	<select id="selectGrantList" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         {call h_get_consumable_grant_need_to_know_information(
+            #{hospital_inner_sn_i,mode=IN},
+            #{av_inner_sn_i,mode=IN},
+            #{warehouse_inner_sn_i,mode=IN},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )}
+	</select>
+	
+	<select id="selectGrantVoucherList" parameterType="map" resultMap="HospitalGrantVoucherResult">
+        select hospital_inner_sn, gv_inner_sn, department_inner_sn, approver_inner_sn, status, grant_time, gv_sn, description, department_name, approver_name,warehouse_inner_sn, warehouse_name, 
+        	receiver_inner_sn, receiver_name
+		from hospital_grant_voucher v
+		inner join (
+	        select hospital_inner_sn_e as hospital_inner_sn, gv_inner_sn 
+	        from h_a_v_d_p_d_h_g_v_d_p_d 
+	        where hospital_inner_sn_c = #{hospital_inner_sn}
+	        <if test="av_inner_sn != null">and av_inner_sn = #{av_inner_sn}</if>
+	        <if test="proposer_inner_sn != null">and av_inner_sn in (select av_inner_sn from hospital_apply_voucher where hospital_inner_sn = #{hospital_inner_sn} and proposer_inner_sn = #{proposer_inner_sn})</if>
+	        union distinct
+	        select hospital_inner_sn_c as hospital_inner_sn, gv_inner_sn 
+	        from h_a_v_p_d_h_g_v_p_d 
+	        where hospital_inner_sn_e = #{hospital_inner_sn}
+	        <if test="av_inner_sn != null">and av_inner_sn = #{av_inner_sn}</if>
+	        
+	        <if test="proposer_inner_sn != null">and av_inner_sn in (select av_inner_sn from hospital_apply_voucher where hospital_inner_sn = #{hospital_inner_sn} and proposer_inner_sn = #{proposer_inner_sn})</if>
+	        ) b using (hospital_inner_sn, gv_inner_sn)
+		where v.status in (${status})
+		<if test="key != null and key !=''">and v.gv_sn like concat('%', #{key}, '%')</if>
+		order by v.grant_time desc
+	</select>
+	
+	<select id="appSelectGrantVoucherList" parameterType="map" resultMap="HospitalGrantVoucherResult">
+        select hospital_inner_sn, gv_inner_sn, department_inner_sn, approver_inner_sn, status, grant_time, gv_sn, description, department_name, approver_name, warehouse_inner_sn, warehouse_name, 
+        	receiver_inner_sn, receiver_name
+		from hospital_grant_voucher v
+		where v.hospital_inner_sn = #{hospital_inner_sn} and v.status in (${status})
+		<if test="gv_sn != null and gv_sn != ''">and (v.gv_sn like concat('%', #{gv_sn}, '%')</if>
+		<if test="warehouse_name != null and warehouse_name !=''">or v.warehouse_name like concat('%', #{warehouse_name}, '%')</if>
+		<if test="department_name != null and department_name !=''">or v.department_name like concat('%', #{department_name}, '%'))</if>
+
+		<if test="uid != null">and v.department_inner_sn in (
+			SELECT
+			department_inner_sn
+			FROM
+			hospital_department
+			WHERE
+			hospital_inner_sn = #{hospital_inner_sn}
+			AND department_inner_sn IN
+			(
+			SELECT
+			department_inner_sn
+			FROM
+			hospital_employee_hospital_department
+			WHERE
+			hospital_inner_sn = #{hospital_inner_sn}
+			AND employee_inner_sn = #{uid})
+			)
+		</if>
+
+		order by v.grant_time desc 
+	</select>
+	
+	<select id="searchGrantList" parameterType="map" resultMap="HospitalGrantVoucherResult">
+		<include refid="selectHospitalGrantVoucher"/>
+		where v.is_delete = 0 and v.hospital_inner_sn = #{hospital_inner_sn}
+		<if test="status != null">and v.status in (${status}) </if>
+		<if test="gv_sn != null and gv_sn != ''">and v.gv_sn like concat('%', #{gv_sn}, '%')</if>
+		<if test="proposer_inner_sn != null">AND v.proposer_inner_sn = #{proposer_inner_sn}</if>
+	</select>
+	
+	<update id="updateGrant" parameterType="map">
+		update hospital_grant_voucher
+		<set>
+			<if test="gv_sn != null">gv_sn = #{gv_sn},</if>
+			<if test="handler_inner_sn != null">handler_inner_sn = #{handler_inner_sn},</if>
+			<if test="handler_inner_sn_null != null">handler_inner_sn = null,</if>
+			<if test="handler_name != null">handler_name = #{handler_name},</if>
+			<if test="department_inner_sn != null and department_inner_sn != -1">department_inner_sn = #{department_inner_sn},</if>
+			<if test="department_inner_sn == -1">department_inner_sn = null,</if>
+			<if test="department_name != null">department_name = #{department_name},</if>
+			<if test="is_delete != null">is_delete = #{is_delete},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="description != null">description=#{description},</if>
+			<if test="receiver_inner_sn != null">receiver_inner_sn = #{receiver_inner_sn},</if>
+			<if test="receiver_name != null">receiver_name=#{receiver_name},</if>
+		</set>
+		where hospital_inner_sn = #{hospital_inner_sn} and gv_inner_sn = #{gv_inner_sn}
+	</update>
+	
+	<resultMap type="HospitalGrantVoucherDetail" id="HospitalGrantVoucherDetailResult">
+		<result property="hospital_inner_sn" column="hospital_inner_sn"/><!-- 医院内部编号 -->
+		<result property="hospital_name" column="hospital_name"/><!-- 医院名称 -->
+		<result property="gv_inner_sn" column="gv_inner_sn"/><!-- 单据内部编号 -->
+		<result property="detail_inner_sn" column="detail_inner_sn"/><!-- 明细内部编号 -->
+		<result property="vendor_inner_sn" column="vendor_inner_sn"/><!-- 厂商内部编号  -->
+		<result property="vendor_name" column="vendor_name"/><!-- 厂商名称  -->
+		<result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号  -->
+		<result property="product_name" column="product_name"/><!-- 产品名称  -->
+		<result property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号  -->
+		<result property="specification" column="specification"/><!-- 型号规格名称  -->
+		<result property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号  -->
+		<result property="unit_name" column="unit_name"/><!-- 单位名称  -->
+		<result property="sort_number" column="sort_number"/><!-- 排序号 -->
+		<result property="batch_number" column="batch_number"/><!-- 批号 -->
+		<result property="grant_quantity" column="grant_quantity"/><!-- 发放数量 -->
+		<result property="get_quantity" column="get_quantity"/><!-- 领取数量 -->
+		<result property="product_type" column="product_type"/><!-- 产品类型 0:经销商(自建)产品   1:厂商产品 -->
+		<result property="image" column="image"/><!-- 图片ID -->
+		<result property="warehouse_inner_sn" column="warehouse_inner_sn"/><!-- 仓库ID -->
+		<result property="warehouse_name" column="warehouse_name"/><!-- 仓库名称 -->
+		<result property="status" column="status"/><!-- 仓库名称 -->
+	</resultMap>
+	
+	<select id="searchGrantDetailList" parameterType="map" resultMap="HospitalGrantVoucherDetailResult">
+		select 
+	        vp.hospital_inner_sn, h.name as hospital_name, vp.gv_inner_sn, vp.detail_inner_sn, vp.product_vendor_inner_sn as vendor_inner_sn, vp.status,
+	        vp.product_vendor_name as vendor_name, vp.product_inner_sn, vp.product_name, vp.specification_inner_sn, vp.specification as specification,
+	        vp.unit_inner_sn, vp.unit as unit_name, vp.sort_number, vp.grant_quantity/1000 as grant_quantity, 1 as product_type, batch_number,
+	        (select url from product_image where vendor_inner_sn = vp.product_vendor_inner_sn and product_inner_sn = vp.product_inner_sn limit 1) as image,
+	        gvpl.warehouse_inner_sn, gvpl.warehouse_name, vp.get_quantity/1000 as get_quantity
+		from hospital_grant_voucher_product_detail vp
+		left join hospital h on vp.hospital_inner_sn=h.hospital_inner_sn
+		left join hospital_grant_voucher gvpl on vp.hospital_inner_sn=gvpl.hospital_inner_sn and vp.gv_inner_sn=gvpl.gv_inner_sn
+		where vp.hospital_inner_sn = #{hospital_inner_sn} and vp.gv_inner_sn = #{gv_inner_sn}
+		<if test="all != null">and vp.status in (0,1) </if>
+		<if test="status != null">and vp.status in (${status}) </if>
+		<if test="detail_inner_sn != null">and vp.detail_inner_sn=#{detail_inner_sn} </if>
+		union all
+		select 
+	        vp.hospital_inner_sn, h.name as hospital_name, vp.gv_inner_sn, vp.detail_inner_sn, vp.product_dealer_inner_sn as vendor_inner_sn, vp.status,
+	        vp.product_dealer_name as vendor_name, vp.product_inner_sn, vp.product_name, vp.specification_inner_sn, vp.specification as specification, 
+	        vp.unit_inner_sn, vp.unit as unit_name, vp.sort_number, vp.grant_quantity/1000 as grant_quantity, 0 as product_type, batch_number,
+	        (select url from dealer_product_image where dealer_inner_sn = vp.product_dealer_inner_sn and product_inner_sn = vp.product_inner_sn limit 1) as image,
+	        gvdpl.warehouse_inner_sn, gvdpl.warehouse_name, vp.get_quantity/1000 as get_quantity
+		from hospital_grant_voucher_dealer_product_detail vp
+		left join hospital h on vp.hospital_inner_sn=h.hospital_inner_sn
+		left join hospital_grant_voucher gvdpl on vp.hospital_inner_sn=gvdpl.hospital_inner_sn and vp.gv_inner_sn=gvdpl.gv_inner_sn
+		where vp.hospital_inner_sn = #{hospital_inner_sn} and vp.gv_inner_sn = #{gv_inner_sn}
+		<if test="all != null">and vp.status in (0,1) </if>
+		<if test="status != null">and vp.status in (${status}) </if>
+		<if test="detail_inner_sn != null">and vp.detail_inner_sn=#{detail_inner_sn} </if>
+	</select>
+	
+	<update id="updateGrantDetail" parameterType="map">
+		update hospital_grant_voucher_product_detail
+		<set>
+			<if test="get_quantity != null">get_quantity = #{get_quantity},</if>
+			<if test="status != null">status = #{status},</if>
+		</set>
+		where hospital_inner_sn = #{hospital_inner_sn} and gv_inner_sn = #{gv_inner_sn} and detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<update id="updateGrantDetailDealer" parameterType="map">
+		update hospital_grant_voucher_dealer_product_detail
+		<set>
+			<if test="get_quantity != null">get_quantity = #{get_quantity},</if>
+			<if test="status != null">status = #{status},</if>
+		</set>
+		where hospital_inner_sn = #{hospital_inner_sn} and gv_inner_sn = #{gv_inner_sn} and detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<select id="checkGrantFinish" parameterType="map" resultType="map">
+		select * from hospital_grant_voucher 
+		where exists (
+			select gv_inner_sn from hospital_grant_voucher_product_detail 
+			where 1=1
+			and hospital_inner_sn = #{hospital_inner_sn} and gv_inner_sn = #{gv_inner_sn}
+			and status in(${checkStatus})
+			union all
+			select gv_inner_sn from hospital_grant_voucher_dealer_product_detail
+			where 1=1
+			and hospital_inner_sn = #{hospital_inner_sn} and gv_inner_sn = #{gv_inner_sn}
+			and status in(${checkStatus})
+		)
+		and hospital_inner_sn = #{hospital_inner_sn} and gv_inner_sn = #{gv_inner_sn}
+	</select>
+	
+	<!-- <insert id="insertGrantDetailDealerRef" parameterType="map">
+		insert into h_a_v_d_p_d_h_g_v_d_p_d
+			(hospital_inner_sn_c, av_inner_sn, detail_inner_sn_c, hospital_inner_sn_e, gv_inner_sn, detail_inner_sn_e)
+        values 
+        	(#{hospital_inner_sn_c}, #{av_inner_sn}, #{detail_inner_sn_c}, #{hospital_inner_sn_e}, #{gv_inner_sn}, #{detail_inner_sn_e})
+	</insert>
+	
+	<insert id="insertGrantDetailRef" parameterType="map">
+		insert into h_a_v_p_d_h_g_v_p_d
+			(hospital_inner_sn_c, av_inner_sn, detail_inner_sn_c, hospital_inner_sn_e, gv_inner_sn, detail_inner_sn_e)
+        values 
+        	(#{hospital_inner_sn_c}, #{av_inner_sn}, #{detail_inner_sn_c}, #{hospital_inner_sn_e}, #{gv_inner_sn}, #{detail_inner_sn_e})
+	</insert>
+	
+	<insert id="insertGrantDetailDealerRefOdo" parameterType="map">
+		insert into h_g_v_d_p_d_h_h_o_d_p_d
+			(gv_hospital_inner_sn, gv_inner_sn, gv_detail_inner_sn, odo_hospital_inner_sn, odo_inner_sn, odo_detail_inner_sn)
+        values 
+        	(#{gv_hospital_inner_sn}, #{gv_inner_sn}, #{gv_detail_inner_sn}, #{odo_hospital_inner_sn}, #{odo_inner_sn}, #{odo_detail_inner_sn})
+	</insert>
+	
+	<insert id="insertGrantDetailRefOdo" parameterType="map">
+		insert into h_g_v_p_d_h_h_o_p_d
+			(gv_hospital_inner_sn, gv_inner_sn, gv_detail_inner_sn, odo_hospital_inner_sn, odo_inner_sn, odo_detail_inner_sn)
+        values 
+        	(#{gv_hospital_inner_sn}, #{gv_inner_sn}, #{gv_detail_inner_sn}, #{odo_hospital_inner_sn}, #{odo_inner_sn}, #{odo_detail_inner_sn})
+	</insert> -->
+</mapper>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.surgery.plan.mapper.OrthopaedicOperationPlanTypeMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanTypeKey">
+    <id column="plan_id" jdbcType="BIGINT" property="plan_id" />
+    <id column="type_inner_sn" jdbcType="TINYINT" property="type_inner_sn" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    plan_id, type_inner_sn
+  </sql>
+  <select id="selectByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanTypeExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from orthopaedic_operation_plan_type
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanTypeKey">
+    delete from orthopaedic_operation_plan_type
+    where plan_id = #{plan_id,jdbcType=BIGINT}
+      and type_inner_sn = #{type_inner_sn,jdbcType=TINYINT}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanTypeExample">
+    delete from orthopaedic_operation_plan_type
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanTypeKey">
+    insert into orthopaedic_operation_plan_type (plan_id, type_inner_sn)
+    values (#{plan_id,jdbcType=BIGINT}, #{type_inner_sn,jdbcType=TINYINT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanTypeKey">
+    insert into orthopaedic_operation_plan_type
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="plan_id != null">
+        plan_id,
+      </if>
+      <if test="type_inner_sn != null">
+        type_inner_sn,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="plan_id != null">
+        #{plan_id,jdbcType=BIGINT},
+      </if>
+      <if test="type_inner_sn != null">
+        #{type_inner_sn,jdbcType=TINYINT},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanTypeExample" resultType="java.lang.Long">
+    select count(*) from orthopaedic_operation_plan_type
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update orthopaedic_operation_plan_type
+    <set>
+      <if test="record.plan_id != null">
+        plan_id = #{record.plan_id,jdbcType=BIGINT},
+      </if>
+      <if test="record.type_inner_sn != null">
+        type_inner_sn = #{record.type_inner_sn,jdbcType=TINYINT},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update orthopaedic_operation_plan_type
+    set plan_id = #{record.plan_id,jdbcType=BIGINT},
+      type_inner_sn = #{record.type_inner_sn,jdbcType=TINYINT}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+</mapper>

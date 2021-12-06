@@ -1,0 +1,754 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.finance.mapper.GrnRecordMapper">
+
+	<select id="selectDealerGrnRecordList" parameterType="map" resultType="GrnRecord">
+		SELECT * FROM(
+			SELECT
+			    dealer_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 0 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM dealer_dealer_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM dealer_dealer_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+				</if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM dealer_dealer_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(dealer_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and dealer_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    dealer_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 1 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM dealer_vendor_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM dealer_vendor_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM dealer_vendor_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(dealer_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and dealer_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    dealer_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 2 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM dealer_hospital_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM dealer_hospital_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM dealer_hospital_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(dealer_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and dealer_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+		) A
+		ORDER BY in_time DESC
+	</select>
+	
+	<select id="sumDealerGrnRecordList" parameterType="map" resultType="BigDecimal">
+		SELECT CAST(sum(amount_of_money) AS DECIMAL(16,4)) as amount_of_money FROM(
+			SELECT
+			    dealer_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 0 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM dealer_dealer_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM dealer_dealer_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+				</if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM dealer_dealer_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(dealer_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and dealer_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    dealer_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 1 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM dealer_vendor_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM dealer_vendor_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM dealer_vendor_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(dealer_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and dealer_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    dealer_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 2 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM dealer_hospital_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM dealer_hospital_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            dealer_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM dealer_hospital_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(dealer_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and dealer_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+		) A
+	</select>
+	
+	<select id="selectHospitalGrnRecordList" parameterType="map" resultType="GrnRecord">
+		SELECT * FROM(
+			SELECT
+			    hospital_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 4 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM hospital_dealer_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM hospital_dealer_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM hospital_dealer_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(hospital_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and hospital_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    hospital_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 4 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM hospital_hospital_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM hospital_hospital_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM hospital_hospital_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(hospital_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and hospital_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    hospital_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 4 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM hospital_vendor_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM hospital_vendor_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM hospital_vendor_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(hospital_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and hospital_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+		) A
+		ORDER BY in_time DESC
+	</select>
+	
+	<select id="sumHospitalGrnRecordList" parameterType="map" resultType="BigDecimal">
+		SELECT CAST(sum(amount_of_money) AS DECIMAL(16,4)) as amount_of_money FROM(
+			SELECT
+			    hospital_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 4 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM hospital_dealer_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM hospital_dealer_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM hospital_dealer_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(hospital_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and hospital_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    hospital_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 4 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM hospital_hospital_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM hospital_hospital_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM hospital_hospital_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(hospital_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and hospital_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    hospital_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 4 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM hospital_vendor_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM hospital_vendor_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            hospital_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM hospital_vendor_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(hospital_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and hospital_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+		) A
+	</select>
+	
+	<select id="selectVendorGrnRecordList" parameterType="map" resultType="GrnRecord">
+		SELECT * FROM(
+			SELECT
+			    vendor_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 6 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM vendor_dealer_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM vendor_dealer_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM vendor_dealer_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(vendor_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and vendor_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    vendor_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 6 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM vendor_hospital_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM vendor_hospital_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM vendor_hospital_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(vendor_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and vendor_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    vendor_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 6 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM vendor_vendor_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM vendor_vendor_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM vendor_vendor_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(vendor_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and vendor_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+		) A
+		ORDER BY in_time DESC
+	</select>
+	
+	<select id="sumVendorGrnRecordList" parameterType="map" resultType="BigDecimal">
+		SELECT CAST(sum(amount_of_money) AS DECIMAL(16,4)) as amount_of_money FROM(
+			SELECT
+			    vendor_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 6 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM vendor_dealer_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM vendor_dealer_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM vendor_dealer_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(vendor_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and vendor_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    vendor_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 6 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM vendor_hospital_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM vendor_hospital_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM vendor_hospital_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(vendor_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and vendor_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+			UNION ALL
+			SELECT
+			    vendor_inner_sn as org_id, grn_inner_sn, in_time, grn_sn, description, organization_name, warehouse_name, rate, mdrf_sn,
+			    handler_name, type_name, department_name, 6 billsType, warehouse_inner_sn, unit_name, buyer_name,
+			    product_vendor_name, product_name, specification, type, batch_number, unit_price, quantity, product_type,
+			    CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money
+			FROM vendor_vendor_grn g
+			JOIN (
+				<if test="selectVendor == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_vendor_name, product_name, specification, type, batch_number, rate, mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            1 as product_type
+		        FROM vendor_vendor_grn_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		        </if>
+				<if test="selectVendor == 1 and selectDealer == 1">
+		        UNION ALL
+		        </if>
+		        <if test="selectDealer == 1">
+		        SELECT
+		            vendor_inner_sn, grn_inner_sn, product_dealer_name as product_vendor_name, product_name, specification, type, batch_number, rate, '' as mdrf_sn,
+		            unit_price/10000 as unit_price, quantity/1000 as quantity, unit as unit_name,
+		            0 as product_type
+		        FROM vendor_vendor_grn_dealer_product_detail
+		        where 1=1
+		        <if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+				<if test="product_dealer_inner_sn != null">and product_dealer_inner_sn = #{product_dealer_inner_sn}</if>
+				</if>
+			) d using(vendor_inner_sn, grn_inner_sn)
+			WHERE g.status in (2,3,4,5) and vendor_inner_sn = #{org_id}
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and g.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and g.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="organization_name != null and organization_name != ''">AND g.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="department_inner_sn != null">and g.department_inner_sn = #{department_inner_sn}</if>
+		) A
+	</select>
+	
+</mapper>

@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.plan.mapper.DealerPlanMapper">
+
+	<resultMap type="Plan" id="PlanResult">
+		<id     property="org_id" column="dealer_inner_sn"/>
+		<result property="ppl_inner_sn" column="ppl_inner_sn"/>
+		<result property="auditor_inner_sn" column="auditor_inner_sn"/>
+		<result property="auditor_name" column="auditor_name"/>
+		<result property="creator_inner_sn" column="creator_inner_sn"/>
+		<result property="creator_name" column="creator_name"/>
+		<result property="department_inner_sn" column="department_inner_sn"/>
+		<result property="department_name" column="department_name"/>
+		<result property="create_time" column="create_time"/>
+		<result property="audit_time" column="audit_time"/>
+		<result property="status" column="status"/>
+		<result property="ppl_sn" column="ppl_sn"/>
+		<result property="description" column="description"/>
+	</resultMap>
+	
+	<sql id="selectPlan">
+        select dealer_inner_sn, ppl_inner_sn, auditor_inner_sn, auditor_name, creator_inner_sn, making_people_name as creator_name, department_inner_sn, 
+        	department_name, create_time, audit_time, status, ppl_sn, description
+		from dealer_ppl dp
+    </sql>
+	
+	<select id="selectPlanInfo" parameterType="map" resultMap="PlanResult">
+		<include refid="selectPlan"/>
+		where dealer_inner_sn = #{org_id} and ppl_inner_sn = #{ppl_inner_sn}
+	</select>
+	
+	<select id="searchPlanList" parameterType="map" resultMap="PlanResult">
+		<include refid="selectPlan"/>
+		where dealer_inner_sn = #{org_id} 
+			<if test="ppl_inner_sn != null">and ppl_inner_sn = #{ppl_inner_sn}</if>
+			<if test="status != null and status != ''">and dp.status in (${status})</if>
+			<if test="department_inner_sn != null">and dp.department_inner_sn=#{department_inner_sn}</if>
+			<if test="ppl_sn != null and ppl_sn != ''">and dp.ppl_sn like concat('%', #{ppl_sn}, '%')</if>
+			<if test="creator_name != null and creator_name != ''">and dp.making_people_name like concat('%', #{creator_name}, '%')</if>
+			<if test="creator_inner_sn != null and creator_inner_sn != ''">AND IF(dp.STATUS =0,dp.creator_inner_sn =#{creator_inner_sn},1=1)</if>
+			<if test="key != null and key != ''">and (dp.auditor_name like concat('%', #{key}, '%')
+				or dp.department_name like concat('%', #{key}, '%') or dp.making_people_name like concat('%', #{key}, '%')
+				or dp.ppl_sn like concat('%', #{key}, '%')
+			)</if>
+	</select>
+	
+	<select id="d_add_dealer_ppl" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call d_add_dealer_ppl(
+			#{dealer_inner_sn_i, mode=IN},
+			#{auditor_inner_sn_i, mode=IN},
+			#{creator_inner_sn_i, mode=IN},
+			#{department_inner_sn_i, mode=IN},
+			#{create_time_i, mode=IN},
+			#{audit_time_i, mode=IN},
+			#{status_i, mode=IN},
+			#{ppl_sn_i, mode=IN},
+			#{description_i, mode=IN},
+			#{auditor_name_i, mode=IN},
+			#{making_people_name_i, mode=IN},
+			#{department_name_i, mode=IN},
+			#{ppl_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<delete id="deletePlan" parameterType="map">
+		delete from dealer_ppl 
+		where dealer_inner_sn= #{org_id} and ppl_inner_sn = #{ppl_inner_sn}
+	</delete>
+	
+	<update id="updatePlan" parameterType="map">
+		update dealer_ppl
+		<set>
+			<if test="auditor_inner_sn != null"> auditor_inner_sn = #{auditor_inner_sn},</if>
+			<if test="creator_inner_sn != null "> creator_inner_sn = #{creator_inner_sn},</if>
+			<if test="department_inner_sn != null and department_inner_sn != -1"> department_inner_sn = #{department_inner_sn},</if>
+			<if test="department_inner_sn == -1 "> department_inner_sn = null,</if>
+			<if test="create_time != null "> create_time = #{create_time},</if>
+			<if test="audit_time != null "> audit_time = #{audit_time},</if>
+			<if test="status != null"> status = #{status},</if>
+			<if test="ppl_sn != null"> ppl_sn = #{ppl_sn},</if>
+			<if test="description != null"> description = #{description},</if>
+			<if test="auditor_name != null"> auditor_name = #{auditor_name},</if>
+			<if test="making_people_name != null"> making_people_name = #{making_people_name},</if>
+			<if test="department_name != null"> department_name = #{department_name},</if>
+		</set>
+		where dealer_inner_sn= #{org_id} and ppl_inner_sn = #{ppl_inner_sn}
+	</update>
+	
+	<resultMap type="PlanDetail" id="PlanDetailResult">
+		<id     property="org_id" column="dealer_inner_sn"/>
+		<result property="ppl_inner_sn" column="ppl_inner_sn"/>
+		<result property="detail_inner_sn" column="detail_inner_sn"/>
+		<result property="product_vendor_inner_sn" column="product_vendor_inner_sn"/>
+		<result property="product_vendor_name" column="product_vendor_name"/>
+		<result property="product_inner_sn" column="product_inner_sn"/>
+		<result property="product_name" column="product_name"/>
+		<result property="specification_inner_sn" column="specification_inner_sn"/>
+		<result property="specification" column="specification"/>
+		<result property="unit_inner_sn" column="unit_inner_sn"/>
+		<result property="unit_name" column="unit_name"/>
+		<result property="quantity" column="quantity"/>
+		<result property="batch_number" column="batch_number"/>
+		<result property="sort_number" column="sort_number"/>
+		<result property="status" column="status"/>
+		<result property="product_type" column="product_type"/>
+	</resultMap>
+	
+	<select id="d_add_dealer_ppl_product_detail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call d_add_dealer_ppl_product_detail(
+			#{dealer_inner_sn_i, mode=IN},
+			#{ppl_inner_sn_i, mode=IN},
+			#{product_vendor_inner_sn_i, mode=IN},
+			#{product_inner_sn_i, mode=IN},
+			#{specification_inner_sn_i, mode=IN},
+			#{unit_inner_sn_i, mode=IN},
+			#{quantity_i, mode=IN},
+			#{sort_number_i, mode=IN},
+			#{status_i, mode=IN},
+			#{product_vendor_name_i, mode=IN},
+			#{product_name_i, mode=IN},
+			#{specification_i, mode=IN},
+			#{unit_i, mode=IN},
+			#{batch_number_i, mode=IN},
+			#{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<select id="d_add_dealer_ppl_dealer_product_detail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call d_add_dealer_ppl_dealer_product_detail(
+			#{dealer_inner_sn_i, mode=IN},
+			#{ppl_inner_sn_i, mode=IN},
+			#{product_dealer_inner_sn_i, mode=IN},
+			#{product_inner_sn_i, mode=IN},
+			#{specification_inner_sn_i, mode=IN},
+			#{unit_inner_sn_i, mode=IN},
+			#{quantity_i, mode=IN},
+			#{sort_number_i, mode=IN},
+			#{status_i, mode=IN},
+			#{product_dealer_name_i, mode=IN},
+			#{product_name_i, mode=IN},
+			#{specification_i, mode=IN},
+			#{unit_i, mode=IN},
+			#{batch_number_i, mode=IN},
+			#{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<delete id="deletePlanVendorDetail" parameterType="map">
+		delete from dealer_ppl_product_detail 
+		where dealer_inner_sn= #{org_id} and ppl_inner_sn = #{ppl_inner_sn}
+			<if test="detail_inner_sn != null">and detail_inner_sn= #{detail_inner_sn}</if>
+	</delete>
+	
+	<update id="updatePlanVendorDetail" parameterType="map">
+		update dealer_ppl_product_detail
+		<set>
+			<if test="unit_inner_sn != null">unit_inner_sn = #{unit_inner_sn},</if>
+			<if test="quantity != null">quantity = #{quantity},</if>
+			<if test="sort_number != null">sort_number = #{sort_number},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="product_vendor_name != null">product_vendor_name = #{product_vendor_name},</if>
+			<if test="product_name != null">product_name = #{product_name},</if>
+			<if test="specification != null">specification = #{specification},</if>
+			<if test="unit != null">unit = #{unit},</if>
+			<if test="batch_number != null">batch_number = #{batch_number},</if>
+		</set>
+		where dealer_inner_sn = #{org_id} and ppl_inner_sn = #{ppl_inner_sn}
+			and detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<delete id="deletePlanDealerDetail" parameterType="map">
+		delete from dealer_ppl_dealer_product_detail 
+		where dealer_inner_sn= #{org_id} and ppl_inner_sn = #{ppl_inner_sn}
+			<if test="detail_inner_sn != null">and detail_inner_sn= #{detail_inner_sn}</if>
+	</delete>
+	
+	<update id="updatePlanDealerDetail" parameterType="map">
+		update dealer_ppl_dealer_product_detail
+		<set>
+			<if test="unit_inner_sn != null">unit_inner_sn = #{unit_inner_sn},</if>
+			<if test="quantity != null">quantity = #{quantity},</if>
+			<if test="sort_number != null">sort_number = #{sort_number},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="product_dealer_name != null">product_dealer_name = #{product_dealer_name},</if>
+			<if test="product_name != null">product_name = #{product_name},</if>
+			<if test="specification != null">specification = #{specification},</if>
+			<if test="unit != null">unit = #{unit},</if>
+			<if test="batch_number != null">batch_number = #{batch_number},</if>
+		</set>
+		where dealer_inner_sn = #{org_id} and ppl_inner_sn = #{ppl_inner_sn}
+			and detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<select id="selectPlanDetailList" parameterType="map" resultMap="PlanDetailResult">
+		select dealer_inner_sn, ppl_inner_sn, detail_inner_sn, product_vendor_inner_sn, product_vendor_name, product_inner_sn, product_name,
+		        specification_inner_sn, specification, unit_inner_sn, unit_name, quantity, sort_number, status, product_type, batch_number
+		from(
+			select d.dealer_inner_sn, d.ppl_inner_sn, d.detail_inner_sn, d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, d.product_name, 
+			        d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity, d.sort_number, d.status, 1 as product_type, batch_number
+			from dealer_ppl_product_detail d
+			where d.dealer_inner_sn = #{org_id} and d.ppl_inner_sn = #{ppl_inner_sn}
+			<if test="status != null">and d.status = #{status}</if>
+			UNION ALL
+			select d.dealer_inner_sn, d.ppl_inner_sn, d.detail_inner_sn, d.product_dealer_inner_sn as product_vendor_inner_sn, d.product_dealer_name as product_vendor_name, d.product_inner_sn, d.product_name, 
+			        d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity, d.sort_number, d.status, 0 as product_type, batch_number
+			from dealer_ppl_dealer_product_detail d
+			left join dealer v on v.dealer_inner_sn=d.product_dealer_inner_sn
+			where d.dealer_inner_sn = #{org_id} and d.ppl_inner_sn = #{ppl_inner_sn}
+			<if test="status != null">and d.status = #{status}</if>
+		) a
+		order by sort_number
+	</select>
+	
+	<!-- 查询计划中经销商自建产品和厂商产品的明细ID -->
+	<select id="selectPlanDetailIDList" parameterType="map" resultType="map">
+		select d.dealer_inner_sn as org_id, d.ppl_inner_sn, d.detail_inner_sn, 1 as product_type
+		from dealer_ppl_product_detail d
+		where d.dealer_inner_sn = #{org_id} and d.ppl_inner_sn = #{ppl_inner_sn}
+		UNION ALL
+		select d.dealer_inner_sn as org_id, d.ppl_inner_sn, d.detail_inner_sn, 0 as product_type
+		from dealer_ppl_dealer_product_detail d
+		where d.dealer_inner_sn = #{org_id} and d.ppl_inner_sn = #{ppl_inner_sn}
+	</select>
+	
+	<!-- 查询计划明细中厂商产品并转换包装单位为最小包装单位，数量转换为最小包装单位的数量 -->
+	<select id="selectPlanProductDetailList" parameterType="map" resultType="BuildOrderData">
+		select d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.status,
+	        c_get_product_min_unit_inner_sn(product_vendor_inner_sn, product_inner_sn, specification_inner_sn, d.unit_inner_sn) as unit_inner_sn,
+	        c_get_product_min_unit(product_vendor_inner_sn, product_inner_sn, specification_inner_sn, d.unit_inner_sn) as unit_name, 
+	        (c_calculate_product_min_unit(product_vendor_inner_sn, product_inner_sn, specification_inner_sn, d.unit_inner_sn) * d.quantity/1000) as quantity, 
+	        CONCAT(product_vendor_inner_sn, product_inner_sn, specification_inner_sn, '-', batch_number, '-', '1') as customID, 1 as product_type, batch_number
+		from dealer_ppl_product_detail d
+		where d.dealer_inner_sn = #{org_id} and d.ppl_inner_sn = #{ppl_inner_sn}
+		<if test="detail_inner_sn != null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</select>
+	
+	<!-- 查询计划明细中经销商自建产品并转换包装单位为最小包装单位，数量转换为最小包装单位的数量 -->
+	<select id="selectPlanDearlerProductDetailList" parameterType="map" resultType="BuildOrderData">
+		select  d.product_dealer_inner_sn as product_vendor_inner_sn, d.product_dealer_name as product_vendor_name, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, 
+	        c_get_dealer_product_min_unit_inner_sn(product_dealer_inner_sn, product_inner_sn,specification_inner_sn, d.unit_inner_sn) as unit_inner_sn,
+	        c_get_dealer_product_min_unit(product_dealer_inner_sn, product_inner_sn,specification_inner_sn, d.unit_inner_sn) as unit_name, 
+	        (c_calculate_dealer_product_min_unit(product_dealer_inner_sn, product_inner_sn,specification_inner_sn, d.unit_inner_sn) *d.quantity/1000) as quantity, 
+	        CONCAT(product_dealer_inner_sn, product_inner_sn, specification_inner_sn, '-', batch_number, '-', '0') as customID, 0 as product_type, batch_number
+		from dealer_ppl_dealer_product_detail d
+		where d.dealer_inner_sn = #{org_id} and d.ppl_inner_sn = #{ppl_inner_sn}
+		<if test="detail_inner_sn != null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</select>
+	
+	<!-- 查询计划明细合并后对应的厂商合同供应商信息(供应商ID，供应商名称，供应商类型，合同产品价格，合同产品包装单位) -->
+	<select id="selectSupplierInfo" parameterType="map" resultType="SupplierData4Out">
+		select DISTINCT dealer_b_inner_sn as supplier_id , v.name as supplier_name, 0 as supplier_type, 
+	        c.unit_inner_sn, pu.name as unit_name, c_calculate_product_min_unit(c.product_vendor_inner_sn, c.product_inner_sn, c.specification_inner_sn, c.unit_inner_sn) as measure, 
+	        c.price/10000 as unit_price, CONCAT(c.dealer_b_inner_sn, '2') as customID
+		from dealer_dealer_contract_product c
+		left join dealer v on v.dealer_inner_sn=c.dealer_b_inner_sn
+		left join product_unit pu on pu.vendor_inner_sn=c.product_vendor_inner_sn and pu.product_inner_sn=c.product_inner_sn and pu.specification_inner_sn=c.specification_inner_sn and pu.unit_inner_sn=c.unit_inner_sn
+		where v.is_delete = 0 and c.dealer_a_inner_sn = #{org_id}
+		and (c.dealer_a_inner_sn,c.dealer_b_inner_sn,c.contract_inner_sn) in(select dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn from dealer_dealer_contract where dealer_a_inner_sn = #{org_id} and status in (3,4,5,7))
+		and c.product_vendor_inner_sn = #{vendor_inner_sn}
+		and c.product_inner_sn = #{product_inner_sn}
+		and c.specification_inner_sn = #{specification_inner_sn}
+		UNION ALL 
+		select c.vendor_inner_sn as supplier_id , v.name as supplier_name, 1 as supplier_type, 
+	        c.unit_inner_sn, pu.name as unit_name, c_calculate_product_min_unit(c.product_vendor_inner_sn, c.product_inner_sn, c.specification_inner_sn, c.unit_inner_sn) as measure, 
+	        c.price/10000 as unit_price, CONCAT(c.vendor_inner_sn, '3') as customID
+		from dealer_vendor_contract_product c
+		left join vendor v on v.vendor_inner_sn=c.vendor_inner_sn
+		left join product_unit pu on pu.vendor_inner_sn=c.product_vendor_inner_sn and pu.product_inner_sn=c.product_inner_sn and pu.specification_inner_sn=c.specification_inner_sn and pu.unit_inner_sn=c.unit_inner_sn
+		where v.is_delete = 0 and c.dealer_inner_sn = #{org_id}
+		and (c.dealer_inner_sn,c.vendor_inner_sn,c.contract_inner_sn) in(select dealer_inner_sn,vendor_inner_sn,contract_inner_sn from dealer_vendor_contract where dealer_inner_sn = #{org_id} and status in (3,4,5,7))
+		and c.product_vendor_inner_sn = #{vendor_inner_sn}
+		and c.product_inner_sn = #{product_inner_sn}
+		and c.specification_inner_sn = #{specification_inner_sn}
+	</select>
+	
+	<!-- 查询计划明细合并后对应的自建产品合同供应商信息(供应商ID，供应商名称，供应商类型，合同产品价格，合同产品包装单位) -->
+	<select id="selectSupplierInfo1" parameterType="map" resultType="SupplierData4Out">
+		select DISTINCT dealer_b_inner_sn as supplier_id , v.name as supplier_name, 0 as supplier_type, 
+	        c.unit_inner_sn, pu.name as unit_name, c_calculate_dealer_product_min_unit(c.dealer_b_inner_sn, c.product_inner_sn, c.specification_inner_sn, c.unit_inner_sn) as measure, 
+	        c.price/10000 as unit_price, CONCAT(c.dealer_b_inner_sn, '2') as customID
+		from dealer_dealer_contract_dealer_product c
+		left join dealer v on v.dealer_inner_sn=c.dealer_b_inner_sn
+		left join dealer_product_unit pu on pu.dealer_inner_sn=c.dealer_b_inner_sn and pu.product_inner_sn=c.product_inner_sn and pu.specification_inner_sn=c.specification_inner_sn and pu.unit_inner_sn=c.unit_inner_sn
+		where v.is_delete = 0 and c.dealer_a_inner_sn = #{org_id}
+		and (c.dealer_a_inner_sn,c.dealer_b_inner_sn,c.contract_inner_sn) in(select dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn from dealer_dealer_contract where dealer_a_inner_sn = #{org_id} and status in (3,4,5,7))
+		and c.dealer_b_inner_sn = #{vendor_inner_sn}
+		and c.product_inner_sn = #{product_inner_sn}
+		and c.specification_inner_sn = #{specification_inner_sn}
+	</select>
+	
+	<!-- 获取厂商产品列表(有合同关联的厂商产品) -->
+	<select id="selectVendorProductList" parameterType="map" resultType="ResponseProductInfo">
+		select 
+			concat(a.vendor_inner_sn, '-',  a.product_inner_sn, '-', a.specification_inner_sn, '-1') as id,
+			a.*
+        from(
+			select distinct 
+				dv.vendor_inner_sn, v.name as vendor_name, dv.product_vendor_inner_sn, dv.product_vendor_name, dv.product_inner_sn, dv.product_name, 
+				dv.specification_inner_sn, dv.specification, 1 as product_type, p.newest_register_sn as mdrf_sn, ps.specification_vendor_sn, 
+				dv.unit_inner_sn as common_use_unit_inner_sn, dv.unit as common_use_unit, u.unit_inner_sn as min_unit_inner_sn, u.name as min_unit
+			from dealer_vendor_contract_product dv
+			JOIN vendor v using(vendor_inner_sn)
+			join product p on p.vendor_inner_sn=dv.product_vendor_inner_sn and p.product_inner_sn=dv.product_inner_sn
+			join product_specification ps on ps.vendor_inner_sn=dv.product_vendor_inner_sn and ps.product_inner_sn=dv.product_inner_sn and ps.specification_inner_sn=dv.specification_inner_sn
+			join dealer_vendor_contract c on c.vendor_inner_sn=dv.vendor_inner_sn and c.dealer_inner_sn=dv.dealer_inner_sn and c.contract_inner_sn=dv.contract_inner_sn
+			join product_unit u on ps.vendor_inner_sn=u.vendor_inner_sn and ps.product_inner_sn=u.product_inner_sn 
+			     and ps.specification_inner_sn = u.specification_inner_sn and u.parent_unit_inner_sn is null and u.is_delete = 0
+			where dv.dealer_inner_sn = #{org_id}
+		        and c.status in (4,5,7)
+				<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+				<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+				<if test="product_name != null and product_name != ''">and (dv.product_name like concat('%', #{product_name}, '%') OR p.pinyin like concat('%', #{product_name}, '%'))</if>
+				<if test="product_vendor_id != null">and dv.product_vendor_inner_sn = #{product_vendor_id}</if>
+				<if test="specification_vendor_sn != null and specification_vendor_sn != ''">and ps.specification_vendor_sn like concat('%', #{specification_vendor_sn}, '%')</if>
+	            <if test="specification != null and specification != ''">and ps.specification like concat('%', #{specification}, '%')</if>
+			union distinct
+			select distinct 
+					dv.dealer_b_inner_sn as vendor_inner_sn, d.name as vendor_name, dv.product_vendor_inner_sn, dv.product_vendor_name, dv.product_inner_sn, dv.product_name, 
+					dv.specification_inner_sn, dv.specification, 1 as product_type, p.newest_register_sn as mdrf_sn, ps.specification_vendor_sn,
+					dv.unit_inner_sn as common_use_unit_inner_sn, dv.unit as common_use_unit, u.unit_inner_sn as min_unit_inner_sn, u.name as min_unit
+				from dealer_dealer_contract_product dv
+				left join dealer d on d.dealer_inner_sn=dv.dealer_b_inner_sn
+				join product p on p.vendor_inner_sn=dv.product_vendor_inner_sn and p.product_inner_sn=dv.product_inner_sn
+				join product_specification ps on ps.vendor_inner_sn=dv.product_vendor_inner_sn and ps.product_inner_sn=dv.product_inner_sn 
+					and ps.specification_inner_sn=dv.specification_inner_sn
+				join dealer_dealer_contract c using(dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn)
+				join product_unit u on ps.vendor_inner_sn=u.vendor_inner_sn and ps.product_inner_sn=u.product_inner_sn 
+				     and ps.specification_inner_sn = u.specification_inner_sn and u.parent_unit_inner_sn is null and u.is_delete = 0
+				where dv.dealer_a_inner_sn = #{org_id}
+			        and c.status IN (4,5,7)
+				<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+				<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+				<if test="product_name != null and product_name != ''">and (dv.product_name like concat('%', #{product_name}, '%') OR p.pinyin like concat('%', #{product_name}, '%'))</if>
+				<if test="product_vendor_id != null">and dv.product_vendor_inner_sn = #{product_vendor_id}</if>
+				<if test="specification_vendor_sn != null and specification_vendor_sn != ''">and ps.specification_vendor_sn like concat('%', #{specification_vendor_sn}, '%')</if>
+	            <if test="specification != null and specification != ''">and ps.specification like concat('%', #{specification}, '%')</if>
+            ) a
+	</select>
+	
+	<!-- 获取经销商自建产品列表(有合同关联的经销商) -->
+	<select id="selectDealerProductList" parameterType="map" resultType="ResponseProductInfo">
+		select 
+        	concat(a.dealer_inner_sn, '-',  a.product_inner_sn, '-', a.specification_inner_sn, '-0') as id,
+        	a.*
+        from(
+	        select distinct
+		        hp.dealer_b_inner_sn as dealer_inner_sn, hp.product_dealer_name as dealer_name, hp.product_inner_sn, hp.product_name, hp.specification_inner_sn, hp.specification, 
+		        hp.unit_inner_sn as common_use_unit_inner_sn, hp.unit as common_use_unit, 0 as product_type, u.unit_inner_sn as min_unit_inner_sn, u.name as min_unit
+			from dealer_dealer_contract_dealer_product hp
+			join dealer_product p on p.dealer_inner_sn=hp.dealer_b_inner_sn and p.product_inner_sn=hp.product_inner_sn
+			join dealer_product_specification ps on ps.dealer_inner_sn=hp.dealer_b_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+			join dealer_product_unit u on ps.dealer_inner_sn=u.dealer_inner_sn and ps.product_inner_sn=u.product_inner_sn 
+				and ps.specification_inner_sn = u.specification_inner_sn and u.parent_unit_inner_sn is null and u.is_delete = 0
+			where  1=1
+				and hp.dealer_a_inner_sn = #{org_id}
+				and (hp.dealer_a_inner_sn,hp.dealer_b_inner_sn,hp.contract_inner_sn) in (select dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn from dealer_dealer_contract where dealer_a_inner_sn = #{ids} and dealer_b_inner_sn = #{organization_inner_sn} and status in (4,5,7))
+				<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+				<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+				<if test="product_name != null and product_name != ''">and (hp.product_name like concat('%', #{product_name}, '%') OR p.pinyin like concat('%', #{product_name}, '%'))</if>
+				<if test="product_vendor_id != null">and hp.dealer_b_inner_sn = #{product_vendor_id}</if>
+		) a
+	</select>
+	
+	<!-- 获取甲方合同关联的厂商产品列表 -->
+	<select id="selectVendorProductList4Phone" parameterType="map" resultType="map">
+		select distinct dv.dealer_inner_sn, dv.product_vendor_inner_sn as vendor_inner_sn, dv.product_vendor_name as vendor_name,
+			dv.product_inner_sn, dv.product_name, dv.specification_inner_sn, ps.specification_vendor_sn, dv.specification, 
+			ps.common_use_unit_inner_sn, ps.common_use_unit, 1 as product_type,
+			c_get_product_min_unit_inner_sn(dv.product_vendor_inner_sn, dv.product_inner_sn, dv.specification_inner_sn, unit_inner_sn) as min_unit_inner_sn,
+	        c_get_product_min_unit(dv.product_vendor_inner_sn, dv.product_inner_sn, dv.specification_inner_sn, unit_inner_sn) as min_unit,
+	        (select url from product_image im where im.vendor_inner_sn=dv.product_vendor_inner_sn and im.product_inner_sn=dv.product_inner_sn limit 1) as image
+		from dealer_vendor_contract_product dv
+		JOIN dealer_vendor_contract c USING(dealer_inner_sn,vendor_inner_sn,contract_inner_sn)
+		left join product_specification ps on ps.vendor_inner_sn=dv.product_vendor_inner_sn and ps.product_inner_sn=dv.product_inner_sn and ps.specification_inner_sn=dv.specification_inner_sn
+		and length(trim(ps.common_use_unit))>0
+		where dv.dealer_inner_sn = #{org_id}
+			and C.status in (4,5,7)
+			<if test="key != null and key != ''">and (dv.product_name like concat('%', #{key}, '%') or dv.specification like concat('%', #{key}, '%'))</if>
+		union distinct
+		select distinct dv.dealer_a_inner_sn, dv.product_vendor_inner_sn as vendor_inner_sn, dv.product_vendor_name as vendor_name, 
+			dv.product_inner_sn, dv.product_name, dv.specification_inner_sn, ps.specification_vendor_sn, dv.specification, 
+			ps.common_use_unit_inner_sn, ps.common_use_unit, 1 as product_type,
+			c_get_product_min_unit_inner_sn(dv.product_vendor_inner_sn, dv.product_inner_sn, dv.specification_inner_sn, unit_inner_sn) as min_unit_inner_sn,
+	        c_get_product_min_unit(dv.product_vendor_inner_sn, dv.product_inner_sn, dv.specification_inner_sn, unit_inner_sn) as min_unit,
+	        (select url from product_image im where im.vendor_inner_sn=dv.product_vendor_inner_sn and im.product_inner_sn=dv.product_inner_sn limit 1) as image
+		from dealer_dealer_contract_product dv
+		JOIN dealer_dealer_contract c USING(dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn)
+		left join product_specification ps on ps.vendor_inner_sn=dv.product_vendor_inner_sn and ps.product_inner_sn=dv.product_inner_sn and ps.specification_inner_sn=dv.specification_inner_sn
+		and length(trim(ps.common_use_unit))>0
+		where dv.dealer_a_inner_sn = #{org_id}
+	        and c.status in (4,5,7)
+			<if test="key != null and key != ''">and (dv.product_name like concat('%', #{key}, '%') or dv.specification like concat('%', #{key}, '%'))</if>
+	</select>
+	
+	<select id="selectDealerProductList4Phone" parameterType="map" resultType="map">
+		select distinct
+		hp.dealer_b_inner_sn as dealer_inner_sn, hp.dealer_b_inner_sn as vendor_inner_sn, hp.product_dealer_name as
+		vendor_name,
+		hp.product_inner_sn, hp.product_name, hp.specification_inner_sn, hp.specification,
+		ps.common_use_unit_inner_sn, ps.common_use_unit, 0 as product_type,
+		c_get_dealer_product_min_unit_inner_sn(dealer_b_inner_sn, hp.product_inner_sn, hp.specification_inner_sn,
+		unit_inner_sn) as min_unit_inner_sn,
+		c_get_dealer_product_min_unit(dealer_b_inner_sn, hp.product_inner_sn, hp.specification_inner_sn, unit_inner_sn)
+		as min_unit,
+		(select url from dealer_product_image im where im.dealer_inner_sn=hp.dealer_b_inner_sn and
+		im.product_inner_sn=hp.product_inner_sn limit 1) as image
+		from dealer_dealer_contract_dealer_product hp
+		JOIN dealer_dealer_contract c USING(dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn)
+		left join dealer_product_specification ps on ps.dealer_inner_sn=hp.dealer_b_inner_sn and
+		ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		and length(trim(ps.common_use_unit))>0
+		where 1=1
+		and hp.dealer_a_inner_sn = #{org_id}
+		and c.status in (4,5,7)
+		<if test="key != null and key != ''">and (hp.product_name like concat('%', #{key}, '%') or hp.specification like
+			concat('%', #{key}, '%'))</if>
+	</select>
+	
+	<!-- 所有合同双方产品列表 -->
+	<select id="selectContractVendorProductList4Phone" parameterType="map" resultType="map">
+		select distinct dv.product_vendor_inner_sn as vendor_inner_sn, dv.product_vendor_name as vendor_name, 1 as product_type,
+			dv.product_inner_sn, dv.product_name, dv.specification_inner_sn, ps.specification_vendor_sn, dv.specification, 
+	        (select url from product_image im where im.vendor_inner_sn=dv.product_vendor_inner_sn and im.product_inner_sn=dv.product_inner_sn limit 1) as image
+		from dealer_vendor_contract_product dv
+		JOIN dealer_vendor_contract c USING(dealer_inner_sn,vendor_inner_sn,contract_inner_sn)
+		left join product_specification ps on ps.vendor_inner_sn=dv.product_vendor_inner_sn and ps.product_inner_sn=dv.product_inner_sn and ps.specification_inner_sn=dv.specification_inner_sn
+		where dv.dealer_inner_sn = #{org_id}
+			and c.status in (4,5,7)
+			<if test="key != null and key != ''">and (dv.specification like concat('%', #{key}, '%') or dv.product_name like concat('%', #{key}, '%') )</if>
+			<!--<if test="key != null and key != ''">and (dv.product_vendor_name like concat('%', #{key}, '%') or dv.product_name like concat('%', #{key}, '%') or ps.specification_vendor_sn like concat('%', #{key}, '%'))</if>-->
+		union distinct
+		select distinct dv.product_vendor_inner_sn as vendor_inner_sn, dv.product_vendor_name as vendor_name, 1 as product_type,
+			dv.product_inner_sn, dv.product_name, dv.specification_inner_sn, ps.specification_vendor_sn, dv.specification, 
+	        (select url from product_image im where im.vendor_inner_sn=dv.product_vendor_inner_sn and im.product_inner_sn=dv.product_inner_sn limit 1) as image
+		from dealer_dealer_contract_product dv
+		JOIN dealer_dealer_contract c USING(dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn)
+		left join product_specification ps on ps.vendor_inner_sn=dv.product_vendor_inner_sn and ps.product_inner_sn=dv.product_inner_sn and ps.specification_inner_sn=dv.specification_inner_sn
+		where dv.dealer_a_inner_sn = #{org_id}
+	        and c.status in (4,5,7)
+		<if test="key != null and key != ''">and (dv.specification like concat('%', #{key}, '%') or dv.product_name like concat('%', #{key}, '%') )</if>
+			<!--<if test="key != null and key != ''">and (dv.product_vendor_name like concat('%', #{key}, '%') or dv.product_name like concat('%', #{key}, '%') or ps.specification_vendor_sn like concat('%', #{key}, '%'))</if>-->
+		union distinct
+		select distinct dv.product_vendor_inner_sn as vendor_inner_sn, dv.product_vendor_name as vendor_name, 1 as product_type,
+			dv.product_inner_sn, dv.product_name, dv.specification_inner_sn, ps.specification_vendor_sn, dv.specification, 
+	        (select url from product_image im where im.vendor_inner_sn=dv.product_vendor_inner_sn and im.product_inner_sn=dv.product_inner_sn limit 1) as image
+		from dealer_dealer_contract_product dv
+		JOIN dealer_dealer_contract c USING(dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn)
+		left join product_specification ps on ps.vendor_inner_sn=dv.product_vendor_inner_sn and ps.product_inner_sn=dv.product_inner_sn and ps.specification_inner_sn=dv.specification_inner_sn
+		where dv.dealer_b_inner_sn = #{org_id}
+	        and c.status in (4,5,7)
+		<if test="key != null and key != ''">and (dv.specification like concat('%', #{key}, '%') or dv.product_name like concat('%', #{key}, '%') )</if>
+			<!--<if test="key != null and key != ''">and (dv.product_vendor_name like concat('%', #{key}, '%') or dv.product_name like concat('%', #{key}, '%') or ps.specification_vendor_sn like concat('%', #{key}, '%'))</if>-->
+		union distinct
+		select distinct hp.product_vendor_inner_sn as vendor_inner_sn, hp.product_vendor_name as vendor_name, 1 as product_type, 
+			hp.product_inner_sn, hp.product_name, hp.specification_inner_sn, ps.specification_vendor_sn, hp.specification, 
+	        (select url from product_image im where im.vendor_inner_sn=hp.product_vendor_inner_sn and im.product_inner_sn=hp.product_inner_sn limit 1) as image
+		from hospital_dealer_contract_product hp
+		JOIN hospital_dealer_contract c USING(hospital_inner_sn,dealer_inner_sn,contract_inner_sn)
+		left join product_specification ps on ps.vendor_inner_sn=hp.product_vendor_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		where  1=1
+		and hp.dealer_inner_sn = #{org_id}
+		and c.status in (4,5,7)
+		<if test="key != null and key != ''">and (hp.specification like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%') )</if>
+		<!--<if test="key != null and key != ''">and (hp.product_vendor_name like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%') or ps.specification_vendor_sn like concat('%', #{key}, '%'))</if>-->
+	</select>
+	
+	<select id="selectContractDealerProductList4Phone" parameterType="map" resultType="map">
+		select distinct
+	        hp.dealer_b_inner_sn as vendor_inner_sn, hp.product_dealer_name as vendor_name, 0 as product_type,
+	        hp.product_inner_sn, hp.product_name, hp.specification_inner_sn, hp.specification, 
+	        (select url from dealer_product_image im where im.dealer_inner_sn=hp.dealer_b_inner_sn and im.product_inner_sn=hp.product_inner_sn limit 1) as image
+		from dealer_dealer_contract_dealer_product hp
+		JOIN dealer_dealer_contract c USING(dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn)
+		left join dealer_product_specification ps on ps.dealer_inner_sn=hp.dealer_b_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		where  1=1
+		and hp.dealer_a_inner_sn = #{org_id}
+		and c.status in (4,5,7)
+		<if test="key != null and key != ''">and (hp.specification like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%'))</if>
+<!--		<if test="key != null and key != ''">and (hp.product_dealer_name like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%'))</if>-->
+		union distinct
+		select distinct
+	        hp.dealer_a_inner_sn as vendor_inner_sn, hp.product_dealer_name as vendor_name, 0 as product_type,
+	        hp.product_inner_sn, hp.product_name, hp.specification_inner_sn, hp.specification, 
+	        (select url from dealer_product_image im where im.dealer_inner_sn=hp.dealer_a_inner_sn and im.product_inner_sn=hp.product_inner_sn limit 1) as image
+		from dealer_dealer_contract_dealer_product hp
+		JOIN dealer_dealer_contract c USING(dealer_a_inner_sn,dealer_b_inner_sn,contract_inner_sn)
+		left join dealer_product_specification ps on ps.dealer_inner_sn=hp.dealer_b_inner_sn and ps.product_inner_sn=hp.product_inner_sn and ps.specification_inner_sn=hp.specification_inner_sn
+		where  1=1
+		and hp.dealer_b_inner_sn = #{org_id}
+		and c.status in (4,5,7)
+		<if test="key != null and key != ''">and (hp.specification like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%'))</if>
+		<!--<if test="key != null and key != ''">and (hp.product_dealer_name like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%'))</if>-->
+		union distinct
+		select distinct
+	        hp.dealer_inner_sn as vendor_inner_sn, hp.product_dealer_name as vendor_name, 0 as product_type,
+	        hp.product_inner_sn, hp.product_name, hp.specification_inner_sn, hp.specification, 
+	        (select url from dealer_product_image im where im.dealer_inner_sn=hp.dealer_inner_sn and im.product_inner_sn=hp.product_inner_sn limit 1) as image
+		from hospital_dealer_contract_dealer_product hp
+		JOIN hospital_dealer_contract c USING(hospital_inner_sn,dealer_inner_sn,contract_inner_sn)
+		left join dealer_product_specification ps using (dealer_inner_sn, product_inner_sn,specification_inner_sn)
+		where  1=1
+		and hp.dealer_inner_sn = #{org_id}
+		and c.status in (4,5,7)
+		<if test="key != null and key != ''">and (hp.specification like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%'))</if>
+		<!--<if test="key != null and key != ''">and (hp.product_dealer_name like concat('%', #{key}, '%') or hp.product_name like concat('%', #{key}, '%'))</if>-->
+	</select>
+	
+	<!-- 获取仓库内自建产品批号列表 -->
+	<select id="selectDealerProductBatchNumList" parameterType="map" resultType="string">
+		select distinct batch_number
+       	from dealer_dealer_product_min_unit_inventory
+       	where 1=1
+        	and dealer_inner_sn = #{org_id}
+			<if test="product_vendor_inner_sn != null">and product_dealer_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		group by batch_number, produce_date, overdue_date
+		order by produce_date
+	</select>
+	
+	<!-- 获取仓库内产品批号列表 -->
+	<select id="selectProductBatchNumList" parameterType="map" resultType="string">
+        select distinct batch_number
+        from dealer_product_min_unit_inventory
+        where 1=1
+	        and dealer_inner_sn = #{org_id}
+			<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		group by batch_number, produce_date, overdue_date
+		order by produce_date
+	</select>
+</mapper> 

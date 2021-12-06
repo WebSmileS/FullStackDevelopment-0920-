@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.product.mapper.DealerProductMapper">
+
+	<resultMap type="DealerProduct" id="DealerProductResult">
+		<id      property="dealer_inner_sn" column="dealer_inner_sn"/><!-- 厂商内部编号 -->
+		<result  property="dealer_name" column="dealer_name"/><!-- 厂商名称 -->
+		<result  property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result property="create_employee_inner_sn" column="create_employee_inner_sn"/><!-- 发布员工内部编号 -->
+		<result property="type_inner_sn" column="type_inner_sn"/><!-- 自定义分类内部编号  -->
+		<result property="type_name" column="type_name"/><!-- 自定义分类名称  -->
+		<result property="code68_sn" column="code68_sn"/><!-- 68分类目录编号  -->
+		<result property="code68_name" column="code68_name"/><!-- 68分类目录名称  -->
+		<result  property="data_source" column="data_source"/><!-- 数据来源 -->
+		<result  property="status" column="status"/><!-- 状态 -->
+		<result  property="release_status" column="release_status"/><!-- 发布状态 -->
+		<result  property="storage_condition" column="storage_condition"/><!-- 存储条件 -->
+		<result  property="health_care_type" column="health_care_type"/><!-- 医保类型 -->
+		<result  property="is_delete" column="is_delete"/><!-- 已删除 -->
+		<result property="name" column="name"/><!-- 名称* -->
+		<result property="product_dealer_sn" column="product_dealer_sn"/><!-- 产品编号 -->
+		<result property="specifications" column="specifications"/><!-- 型号规格(总览) -->
+		<result property="description" column="description"/><!-- 描述 -->
+	</resultMap>
+	
+	<sql id="selectProduct">
+		select p.dealer_inner_sn, d.name as dealer_name, product_inner_sn, create_employee_inner_sn, p.type_inner_sn, pt.type as type_name, 
+			p.code68_sn, c.name as code68_name, p.status, p.storage_condition, p.health_care_type, p.is_delete, p.name, p.product_dealer_sn,
+			p.specifications, p.description
+		from dealer_product p 
+		left join dealer d using(dealer_inner_sn)
+		left join code68 c using(code68_sn)
+		left join dealer_product_type pt using(dealer_inner_sn,type_inner_sn)
+	</sql>
+	
+	<select id="selectDealerProductInfo" parameterType="DealerProduct" resultMap="DealerProductResult">
+		<include refid="selectProduct"/>
+		where p.is_delete = 0
+			and p.product_inner_sn = #{product_inner_sn} and p.dealer_inner_sn = #{dealer_inner_sn}
+	</select>
+	
+	<select id="selectProductDetailInfo" parameterType="map" resultType="ProductDetail">
+		select p.dealer_inner_sn as vendor_inner_sn, d.name as vendor_name, product_inner_sn, p.type_inner_sn, pt.type as type_name, 
+			p.code68_sn, c.name as code68_name, p.storage_condition, p.health_care_type, p.name as product_name, 
+			p.specifications, p.description
+		from dealer_product p 
+		left join dealer d using(dealer_inner_sn)
+		left join code68 c using(code68_sn)
+		left join dealer_product_type pt using(dealer_inner_sn,type_inner_sn)
+		where 1=1
+			and p.product_inner_sn = #{product_inner_sn} and p.dealer_inner_sn = #{vendor_inner_sn}
+	</select>
+	
+	<select id="searchDealerProductList" parameterType="DealerProduct" resultMap="DealerProductResult">
+		<include refid="selectProduct"/>
+		where p.is_delete = 0
+		and p.dealer_inner_sn = #{dealer_inner_sn}
+		<if test="status != null">and p.status = #{status}</if>
+		<if test="name != null and name != ''">and (p.name like concat('%', #{name}, '%') OR p.pinyin like concat('%', #{name}, '%'))</if>
+		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+		<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+		<if test="product_dealer_sn != null">and p.product_dealer_sn like concat('%', #{product_dealer_sn}, '%')</if>
+	</select>
+
+	<select id="selectDealerProductAll" parameterType="DealerProduct" resultMap="DealerProductResult">
+		SELECT * FROM dealer_product
+	</select>
+	
+	<!--  平台产品发布页面专用 -->
+	<select id="searchAllDealerProductList" parameterType="map" resultMap="DealerProductResult">
+		<include refid="selectProduct"/>
+		where p.is_delete = 0
+		<if test="name != null and name != ''">and p.name like concat('%', #{name}, '%')</if>
+		<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+		<if test="dealer_inner_sn != null">and p.dealer_inner_sn = #{dealer_inner_sn}</if>
+	</select>
+	
+	<select id="searchDealerProductList4Contract" parameterType="map" resultType="ResponseProductInfo">
+		select p.dealer_inner_sn as vendor_inner_sn, v.name as  vendor_name, s.product_inner_sn, p.name as product_name, 
+			'' as mdrf_sn, s.specification_inner_sn, s.specification, '' as specification_vendor_sn, 0 as product_type, 
+			u.unit_inner_sn as common_use_unit_inner_sn, u.name as common_use_unit, u.unit_inner_sn as min_unit_inner_sn, u.name as min_unit
+		from dealer_product_specification s
+		join dealer_product p using(dealer_inner_sn,product_inner_sn)
+		join dealer v using(dealer_inner_sn)
+		join dealer_product_type pt using(dealer_inner_sn,type_inner_sn)
+		join code68 c on c.code68_sn = p.code68_sn
+		join dealer_product_unit u using(dealer_inner_sn, product_inner_sn, specification_inner_sn)
+		where  s.status = 1 and s.is_delete = 0 and u.parent_unit_inner_sn is null and u.is_delete = 0
+		and p.status=1 and p.is_delete=0
+		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+		<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+		<if test="name != null and name != ''">and (p.name like concat('%', #{name}, '%') OR p.pinyin like concat('%', #{name}, '%'))</if>
+		<if test="specification != null and specification != ''">and s.specification like concat('%', #{specification}, '%')</if>
+		<if test="dealer_inner_sn != null">and s.dealer_inner_sn = #{dealer_inner_sn}</if>
+		<if test="key != null and key != ''">and (s.specification like concat('%', #{key}, '%') or p.name like concat('%', #{key}, '%') or c.name like concat('%', #{key}, '%') or pt.type like concat('%', #{key}, '%'))</if>
+	</select>
+	
+	<select id="d_add_dealer_product" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call d_add_dealer_product(
+            #{dealer_inner_sn_i,mode=IN},
+            #{create_employee_inner_sn_i,mode=IN},
+            #{type_inner_sn_i,mode=IN},
+            #{code68_sn_i,mode=IN},
+            #{storage_condition_i,mode=IN},
+            #{health_care_type_i,mode=IN},
+            #{name_i,mode=IN},
+            #{product_dealer_sn_i,mode=IN},
+            #{description_i,mode=IN},
+            #{specifications_i,mode=IN},
+			#{pinyin_i,mode=IN},
+            #{product_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )
+	</select>
+	
+	<update id="updateDealerProduct" parameterType="map">
+		update dealer_product
+		<set>
+			<if test="name != null and name != ''">name = #{name},</if>
+			<if test="type_inner_sn != null and type_inner_sn != -1">type_inner_sn = #{type_inner_sn},</if>
+			<if test="type_inner_sn == -1">type_inner_sn = null,</if>
+			<if test="code68_sn != null and code68_sn != -1">code68_sn = #{code68_sn},</if>
+			<if test="code68_sn == -1">code68_sn = null,</if>
+			<if test="storage_condition != null">storage_condition = #{storage_condition},</if>
+			<if test="health_care_type != null">health_care_type = #{health_care_type},</if>
+			<if test="specifications != null">specifications=#{specifications},</if>
+			<if test="description != null">description=#{description},</if>
+			<if test="product_dealer_sn != null">product_dealer_sn=#{product_dealer_sn},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="pinyin != null">pinyin = #{pinyin},</if>
+
+		</set>
+		where dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn}
+	</update>
+	
+	<update id="updateDealerProduct4Map" parameterType="map">
+		update dealer_product
+		<set>
+			<if test="create_employee_inner_sn != null">create_employee_inner_sn = #{create_employee_inner_sn},</if>
+			<if test="name != null and name != ''">name = #{name},</if>
+			<if test="type_inner_sn != null and type_inner_sn != -1">type_inner_sn = #{type_inner_sn},</if>
+			<if test="type_inner_sn == -1">type_inner_sn = null,</if>
+			<if test="code68_sn != null and code68_sn != -1">code68_sn = #{code68_sn},</if>
+			<if test="code68_sn == -1">code68_sn = null,</if>
+			<if test="storage_condition != null">storage_condition = #{storage_condition},</if>
+			<if test="health_care_type != null">health_care_type = #{health_care_type},</if>
+			<if test="specifications != null">specifications=#{specifications},</if>
+			<if test="description != null">description=#{description},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="pinyin != null">pinyin = #{pinyin},</if>
+
+		</set>
+		where dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn}
+	</update>
+	
+	<update id="deleteDealerProduct" parameterType="DealerProduct">
+	  update dealer_product set is_delete = 1
+	  where dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn}
+	</update>
+	
+	<!-- 产品相关图片 -->
+	<resultMap type="DealerProductRelImage" id="ImageResult">
+		<result property="dealer_inner_sn" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result property="image_inner_sn" column="image_inner_sn"/><!-- 图片内部编号  -->
+		<result property="type" column="type"/><!-- 类别 -->
+		<result property="begin_date" column="begin_date"/><!-- 开始日期 -->
+		<result property="end_date" column="end_date"/><!-- 截止日期 -->
+		<result property="url" column="url"/><!-- 统一资源定位符  -->
+	</resultMap>
+	
+	<sql id="selectCertImage">
+        select dealer_inner_sn, product_inner_sn, image_inner_sn, type, url, begin_date, end_date
+		from dealer_product_image
+    </sql>
+    
+	<select id="selectCertImageList" parameterType="DealerProductRelImage" resultMap="ImageResult">
+		<include refid="selectCertImage"/>
+		where dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn} 
+		<if test="type != null">and type=#{type}</if>
+	</select>
+	
+	<select id="selectCertImageList1" parameterType="map" resultType="ProductRelImage">
+		select dealer_inner_sn as vendor_inner_sn, product_inner_sn, image_inner_sn, type, url, begin_date, end_date
+		from dealer_product_image
+		where dealer_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} 
+		<if test="type != null">and type=#{type}</if>
+	</select>
+	
+	<select id="selectCertImageInfo" parameterType="DealerProductRelImage" resultMap="ImageResult">
+		<include refid="selectCertImage"/>
+		where dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn} and image_inner_sn = #{image_inner_sn} and type=#{type}
+	</select>
+	
+	<select id="d_add_dealer_product_image" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call d_add_dealer_product_image(
+            #{dealer_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{type_i,mode=IN},
+            #{begin_date_i,mode=IN},
+            #{end_date_i,mode=IN},
+            #{url_i,mode=IN},
+            #{image_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<delete id="deleteProductImage" parameterType="map">
+		delete from dealer_product_image 
+		where dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn} 
+			and type=#{type} and image_inner_sn = #{image_inner_sn}
+	</delete>
+	
+	<!-- 产品型号规格 -->
+	<resultMap type="DealerProductSpecification" id="SpecResult">
+		<result property="dealer_inner_sn" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号  -->
+		<result property="status" column="status"/><!-- 状态 -->
+		<result property="is_delete" column="is_delete"/><!-- 已删除 -->
+		<result property="specification" column="specification"/><!-- 型号规格*  -->
+		<result property="common_use_unit_inner_sn" column="common_use_unit_inner_sn"/><!-- 常用单位内部编号 -->
+		<result property="common_use_unit" column="common_use_unit"/><!-- 常用单位(冗余)  -->
+	</resultMap>
+	
+	<sql id="selectSpec">
+        select dealer_inner_sn, product_inner_sn, specification_inner_sn, status, specification, common_use_unit_inner_sn, common_use_unit
+		from dealer_product_specification
+    </sql>
+    
+	<select id="selectDealerProductSpecListById" parameterType="DealerProductSpecification" resultMap="SpecResult">
+		<include refid="selectSpec"/>
+		where is_delete=0
+			and dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn}
+			<if test="status != null">and status = #{status}</if>
+	</select>
+	
+	<select id="selectProductSpecListById" parameterType="map" resultType="ProductSpecification">
+		select dealer_inner_sn as vendor_inner_sn, product_inner_sn, specification_inner_sn, status, specification, common_use_unit_inner_sn, common_use_unit
+		from dealer_product_specification
+		where is_delete=0
+			and dealer_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+			<if test="status != null">and status = #{status}</if>
+	</select>
+	
+	<select id="selectDealerProductSpecInfoById" parameterType="DealerProductSpecification" resultMap="SpecResult">
+		<include refid="selectSpec"/>
+		where is_delete=0
+			and dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn} and specification_inner_sn = #{specification_inner_sn}
+			<if test="status != null">and status = #{status}</if>
+	</select>
+	
+	<select id="d_add_dealer_product_specification" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call d_add_dealer_product_specification(
+            #{dealer_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{specification_i,mode=IN},
+            #{status_i,mode=IN},
+            #{specification_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<update id="updateDealerProductSpec" parameterType="DealerProductSpecification">
+		update dealer_product_specification
+		<set>
+			<if test="specification != null and specification != ''">specification = #{specification},</if>
+			<if test="common_use_unit_inner_sn != null ">common_use_unit_inner_sn = #{common_use_unit_inner_sn},</if>
+			<if test="common_use_unit != null ">common_use_unit = #{common_use_unit},</if>
+			<if test="status != null">status = #{status},</if>
+		</set>
+		where dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn} and specification_inner_sn = #{specification_inner_sn}
+	</update>
+	
+	<update id="cleanCommonUse" parameterType="DealerProductSpecification">
+		update dealer_product_specification set common_use_unit_inner_sn = null, common_use_unit=''
+		where dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn} and specification_inner_sn = #{specification_inner_sn}
+	</update>
+	
+	<update id="deleteDealerProductSpec" parameterType="DealerProductSpecification">
+	  update dealer_product_specification set is_delete = 1
+	  where dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn} and specification_inner_sn = #{specification_inner_sn}
+	</update>
+</mapper>

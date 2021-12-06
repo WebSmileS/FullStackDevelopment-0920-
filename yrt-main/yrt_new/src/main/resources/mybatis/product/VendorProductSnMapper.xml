@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.product.mapper.VendorProductSnMapper">
+
+	<!-- 医保编号 -->
+	<select id="insertHealthCaseSn" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true">
+		call p_add_product_vendor_health_care_sn(
+            #{vendor_inner_sn,mode=IN},
+            #{product_inner_sn,mode=IN},
+            #{specification_inner_sn,mode=IN},
+            #{org_id,mode=IN},
+            #{sn,mode=IN},
+            #{is_default,mode=IN},
+            #{health_care_sn_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<update id="updateHealthCaseSn" parameterType="map">
+        update product_vendor_health_care_sn
+        <set>
+ 			<if test="sn != null">health_care_sn = #{sn},</if>
+ 			<if test="is_default != null">is_default = #{is_default}</if>
+ 		</set>
+ 		where sell_vendor_inner_sn = #{org_id}
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn_inner_sn != null">and health_care_sn_inner_sn = #{sn_inner_sn}</if>
+    </update>
+    
+    <update id="updateNotDefaultHealthCaseSn" parameterType="map">
+        update product_vendor_health_care_sn set is_default = 0
+ 		where sell_vendor_inner_sn = #{org_id}
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn_inner_sn != null">and health_care_sn_inner_sn != #{sn_inner_sn}</if>
+    </update>
+    
+    <delete id="trueDeleteHealthCaseSn"  parameterType="map">
+    	delete from product_vendor_health_care_sn
+    	where sell_vendor_inner_sn = #{org_id}
+			and vendor_inner_sn = #{vendor_inner_sn}
+			and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn}
+			<if test="sn_inner_sn != null">and health_care_sn_inner_sn = #{sn_inner_sn}</if>
+    </delete>
+    
+	<select id="selectDefaultHealthCaseSn" parameterType="map" resultType="string">
+		SELECT IFNULL(health_care_sn,'')
+		FROM product_vendor_health_care_sn
+		WHERE sell_vendor_inner_sn = #{org_id} and is_default = 1
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn_inner_sn != null">and health_care_sn_inner_sn = #{sn_inner_sn}</if>
+		limit 1
+	</select>
+	
+    <select id="selectHealthCaseSnList" parameterType="map" resultType="ProductSn">
+		SELECT vendor_inner_sn, product_inner_sn, specification_inner_sn, is_default, 'HEALTH_CARE_SN' as type, health_care_sn_inner_sn as sn_inner_sn, health_care_sn as sn
+		FROM product_vendor_health_care_sn
+		WHERE sell_vendor_inner_sn = #{org_id}
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn_inner_sn != null">and health_care_sn_inner_sn = #{sn_inner_sn}</if>
+		<if test="sn != null">and health_care_sn = #{sn}</if>
+	</select>
+	
+	<select id="existHealthCaseSn" parameterType="map" resultType="long">
+		SELECT health_care_sn_inner_sn
+		FROM product_vendor_health_care_sn
+		WHERE sell_vendor_inner_sn = #{org_id}
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn != null and sn != ''">and health_care_sn = #{sn}</if>
+	</select>
+    
+	<!-- 阳光流水号 -->
+	<select id="insertSunSn" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true">
+		call p_add_product_vendor_sun_sn(
+            #{vendor_inner_sn,mode=IN},
+            #{product_inner_sn,mode=IN},
+            #{specification_inner_sn,mode=IN},
+            #{org_id,mode=IN},
+            #{sn,mode=IN},
+            #{is_default,mode=IN},
+            #{sun_sn_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<update id="updateSunSn" parameterType="map">
+        update product_vendor_sun_sn
+        <set>
+ 			<if test="sn != null">sun_sn = #{sn},</if>
+ 			<if test="is_default != null">is_default = #{is_default}</if>
+ 		</set>
+ 		where sell_vendor_inner_sn = #{org_id}
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn_inner_sn != null">and sun_sn_inner_sn = #{sn_inner_sn}</if>
+    </update>
+    
+    <update id="updateNotDefaultSunSn" parameterType="map">
+        update product_vendor_sun_sn set is_default = 0
+ 		where sell_vendor_inner_sn = #{org_id}
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn_inner_sn != null">and sun_sn_inner_sn != #{sn_inner_sn}</if>
+    </update>
+    
+    <delete id="trueDeleteSunSn"  parameterType="map">
+    	delete from product_vendor_sun_sn
+    	where  sell_vendor_inner_sn = #{org_id}
+			and vendor_inner_sn = #{vendor_inner_sn}
+			and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn}
+			<if test="sn_inner_sn != null">and sun_sn_inner_sn = #{sn_inner_sn}</if>
+    </delete>
+    
+    <select id="selectDefaultSunSn" parameterType="map" resultType="string">
+		SELECT IFNULL(sun_sn,'')
+		FROM product_vendor_sun_sn
+		WHERE sell_vendor_inner_sn = #{org_id} and is_default = 1
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn_inner_sn != null">and sun_sn_inner_sn = #{sn_inner_sn}</if>
+		limit 1
+	</select>
+	
+    <select id="selectSunSnList" parameterType="map" resultType="ProductSn">
+		SELECT vendor_inner_sn, product_inner_sn, specification_inner_sn, is_default, 'SUN_SN' as type, sun_sn_inner_sn as sn_inner_sn, sun_sn as sn
+		FROM product_vendor_sun_sn
+		WHERE sell_vendor_inner_sn = #{org_id}
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn_inner_sn != null">and sun_sn_inner_sn = #{sn_inner_sn}</if>
+		<if test="sn != null">and sun_sn = #{sn}</if>
+	</select>
+	
+	<select id="existSunSn" parameterType="map" resultType="long">
+		SELECT sun_sn_inner_sn
+		FROM product_vendor_sun_sn
+		WHERE sell_vendor_inner_sn = #{org_id}
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="sn != null and sn != ''">and sun_sn = #{sn}</if>
+	</select>
+	
+</mapper>

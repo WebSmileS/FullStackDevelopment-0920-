@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.inquiry.mapper.HospitalVendorInquiryMapper">
+
+	<resultMap type="Inquiry" id="InquiryResult">
+		<result  property="partA" column="hospital_inner_sn"/><!-- 医院内部编号 -->
+		<result  property="partA_name" column="hospital_name"/><!-- 医院名称 -->
+		<result  property="partB" column="vendor_inner_sn"/><!-- 厂商内部编号 -->
+		<result  property="partB_name" column="vendor_name"/><!-- 厂商名称 -->
+		<result  property="ilps_inner_sn" column="ilps_inner_sn"/><!-- 询价单内部编号 -->
+		<result  property="inquirer_inner_sn" column="inquirer_inner_sn"/><!-- 询价人内部编号 -->
+		<result  property="inquirer_name" column="inquirer_name"/><!-- 询价人名字 -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<result property="ask_time" column="ask_time"/><!-- 询价时间  -->
+		<result property="answer_time" column="answer_time"/><!-- 答复时间  -->
+		<result property="ilps_sn" column="ilps_sn"/><!-- 询价单编号  -->
+		<result property="contacts" column="contacts"/><!-- 联系人  -->
+		<result property="phone" column="phone"/><!-- 电话 -->
+		<result property="description" column="description"/><!-- 描述  -->
+		<result property="billsType" column="billsType"/><!-- 单据类型  0-DealerDealer 1-DealerVendor 2-DealerHospital 3-HospitalHospital 4-hospitalDealer 5-hospitalVendor -->
+	</resultMap>
+	
+	<sql id="selectHospitalVendorInquiry">
+		select c.hospital_inner_sn, h.name as hospital_name, c.vendor_inner_sn, d.name as vendor_name, c.ilps_inner_sn, c.inquirer_inner_sn ,e.login_name as inquirer_name,
+			c.status, c.ask_time, c.answer_time, c.ilps_sn, c.contacts, c.phone, c.description, 5 as billsType
+		from hospital_vendor_ilps c
+		inner join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		inner join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join user_v e on c.inquirer_inner_sn = e.user_inner_sn
+	</sql>
+
+	<select id="searchInquiry" parameterType="map" resultMap="InquiryResult">
+		<include refid="selectHospitalVendorInquiry"/>
+		where 1=1
+		<if test="partA != null">and c.hospital_inner_sn= #{partA}</if>
+		<if test="partB != null">and c.vendor_inner_sn= #{partB}</if>
+		<if test="status != null">and c.status in(${status})</if>
+		<if test="key != null and key != ''">and (h.name like concat('%', #{key}, '%') or d.name like concat('%', #{key}, '%') or c.ilps_sn like concat('%', #{key}, '%'))</if>
+	</select>
+	
+	<select id="selectInquiryInfo" parameterType="Inquiry" resultMap="InquiryResult">
+		<include refid="selectHospitalVendorInquiry"/>
+		where 1=1
+		<if test="partA != null">and c.hospital_inner_sn= #{partA}</if>
+		<if test="ilps_inner_sn != null">and c.ilps_inner_sn = #{ilps_inner_sn}</if>
+	</select>
+	
+	<select id="h_add_hospital_vendor_il" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		 call h_add_hospital_vendor_ilps(
+	 		#{hospital_inner_sn_i, mode=IN},
+			#{vendor_inner_sn_i, mode=IN},
+			#{status_i, mode=IN},
+			#{ask_time_i, mode=IN},
+			#{ilps_sn_i, mode=IN},
+			#{contacts_i, mode=IN},
+			#{phone_i, mode=IN},
+			#{description_i, mode=IN},
+			#{ilps_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+ 	    )
+	</select>
+	
+	<update id = "updateInquiry" parameterType = "map">
+		update hospital_vendor_ilps
+		<set>
+			<if test="partB != null"> vendor_inner_sn = #{partB},</if>
+			<if test="status != null"> status = #{status},</if>
+			<if test="ask_time != null "> ask_time = #{ask_time},</if>
+			<if test="answer_time != null "> answer_time = #{answer_time},</if>
+			<if test="ilps_sn != null "> ilps_sn = #{ilps_sn},</if>
+			<if test="sign_date != null "> sign_date = #{sign_date},</if>
+			<if test="contacts != null"> contacts = #{contacts},</if>
+			<if test="phone != null"> phone = #{phone},</if>
+			<if test="description != null"> description = #{description},</if>
+		</set>
+		where hospital_inner_sn = #{partA}
+			and ilps_inner_sn = #{ilps_inner_sn}
+	</update>	
+	
+	<delete id = "deleteInquiry" parameterType = "map">
+		delete from hospital_vendor_ilps
+		where hospital_inner_sn = #{partA}
+			and ilps_inner_sn = #{ilps_inner_sn}
+	</delete>
+	
+	<resultMap type="InquiryDetail" id="InquiryDetailResult">
+		<result  property="partA" column="hospital_inner_sn"/><!-- 经销商内部编号 -->
+		<result  property="vendor_inner_sn" column="product_vendor_inner_sn"/><!-- (产品)厂商内部编号 -->
+		<result  property="vendor_name" column="product_vendor_name"/><!-- (产品)厂商名称 -->
+		<result  property="ilps_inner_sn" column="ilps_inner_sn"/><!-- 询价单内部编号 -->
+		<result  property="detail_inner_sn" column="detail_inner_sn"/><!-- 明细内部编号 -->
+		<result  property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result property="product_name" column="product_name"/>
+		<result property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号  -->
+		<result property="specification" column="specification"/>
+		<result property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号  -->
+		<result property="unit_name" column="unit_name"/>
+		<result property="quantity" column="quantity"/><!-- 数量  -->
+		<result property="unit_price" column="unit_price"/><!-- 单价  -->
+		<result property="discount" column="discount"/><!-- 折扣  -->
+		<result property="rate" column="rate"/><!-- 税率 -->
+		<result property="sort_number" column="sort_number"/><!-- 排序号  -->
+		<result property="billsType" column="billsType"/><!-- 单据类型  0-DealerDealer 1-DealerVendor 2-DealerHospital 3-HospitalHospital 4-hospitalDealer 5-hospitalVendor -->
+	</resultMap>
+	
+	<sql id="selectInquiryDetail">
+		select c.hospital_inner_sn, c.ilps_inner_sn, c.detail_inner_sn, c.product_vendor_inner_sn, c.product_vendor_name, 
+		        c.product_inner_sn, c.product_name, c.specification_inner_sn, c.specification, c.unit_inner_sn, c.unit as unit_name,
+		        c.quantity/1000 as quantity, c.unit_price/10000 as unit_price, c.discount, c.rate, c.sort_number, 5 as billsType
+		from hospital_vendor_ilps_product_detail c
+		inner join hospital d on d.hospital_inner_sn = c.hospital_inner_sn
+	</sql>
+	
+	<select id="selectInquiryDetailList" parameterType="InquiryDetail" resultMap="InquiryDetailResult">
+		<include refid="selectInquiryDetail"/>
+		where 1=1
+		<if test="partA != null">and c.hospital_inner_sn= #{partA}</if>
+		<if test="ilps_inner_sn != null">and c.ilps_inner_sn =#{ilps_inner_sn}</if>
+	</select>
+	
+	<select id="h_add_hospital_vendor_il_product_detail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call h_add_hospital_vendor_ilps_product_detail(
+			#{hospital_inner_sn_i, mode=IN},
+			#{ilps_inner_sn_i, mode=IN},
+			#{product_vendor_inner_sn_i, mode=IN},
+			#{product_inner_sn_i, mode=IN},
+			#{specification_inner_sn_i, mode=IN},
+			#{unit_inner_sn_i, mode=IN},
+			#{quantity_i, mode=IN},
+			#{unit_price_i, mode=IN},
+			#{discount_i, mode=IN},
+			#{rate_i, mode=IN},
+			#{sort_number_i, mode=IN},
+			#{product_name_i, mode=IN},
+			#{specification_i, mode=IN},
+			#{unit_i, mode=IN},
+			#{product_vendor_name_i, mode=IN},
+			#{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<update id = "updateInquiryDetail" parameterType = "InquiryDetail">
+		update hospital_vendor_ilps_product_detail
+		<set>
+			<if test="unit_inner_sn != null"> unit_inner_sn = #{unit_inner_sn},</if>
+			<if test="quantity != null "> quantity = #{quantity},</if>
+			<if test="unit_price != null "> unit_price = #{unit_price},</if>
+			<if test="discount != null "> discount = #{discount},</if>
+			<if test="rate != null "> rate = #{rate},</if>
+			<if test="sort_number != null"> sort_number = #{sort_number},</if>
+		</set>
+		where hospital_inner_sn = #{partA}
+			and ilps_inner_sn = #{ilps_inner_sn}
+			and detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<delete id = "deleteInquiryDetail" parameterType = "map">
+		delete from hospital_vendor_ilps_product_detail
+		where hospital_inner_sn = #{partA}
+	 		and ilps_inner_sn = #{ilps_inner_sn}
+	 		<if test="detail_inner_sn !=null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</delete>
+	
+	<!-- 获取厂商产品列表(平台所有发布产品) -->
+	<select id="selectVendorProductList" parameterType="map" resultType="map">
+		select ps.vendor_inner_sn, v.name as vendor_name, ps.product_inner_sn, 
+		p.name, ps.specification_inner_sn, ps.specification, p.newest_register_sn as register_sn, 
+		1 as product_type, ps.specification_vendor_sn
+		from product_specification ps
+		left join  product p on ps.vendor_inner_sn=p.vendor_inner_sn and ps.product_inner_sn=p.product_inner_sn  
+		left join vendor v on v.vendor_inner_sn=ps.vendor_inner_sn
+		where 1=1
+			and p.release_status = 1  and p.status = 1 and p.is_delete = 0
+	        and ps.status = 1
+	        and ps.is_delete = 0
+	        <if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+	        <if test="type_inner_sn == null">and p.type_inner_sn = 1</if>
+	        <if test="vendor_inner_sn !=null">and ps.vendor_inner_sn = #{vendor_inner_sn}</if>
+	        <if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+			<if test="product_name != null and product_name != ''">and (p.name like concat('%', #{product_name}, '%') OR p.pinyin like concat('%', #{product_name}, '%'))</if>
+	</select>
+	
+	<select id="selectRelatedHospitalList" parameterType="map" resultType="map">
+		select hospital_inner_sn as org_id, name as org_name, social_credit_code, 'HV' as billsType,
+			case when certification_status = 2 then '已认证' else '未认证' end as status
+		from hospital
+		where 1=1 and is_delete=0 and (social_credit_code = 2 or data_source = 0)
+			<if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
+			<if test="is_certifie">and certification_status=2</if>
+	</select>
+</mapper>

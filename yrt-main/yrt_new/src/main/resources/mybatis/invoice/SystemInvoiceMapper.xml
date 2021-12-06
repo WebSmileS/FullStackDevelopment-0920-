@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.invoice.mapper.SystemInvoiceMapper">
+
+	<select id="selectSystemInvoiceList" parameterType="map" resultType="SystemInvoice">
+		SELECT
+		    id, org_id, system_type, system_invoice_type, organization_inner_sn, organization_name,
+		    handler_inner_sn, handler_name, department_inner_sn, department_name, bills_type,
+		    system_invoice_sn, invoice_no, invoice_date, rate, invoice_price, written_off_price, description, cancel_reason,
+		    invoice_type, invoice_status, is_cancel, created_by, created_time, confirm_by, confirm_time,
+		    cancel_by, cancel_time
+		FROM system_invoice
+		WHERE 1 = 1
+			and org_id = #{org_id} AND system_type = #{system_type} AND system_invoice_type = #{system_invoice_type}
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn}</if>
+			<if test="bills_type != null">and bills_type = #{bills_type}</if>
+			<if test="invoice_no != null and invoice_no != ''">and invoice_no like concat('%', #{invoice_no}, '%')</if>
+			<if test="invoice_status != null">and invoice_status in (${invoice_status})</if>
+			<if test="is_cancel != null">and is_cancel = #{is_cancel}</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+	</select>
+	
+	<select id="selectSystemInvoiceDetailList" parameterType="map" resultType="SystemInvoiceDetail">
+		SELECT
+		    id, system_invoice_id, product_vendor_inner_sn, product_inner_sn, specification_inner_sn,
+		    unit_inner_sn, batch_number, product_vendor_name, product_name, specification, unit,
+		    unit_price, quantity, rate, invoiced_quantity, remarks, product_type, voucher_type_c,
+		    voucher_inner_sn_c, voucher_detail_inner_sn_c
+		FROM system_invoice_detail
+		where 1=1
+			and system_invoice_id = #{system_invoice_id}
+	</select>
+	
+	<select id="selectSystemInvoiceInfo" parameterType="map" resultType="SystemInvoice">
+		SELECT
+		    id, org_id, system_type, system_invoice_type, organization_inner_sn, organization_name,
+		    handler_inner_sn, handler_name, department_inner_sn, department_name, bills_type,
+		    system_invoice_sn, invoice_no, invoice_date, rate, invoice_price, written_off_price, description, cancel_reason,
+		    invoice_type, invoice_status, is_cancel, created_by, created_time, confirm_by, confirm_time,
+		    cancel_by, cancel_time
+		FROM system_invoice
+		WHERE 1 = 1
+			and id = #{id}
+	</select>
+	
+	<insert id="insertSystemInvoice" parameterType="SystemInvoice">
+		INSERT INTO system_invoice (
+        	id, org_id, system_type, system_invoice_type, organization_inner_sn, organization_name, handler_inner_sn,
+        	handler_name, department_inner_sn, department_name, bills_type, system_invoice_sn, invoice_no, invoice_date,
+        	rate, invoice_price, description, cancel_reason, invoice_type, invoice_status, is_cancel, created_by,
+        	created_time, confirm_by, confirm_time, cancel_by, cancel_time
+	    ) VALUES (
+	        #{id}, #{org_id}, #{system_type}, #{system_invoice_type}, #{organization_inner_sn}, #{organization_name}, #{handler_inner_sn},
+	        #{handler_name}, #{department_inner_sn}, #{department_name}, #{bills_type}, #{system_invoice_sn}, #{invoice_no}, #{invoice_date},
+	        #{rate}, #{invoice_price}, #{description}, #{cancel_reason}, #{invoice_type}, #{invoice_status}, 0, #{created_by},
+	        now(), #{confirm_by}, #{confirm_time}, #{cancel_by}, #{cancel_time}
+	    )
+	</insert>
+	
+	<update id="updateSystemInvoice" parameterType="map">
+		update system_invoice
+		<set>
+			<if test="organization_inner_sn != null">organization_inner_sn = #{organization_inner_sn},</if>
+			<if test="organization_name != null and organization_name != ''">organization_name = #{organization_name},</if>
+			<if test="handler_inner_sn != null">handler_inner_sn = #{handler_inner_sn},</if>
+			<if test="handler_inner_sn == -1">handler_inner_sn = null,</if>
+			<if test="handler_name != null">handler_name = #{handler_name},</if>
+			<if test="department_inner_sn != null">department_inner_sn = #{department_inner_sn},</if>
+			<if test="department_inner_sn == -1">department_inner_sn = null,</if>
+			<if test="department_name != null">department_name = #{department_name},</if>
+			<if test="bills_type != null">bills_type = #{bills_type},</if>
+			<if test="invoice_no != null and invoice_no != ''">invoice_no = #{invoice_no},</if>
+			<if test="invoice_date != null">invoice_date = #{invoice_date},</if>
+			<if test="rate != null">rate = #{rate},</if>
+			<if test="invoice_price != null">invoice_price = #{invoice_price},</if>
+			<if test="written_off_price != null">written_off_price = #{written_off_price},</if>
+			<if test="description != null and description != ''">description = #{description},</if>
+			<if test="cancel_reason != null and cancel_reason != ''">cancel_reason = #{cancel_reason},</if>
+			<if test="invoice_type != null">invoice_type = #{invoice_type},</if>
+			<if test="invoice_status != null">invoice_status = #{invoice_status},</if>
+			<if test="is_cancel != null">is_cancel = #{is_cancel},</if>
+			<if test="confirm_by != null and confirm_by != ''">confirm_by = #{confirm_by},</if>
+			<if test="confirm_time != null">confirm_time = #{confirm_time},</if>
+			<if test="cancel_by != null and cancel_by != ''">cancel_by = #{cancel_by},</if>
+			<if test="cancel_time != null">cancel_time = #{cancel_time},</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="deteleSystemInvoice" parameterType="map">
+		delete from system_invoice 
+		where id = #{id}
+	</delete>
+	
+	<insert id="insertSystemInvoiceDetail" parameterType="map">
+		INSERT INTO system_invoice_detail (
+	        id, system_invoice_id, product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn,
+	        batch_number, product_vendor_name, product_name, specification, unit, unit_price, quantity, rate,
+	        invoiced_quantity, remarks, product_type, voucher_type_c, voucher_inner_sn_c, voucher_detail_inner_sn_c
+	    ) VALUES (
+	        #{id}, #{system_invoice_id}, #{product_vendor_inner_sn}, #{product_inner_sn}, #{specification_inner_sn}, #{unit_inner_sn},
+	        #{batch_number}, #{product_vendor_name}, #{product_name}, #{specification}, #{unit}, #{unit_price}, #{quantity}, #{rate},
+	        #{invoiced_quantity}, #{remarks}, #{product_type}, #{voucher_type_c}, #{voucher_inner_sn_c}, #{voucher_detail_inner_sn_c}
+	    )
+	</insert>
+	
+	<delete id="deteleSystemInvoiceDetail" parameterType="map">
+		delete from system_invoice_detail 
+		where system_invoice_id = #{system_invoice_id}
+	</delete>
+</mapper> 

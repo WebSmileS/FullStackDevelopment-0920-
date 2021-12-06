@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.GrnNoticeMapper">
+
+	<insert id="insertGrnNotice" parameterType="map">
+ 		INSERT INTO grn_notice (
+	        id,
+	        org_id,
+	        notice_id,
+	        dealer_inner_sn,
+	        dealer_name,
+	        sales_company_name,
+	        grn_inner_sn,
+	        sn,
+	        warehouse_name,
+	        bills_type,
+	        product_vendor_inner_sn,
+	        product_inner_sn,
+	        specification_inner_sn,
+	        unit_inner_sn,
+	        mdrf_inner_sn,
+	        product_vendor_name,
+	        product_name,
+	        specification,
+	        unit,
+	        mdrf_sn,
+	        batch_number,
+	        unit_price,
+	        quantity,
+	        rate,
+	        produce_date,
+	        overdue_date,
+	        product_type,
+	        status,
+	        created_by,
+	        created_time,
+	        confirm_by,
+	        confirm_time
+	    ) VALUES
+	    (
+	        #{id},
+	        #{org_id},
+	        #{notice_id},
+	        #{dealer_inner_sn},
+	        #{dealer_name},
+	        #{sales_company_name},
+	        #{grn_inner_sn},
+	        #{sn},
+	        #{warehouse_name},
+	        #{bills_type},
+	        #{product_vendor_inner_sn},
+	        #{product_inner_sn},
+	        #{specification_inner_sn},
+	        #{unit_inner_sn},
+	        #{mdrf_inner_sn},
+	        #{product_vendor_name},
+	        #{product_name},
+	        #{specification},
+	        #{unit},
+	        #{mdrf_sn},
+	        #{batch_number},
+	        #{unit_price}*10000,
+	        #{quantity}*1000,
+	        #{rate},
+	        #{produce_date},
+	        #{overdue_date},
+	        #{product_type},
+	        #{status},
+	        #{created_by},
+	        #{created_time},
+	        #{confirm_by},
+	        #{confirm_time}
+	    )
+	</insert>
+	
+	<update id="updateGrnNotice" parameterType="map">
+		UPDATE grn_notice
+		<set>
+		    <if test="status != null">status = #{status},</if>
+		    <if test="confirm_by != null and confirm_by != ''">confirm_by = #{confirm_by},</if>
+		    <if test="confirm_time != null">confirm_time = #{confirm_time},</if>
+		</set>
+		WHERE
+		    id = #{id}
+	</update>
+	
+	<delete id="deleteGrnNotice" parameterType="map">
+		delete from grn_notice where id = #{id}
+	</delete>
+ 	
+	<select id="selectGrnNoticeList" parameterType="map" resultType="GrnNotice">
+		SELECT
+		    id, org_id, notice_id, dealer_inner_sn, dealer_name, sales_company_name,
+		    grn_inner_sn, sn, warehouse_name, bills_type, product_vendor_inner_sn,
+		    product_inner_sn, specification_inner_sn, unit_inner_sn, mdrf_inner_sn,
+		    product_vendor_name, product_name, specification, unit, mdrf_sn,
+		    batch_number, unit_price/10000 as unit_price, quantity/1000 as quantity, rate, produce_date, overdue_date,
+		    product_type, status, created_by, created_time, confirm_by, confirm_time
+		FROM grn_notice
+		WHERE org_id = #{org_id}
+		<if test="dealer_name != null and dealer_name != ''">and dealer_name like concat('%', #{dealer_name}, '%')</if>
+		<if test="company_name != null and company_name != ''">and sales_company_name like concat('%', #{company_name}, '%')</if>
+		<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+		<if test="status != null">and status in (${status})</if>
+		<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+		<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+		ORDER BY created_time DESC
+	</select>
+	
+</mapper>

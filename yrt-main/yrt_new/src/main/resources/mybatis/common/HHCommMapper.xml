@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.common.mapper.HHCommMapper">
+	
+	<!-- 获取医院列表(只包含机构ID，机构名称和入库单类型字段)  -->
+	<select id="selectAllOrg4DropDownList" parameterType="map" resultType="map">
+		SELECT
+			hospital_inner_sn as org_id, name, alias, social_credit_code, 'HH' as billsType,
+			case when certification_status = 2 then '已认证' else '未认证' end as status
+		FROM hospital
+		WHERE 1=1
+	        AND hospital_inner_sn = #{id}
+	        AND status=1
+	        AND is_delete = 0
+	        <if test="name != null">and name like concat('%', #{name}, '%')</if>
+	</select>
+	
+	<select id="selectRelatedOrg4DropDownList" parameterType="map" resultType="map">
+		SELECT
+			hospital_inner_sn as org_id, name, alias, social_credit_code, 'HH' as billsType,
+			case when certification_status = 2 then '已认证' else '未认证' end as status
+		FROM hospital
+		WHERE 1=1
+	        AND hospital_inner_sn = #{id}
+	        AND status=1
+	        AND is_delete = 0
+	        <if test="name != null">and name like concat('%', #{name}, '%')</if>
+	</select>
+	
+	<!-- 获取仓库人员 -->
+	<select id="selectWarehouseEmployeeList" parameterType="map" resultType="map">
+		select distinct m.employee_inner_sn, e.name as employee_name
+		from hospital_employee_hospital_warehouse_model m
+		INNER join hospital_employee e using(hospital_inner_sn, employee_inner_sn)
+		where 1=1
+			AND e.status in (0,1)
+			AND e.is_delete = 0
+			and m.hospital_inner_sn = #{org_id}
+			<if test="type != null">and m.type = #{type} </if>
+			<if test="warehouse_model_inner_sn != null">and m.warehouse_model_inner_sn in (${warehouse_model_inner_sn}) </if>
+	</select>
+</mapper>

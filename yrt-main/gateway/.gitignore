@@ -1,0 +1,54 @@
+# ---> Go
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+*.exe
+#可执行文件
+gateway
+
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
+*.exe
+*.test
+*.prof
+
+/vendor
+/views
+/db_ledis
+/docs
+.idea/
+
+__debug_bin
+.DS_Store
+gateway2020031301
+gateway2020031701
+swagger.json
+yrtapp/.DS_Store
+yrtapp/android2.png
+yrtapp/appdown_2wei.png
+yrtapp/appdown_banner.png
+yrtapp/appdown_logo.png
+yrtapp/h.tar
+yrtapp/hi.txt
+yrtapp/index.html
+yrtapp/ios2.png
+yrtapp/style2.css
+__debug_bin
+swagger.json
+__debug_bin
+.DS_Store

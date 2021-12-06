@@ -1,0 +1,859 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.organization.mapper.DealerMapper">
+
+	<resultMap type="Company" id="CompanyResult">
+		<id      property="id" column="dealer_inner_sn"/>
+		<result  property="certifie_employee_inner_sn" column="certifie_employee_inner_sn"/><!-- 认证员工内部编号 -->
+		<result  property="certifie_employee_name" column="certifie_employee_name"/><!-- 认证员工内部编号 -->
+		<result property="administrative_division_sn" column="administrative_division_sn"/><!-- 行政区划代码 -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<!-- <result property="is_delete" column="is_delete"/> --><!-- 已删除  -->
+		<result  property="data_source" column="data_source"/><!-- 数据来源 -->
+		<result  property="certification_status" column="certification_status"/><!-- 机构认证状态 -->
+		<result  property="enterprise_type" column="enterprise_type"/><!-- 机构认证状态 -->
+		<result  property="establish_date" column="establish_date"/><!-- 机构认证状态 -->
+		<result  property="certifie_time" column="certifie_time"/><!-- 认证时间 -->
+		<result  property="register_time" column="register_time"/><!-- 注册时间 -->
+		<result  property="social_credit_code" column="social_credit_code"/><!-- 统一社会信用代码 -->
+		<result property="name" column="name"/><!-- 名称* -->
+		<result property="alias" column="alias"/><!-- 别名 -->
+		<result property="legal_representative" column="legal_representative"/><!-- 法定代表人 -->
+		<result property="principal" column="principal"/><!-- 企业负责人 -->
+		<result property="registered_capital" column="registered_capital"/><!-- 注册资本 -->
+		<result property="address" column="address"/><!-- 地址 -->
+		<result property="bank_name" column="bank_name"/><!-- 银行名称 -->
+		<result property="bank_account" column="bank_account"/><!-- 银行账号 -->
+		<result property="phone" column="phone"/><!-- 电话 -->
+		<result property="email" column="email"/><!-- 电子邮件 -->
+		<result property="description" column="description"/><!-- 描述 -->
+	</resultMap>
+	
+	<sql id="selectOrg">
+		select d.dealer_inner_sn, d.administrative_division_sn, d.certifie_employee_inner_sn, e.name as certifie_employee_name, d.status, d.data_source, d.certification_status, d.enterprise_type, 
+        	d.establish_date, d.register_time, d.certifie_time, d.social_credit_code, d.name, d.legal_representative, d.principal, d.address, d.registered_capital, 
+        	d.bank_name, d.bank_account, d.phone, d.email, d.description
+		from dealer d
+		left join platform_employee e on e.employee_inner_sn = d.certifie_employee_inner_sn
+	</sql>
+	<select id="selectOrgInfo" parameterType="Long" resultMap="CompanyResult">
+		<include refid="selectOrg"/>
+		where d.dealer_inner_sn = #{id}
+	</select>
+	<select id="selectOrgById" parameterType="Long" resultType="Company">
+		select d.dealer_inner_sn as id, d.administrative_division_sn, d.certifie_employee_inner_sn, e.name as certifie_employee_name, d.status, d.data_source, d.certification_status, d.enterprise_type, 
+        	d.establish_date, d.register_time, d.certifie_time, d.social_credit_code, d.name, d.legal_representative, d.principal, d.address, d.registered_capital, 
+        	d.bank_name, d.bank_account, d.phone, d.email, d.description
+		from dealer d
+		left join platform_employee e on e.employee_inner_sn = d.certifie_employee_inner_sn
+		where d.dealer_inner_sn = #{id}
+	</select>
+	<select id="selectOrgList" parameterType="Company" resultMap="CompanyResult" >
+		<include refid="selectOrg"/>
+		where 1=1 and d.is_delete = 0
+		<if test="status != null"> and d.status = #{status}</if>
+	</select>
+	<select id="searchOrgList" parameterType="SearchForm" resultMap="CompanyResult">
+		<include refid="selectOrg"/>
+		where 1=1
+		<if test="administrative_division_sn != null">and d.administrative_division_sn like concat(TRIM(trailing '00' from #{administrative_division_sn}), '%')</if>
+		<if test="status != null">and d.status = #{status}</if>
+		<if test="is_delete != null">and d.is_delete = #{is_delete}</if>
+		<if test="begin_time != null">AND date_format(d.register_time,'%y%m%d') &gt;= date_format(#{begin_time},'%y%m%d')</if>
+		<if test="end_time != null">AND date_format(d.register_time,'%y%m%d') &lt;= date_format(#{end_time},'%y%m%d')</if>
+		<if test="name != null and name != ''">and d.name like concat('%', #{name}, '%')</if>
+		<if test="social_credit_code != null and social_credit_code != ''">and d.social_credit_code like concat('%', #{social_credit_code}, '%')</if>
+		<if test="certification_status != null">and d.certification_status in (${certification_status})</if>
+	</select>
+	<select id="selectOrgByName" parameterType="String" resultMap="CompanyResult">
+		<include refid="selectOrg"/>
+		where 1=1
+		<if test="name != null and name != ''">and d.name = #{name}</if>
+	</select>
+	
+	<!-- 经销商获取合同厂商 -->
+	<select id="selectContractVendor" parameterType="map" resultType="map" >
+		select vendor_inner_sn as id, name, social_credit_code, enterprise_type,phone,email,status 
+		from Vendor v
+		where vendor_inner_sn in(
+			select distinct vendor_inner_sn from dealer_vendor_contract where dealer_inner_sn = #{id} and status in(4,7) and is_delete = 0 )
+			<if test="name != null and name != ''">and v.name like concat('%', #{name}, '%')</if>
+			<if test="social_credit_code != null and social_credit_code != ''">and v.social_credit_code like concat('%', #{social_credit_code}, '%')</if>
+			<if test="administrative_division_sn != null">and v.administrative_division_sn = #{administrative_division_sn}</if>
+	</select>
+	
+	<!-- 经销商获取合同医院 -->
+	<select id="selectContractHospital" parameterType="map" resultType="map" >
+		select hospital_inner_sn as id, name, social_credit_code, enterprise_type,phone,email,status, alias
+		from hospital h
+		where hospital_inner_sn in(
+			select distinct hospital_inner_sn from hospital_dealer_contract where dealer_inner_sn = #{id} and status in(4,7) and is_delete = 0 )
+			<if test="name != null and name != ''">and h.name like concat('%', #{name}, '%')</if>
+			<if test="social_credit_code != null and social_credit_code != ''">and h.social_credit_code like concat('%', #{social_credit_code}, '%')</if>
+			<if test="administrative_division_sn != null">and h.administrative_division_sn = #{administrative_division_sn}</if>
+	</select>
+	
+	<!-- 经销商获取合同经销商 -->
+	<select id="selectContractDealer" parameterType="map" resultType="map" >
+		select dealer_inner_sn as id, name, social_credit_code, enterprise_type,phone,email,status 
+		from dealer d
+		where dealer_inner_sn in(
+			select distinct dealer_b_inner_sn from dealer_dealer_contract where dealer_a_inner_sn = #{id} and status in(4,7) and is_delete = 0 )
+			<if test="name != null and name != ''">and d.name like concat('%', #{name}, '%')</if>
+			<if test="social_credit_code != null and social_credit_code != ''">and d.social_credit_code like concat('%', #{social_credit_code}, '%')</if>
+			<if test="administrative_division_sn != null">and d.administrative_division_sn = #{administrative_division_sn}</if>
+		union distinct
+		select dealer_inner_sn as id, name, social_credit_code, enterprise_type,phone,email,status 
+		from dealer d
+		where dealer_inner_sn in(
+			select distinct dealer_a_inner_sn from dealer_dealer_contract where dealer_b_inner_sn = #{id} and status in(4,7) and is_delete = 0 )
+			<if test="name != null and name != ''">and d.name like concat('%', #{name}, '%')</if>
+			<if test="social_credit_code != null and social_credit_code != ''">and d.social_credit_code like concat('%', #{social_credit_code}, '%')</if>
+			<if test="administrative_division_sn != null">and d.administrative_division_sn = #{administrative_division_sn}</if>
+	</select>
+	
+	<!-- 可用经销商列表下列专用 -->
+	<select id="selectOrgList4Dropdown" parameterType="SearchForm" resultType="map">
+		select dealer_inner_sn as org_id,2 AS org_type, name as org_name, social_credit_code, case when certification_status = 2 then '已认证' else '未认证' end as status
+		from dealer
+		where 1=1 and is_delete=0 and (social_credit_code = 2 or data_source = 0)
+			<if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
+			<if test="is_certifie">and certification_status=2</if>
+	</select>
+	
+	<insert id="insertOrg" parameterType="Company" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+	   	insert into dealer(administrative_division_sn, status, is_delete, data_source, certification_status, enterprise_type, establish_date, register_time,
+			social_credit_code, name, legal_representative, principal, address, registered_capital, bank_name, bank_account, phone, email, description)
+        values (
+        	#{administrative_division_sn}, 
+        	#{status}, 
+        	0,
+        	#{data_source},
+        	0,
+        	#{enterprise_type},
+        	#{establish_date},
+        	#{register_time},
+        	#{social_credit_code},
+        	#{name},
+        	#{legal_representative},
+        	#{principal},
+        	#{address},
+        	#{registered_capital},
+        	#{bank_name},
+        	#{bank_account},
+        	#{phone},
+        	#{email},
+        	#{description}
+       	)
+	</insert>
+	
+	<update id="updateOrg" parameterType="Company">
+		update dealer
+		<set>
+			<if test="administrative_division_sn != null">administrative_division_sn = #{administrative_division_sn},</if>
+ 			<if test="certifie_employee_inner_sn != null">certifie_employee_inner_sn = #{certifie_employee_inner_sn},</if>
+ 			<if test="status != null">status = #{status},</if>
+ 			<if test="data_source != null">data_source = #{data_source},</if>
+ 			<if test="certification_status != null">certification_status = #{certification_status},</if>
+ 			<if test="enterprise_type != null">enterprise_type = #{enterprise_type},</if>
+ 			<if test="establish_date != null">establish_date = #{establish_date},</if>
+ 			<if test="establish_date == null and establish_date_null == 1">establish_date = null,</if>
+ 			<if test="register_time != null">register_time = #{register_time},</if>
+ 			<if test="certifie_time != null">data_source = #{certifie_time},</if>
+ 			<if test="social_credit_code != null and social_credit_code != ''">social_credit_code = #{social_credit_code},</if>
+ 			<if test="name != null and name != ''">name = #{name},</if>
+ 			<if test="legal_representative != null">legal_representative = #{legal_representative},</if>
+ 			<if test="principal != null">principal = #{principal},</if>
+ 			<if test="address != null">address = #{address},</if>
+ 			<if test="registered_capital != null">registered_capital = #{registered_capital},</if>
+ 			<if test="bank_name != null">bank_name = #{bank_name},</if>
+ 			<if test="bank_account != null">bank_account = #{bank_account},</if>
+ 			<if test="phone != null">phone = #{phone},</if>
+ 			<if test="email != null">email = #{email},</if>
+ 			<if test="description != null">description = #{description},</if>
+		</set>
+		where dealer_inner_sn=#{id}
+	</update>
+	
+	<update id="updateOrg4Map" parameterType="map">
+		update dealer
+		<set>
+			<if test="administrative_division_sn != null">administrative_division_sn = #{administrative_division_sn},</if>
+ 			<if test="certifie_employee_inner_sn != null">certifie_employee_inner_sn = #{certifie_employee_inner_sn},</if>
+ 			<if test="status != null">status = #{status},</if>
+ 			<if test="is_delete != null">is_delete = #{is_delete},</if>
+ 			<if test="data_source != null">data_source = #{data_source},</if>
+ 			<if test="certification_status != null">certification_status = #{certification_status},</if>
+ 			<if test="enterprise_type != null">enterprise_type = #{enterprise_type},</if>
+ 			<if test="establish_date != null">establish_date = #{establish_date},</if>
+ 			<if test="establish_date == null and establish_date_null == 1">establish_date = null,</if>
+ 			<if test="register_time != null">register_time = #{register_time},</if>
+ 			<if test="certifie_time != null">data_source = #{certifie_time},</if>
+ 			<if test="social_credit_code != null and social_credit_code != ''">social_credit_code = #{social_credit_code},</if>
+ 			<if test="name != null and name != ''">name = #{name},</if>
+ 			<if test="legal_representative != null">legal_representative = #{legal_representative},</if>
+ 			<if test="principal != null">principal = #{principal},</if>
+ 			<if test="address != null">address = #{address},</if>
+ 			<if test="registered_capital != null">registered_capital = #{registered_capital},</if>
+ 			<if test="bank_name != null">bank_name = #{bank_name},</if>
+ 			<if test="bank_account != null">bank_account = #{bank_account},</if>
+ 			<if test="phone != null">phone = #{phone},</if>
+ 			<if test="email != null">email = #{email},</if>
+ 			<if test="description != null">description = #{description},</if>
+		</set>
+		where dealer_inner_sn=#{id}
+	</update>
+	
+	<update id="updateStatus" parameterType="Company">
+	  update dealer set status=#{status}
+	  where dealer_inner_sn = #{id}
+	</update>
+	
+	<update id="updateCertifieStatus"  parameterType="Company">
+    	update dealer set certification_status = #{certification_status}, certifie_employee_inner_sn = #{certifie_employee_inner_sn}
+    	where dealer_inner_sn = #{id}
+    </update>
+    
+    <update id="updateCertifieStatus2"  parameterType="Company">
+    	update dealer set certification_status = #{certification_status}, certifie_employee_inner_sn = #{certifie_employee_inner_sn}
+    	where dealer_inner_sn = #{id}
+    </update>
+    
+    <update id="updateCertifieStatus1"  parameterType="Long">
+    	update dealer set certification_status = 1 where dealer_inner_sn = #{id}
+    </update>
+	
+	<update id="deleteOrg" parameterType="Long">
+	  update dealer set is_delete = 1
+	  where dealer_inner_sn = #{id}
+	</update>
+	
+	<delete id="trueDeleteOrg" parameterType="Long">
+		delete from dealer where dealer_inner_sn = #{id}
+	</delete>
+	
+	<!-- 经销商相关图片 -->
+	<resultMap type="OrgRelImage" id="ImageResult">
+		<id     property="id" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result  property="org_related_image_inner_sn" column="image_inner_sn"/><!-- 经销商相关图片内部编号  -->
+		<result property="type" column="type"/><!-- 类别 -->
+		<result property="begin_date" column="begin_date"/><!-- 开始日期 -->
+		<result property="end_date" column="end_date"/><!-- 截止日期 -->
+		<result property="url" column="url"/><!-- 统一资源定位符  -->
+		<result property="file_name" column="file_name"/><!-- 文件名  -->
+	</resultMap>
+	
+	<sql id="selectCertImage">
+        select dealer_inner_sn, image_inner_sn, type, url, begin_date, end_date, file_name
+		from dealer_image
+    </sql>
+    
+    <select id="selectCertImageList" parameterType="Long" resultMap="ImageResult">
+		<include refid="selectCertImage"/>
+		where dealer_inner_sn = #{id}
+	</select>
+	
+	<select id="selectCertImageList2" parameterType="OrgRelImage" resultMap="ImageResult">
+		<include refid="selectCertImage"/>
+		where dealer_inner_sn = #{id} and type=#{type}
+	</select>
+	
+	<select id="insertOrgImage" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call d_add_dealer_image(
+            #{org_id_i,mode=IN},
+            #{type_i,mode=IN},
+            #{begin_date_i,mode=IN},
+            #{end_date_i,mode=IN},
+            #{url_i,mode=IN},
+            #{file_name_i,mode=IN},
+            #{image_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<delete id="trueDeleteCertImage" parameterType="map">
+		delete FROM dealer_image where dealer_inner_sn= #{oid} and type = #{type}
+		<if test="id != null">and image_inner_sn = #{id}</if>
+	</delete>
+	
+	<!-- 经销商营业执照信息 -->
+	<resultMap type="BusinessLicense" id="LicenseResult">
+		<id     property="id" column="dealer_inner_sn"/><!-- 内部编号 -->
+		<result  property="begin_date" column="begin_date"/><!-- 开始日期  -->
+		<result property="end_date" column="end_date"/><!-- 截止日期 -->
+		<result property="issue_date" column="issue_date"/><!-- 颁发日期  -->
+		<result property="issue_organization" column="issue_organization"/><!-- 登记机关 -->
+		<result property="business_scope" column="business_scope"/><!-- 经营范围  -->
+	</resultMap>
+	
+	<sql id="selectLicense">
+        select dealer_inner_sn, begin_date, end_date, issue_date, issue_organization, business_scope
+		from dealer_business_license
+    </sql>
+    
+    <select id="selectLicenseById" parameterType="Long" resultMap="LicenseResult">
+		<include refid="selectLicense"/>
+		where dealer_inner_sn = #{id}
+	</select>
+	<insert id="insertLicense" parameterType="BusinessLicense" >
+	   	insert into dealer_business_license(dealer_inner_sn, begin_date, end_date, issue_date, issue_organization, business_scope)
+        values (
+        	#{id}, 
+        	#{begin_date}, 
+        	#{end_date},
+        	#{issue_date},
+        	#{issue_organization},
+        	#{business_scope}
+       	)
+	</insert>
+	
+	<update id="updateLicense" parameterType="BusinessLicense">
+		update dealer_business_license
+		<set>
+			<if test="begin_date != null">begin_date = #{begin_date},</if>
+ 			<if test="end_date != null">end_date = #{end_date},</if>
+ 			<if test="issue_date != null">issue_date = #{issue_date},</if>
+ 			<if test="issue_organization != null">issue_organization = #{issue_organization},</if>
+ 			<if test="business_scope != null">business_scope = #{business_scope},</if>
+		</set>
+		where dealer_inner_sn=#{id}
+	</update>
+	<update id="updateLicense4Map" parameterType="map">
+		update dealer_business_license
+		<set>
+			<if test="begin_date != null">begin_date = #{begin_date},</if>
+ 			<if test="end_date != null">end_date = #{end_date},</if>
+ 			<if test="issue_date != null">issue_date = #{issue_date},</if>
+ 			<if test="issue_organization != null">issue_organization = #{issue_organization},</if>
+ 			<if test="business_scope != null">business_scope = #{business_scope},</if>
+		</set>
+		where dealer_inner_sn=#{id}
+	</update>
+	
+	<delete id="trueDeleteLicense" parameterType="Long">
+		delete from dealer_business_license where dealer_inner_sn=#{id}
+	</delete>
+	
+	<!-- 经销商医疗器械经营许可证(就是第三类) -->
+	<resultMap type="DealerMAAIOL" id="DealerMAAIOLResult">
+		<id     property="id" column="dealer_inner_sn"/><!-- 内部编号 -->
+		<result  property="operation_mode" column="operation_mode"/><!-- 经营方式  -->
+		<result property="end_date" column="end_date"/><!-- 截止日期 -->
+		<result property="issue_date" column="issue_date"/><!-- 颁发日期  -->
+		<result  property="license_sn" column="license_sn"/><!-- 许可证编号  -->
+		<result  property="premises" column="premises"/><!-- 经营场所  -->
+		<result  property="warehouse_address" column="warehouse_address"/><!-- 库房地址  -->
+		<result property="issue_organization" column="issue_organization"/><!-- 登记机关 -->
+		<result property="business_scope" column="business_scope"/><!-- 经营范围  -->
+		<result property="business_scope_name" column="business_scope_name"/><!-- 经营范围  -->
+	</resultMap>
+	
+	<sql id="selectMAAIOL">
+        select dealer_inner_sn, operation_mode, end_date, issue_date, license_sn, premises, warehouse_address, issue_organization, 
+        	group_concat(c1.code68_sn) as business_scope, group_concat(c.name) as business_scope_name
+		from dealer_maaiol
+		left join dealer_maaiol_code68 c1 using(dealer_inner_sn)
+		left join code68 c using(code68_sn)
+    </sql>
+    
+    <select id="selectMAAIOLById" parameterType="Long" resultMap="DealerMAAIOLResult">
+		<include refid="selectMAAIOL"/>
+		where dealer_inner_sn = #{id}
+		group by c1.dealer_inner_sn
+	</select>
+	<insert id="insertMAAIOL" parameterType="DealerMAAIOL" >
+	   	insert into dealer_maaiol(dealer_inner_sn, operation_mode, end_date, issue_date, license_sn, premises, warehouse_address, issue_organization)
+        values (
+        	#{id},
+        	#{operation_mode},
+        	#{end_date},
+        	#{issue_date},
+        	#{license_sn},
+        	#{premises},
+        	#{warehouse_address},
+        	#{issue_organization}
+       	)
+	</insert>
+	
+	<update id="updateMAAIOL" parameterType="DealerMAAIOL">
+		update dealer_maaiol
+		<set>
+			<if test="operation_mode != null">operation_mode = #{operation_mode},</if>
+ 			<if test="end_date != null">end_date = #{end_date},</if>
+ 			<if test="issue_date != null">issue_date = #{issue_date},</if>
+ 			<if test="license_sn != null">license_sn = #{license_sn},</if>
+ 			<if test="premises != null">premises = #{premises},</if>
+ 			<if test="warehouse_address != null">warehouse_address = #{warehouse_address},</if>
+ 			<if test="issue_organization != null">issue_organization = #{issue_organization},</if>
+		</set>
+		where dealer_inner_sn=#{id}
+	</update>
+	<update id="updateMAAIOL4Map" parameterType="map">
+		update dealer_maaiol
+		<set>
+			<if test="operation_mode != null">operation_mode = #{operation_mode},</if>
+ 			<if test="end_date != null">end_date = #{end_date},</if>
+ 			<if test="issue_date != null">issue_date = #{issue_date},</if>
+ 			<if test="license_sn != null">license_sn = #{license_sn},</if>
+ 			<if test="premises != null">premises = #{premises},</if>
+ 			<if test="warehouse_address != null">warehouse_address = #{warehouse_address},</if>
+ 			<if test="issue_organization != null">issue_organization = #{issue_organization},</if>
+		</set>
+		where dealer_inner_sn=#{id}
+	</update>
+	
+	<insert id="insertMAAIOLScopeRelCode68" parameterType="BusinessScopeRelCode68">
+		insert into dealer_maaiol_code68 (dealer_inner_sn, code68_sn)
+		values (
+        	#{org_id},
+        	#{code68_sn}
+       	)
+	</insert>
+	
+	<delete id="deleteMAAIOLScopeRelCode68" parameterType="Long">
+		delete from dealer_maaiol_code68 
+		where dealer_inner_sn = #{org_id}
+	</delete>
+	
+	<!-- 经销商第二类医疗器械经营备案凭证 -->
+	<resultMap type="DealerSTMDBRC" id="DealerSTMDBRCResult">
+		<id     property="id" column="dealer_inner_sn"/><!-- 内部编号 -->
+		<result  property="operation_mode" column="operation_mode"/><!-- 经营方式  -->
+		<result  property="issue_date" column="issue_date"/><!-- 备案日期  -->
+		<result property="record_sn" column="record_sn"/><!-- 备案编号 -->
+		<result property="premises" column="premises"/><!-- 经营场所  -->
+		<result  property="warehouse_address" column="warehouse_address"/><!-- 库房地址  -->
+		<result property="issue_organization" column="issue_organization"/><!-- 登记机关 -->
+		<result property="business_scope" column="business_scope"/><!-- 经营范围  -->
+		<result property="business_scope_name" column="business_scope_name"/><!-- 经营范围  -->
+	</resultMap>
+	<update id="setGroupconcatmaxLen">
+		set group_concat_max_len = 4294967295
+	</update>
+	<sql id="selectSTMDBRC">
+        select dealer_inner_sn, operation_mode, issue_date, record_sn, premises, warehouse_address, issue_organization,
+        	group_concat(c1.code68_sn) as business_scope, group_concat(c.name) as business_scope_name
+		from dealer_stmdbrc d
+		left join dealer_stmdbrc_code68 c1 using(dealer_inner_sn)
+		left join code68 c using(code68_sn)
+    </sql>
+    
+    <select id="selectSTMDBRCById" parameterType="Long" resultMap="DealerSTMDBRCResult">
+		<include refid="selectSTMDBRC"/>
+		where dealer_inner_sn = #{id}
+		group by c1.dealer_inner_sn
+	</select>
+	<insert id="insertSTMDBRC" parameterType="DealerSTMDBRC" >
+	   	insert into dealer_stmdbrc(dealer_inner_sn, operation_mode, issue_date, record_sn, premises, warehouse_address, issue_organization)
+        values (
+        	#{id},
+        	#{operation_mode},
+        	#{issue_date},
+        	#{record_sn},
+        	#{premises},
+        	#{warehouse_address},
+        	#{issue_organization}
+       	)
+	</insert>
+	
+	<update id="updateSTMDBRC" parameterType="DealerSTMDBRC">
+		update dealer_stmdbrc
+		<set>
+			<if test="operation_mode != null">operation_mode = #{operation_mode},</if>
+			<if test="issue_date != null">issue_date = #{issue_date},</if>
+ 			<if test="record_sn != null">record_sn = #{record_sn},</if>
+ 			<if test="premises != null">premises = #{premises},</if>
+ 			<if test="warehouse_address != null">warehouse_address = #{warehouse_address},</if>
+ 			<if test="issue_organization != null">issue_organization = #{issue_organization},</if>
+		</set>
+		where dealer_inner_sn=#{id}
+	</update>
+	<update id="updateSTMDBRC4Map" parameterType="map">
+		update dealer_stmdbrc
+		<set>
+			<if test="operation_mode != null">operation_mode = #{operation_mode},</if>
+			<if test="issue_date != null">issue_date = #{issue_date},</if>
+ 			<if test="record_sn != null">record_sn = #{record_sn},</if>
+ 			<if test="premises != null">premises = #{premises},</if>
+ 			<if test="warehouse_address != null">warehouse_address = #{warehouse_address},</if>
+ 			<if test="issue_organization != null">issue_organization = #{issue_organization},</if>
+		</set>
+		where dealer_inner_sn=#{id}
+	</update>
+	
+	<insert id="insertSTMDBRCScopeRelCode68" parameterType="BusinessScopeRelCode68">
+		insert into dealer_stmdbrc_code68 (dealer_inner_sn, code68_sn)
+		values (
+        	#{org_id},
+        	#{code68_sn}
+       	)
+	</insert>
+	
+	<delete id="deleteSTMDBRCScopeRelCode68" parameterType="Long">
+		delete from dealer_stmdbrc_code68 
+		where dealer_inner_sn = #{org_id}
+	</delete>
+	
+	<!-- 经销商部门管理 -->
+	<resultMap type="OrgDept" id="DeptResult">
+		<id      property="id" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result  property="org_name" column="dealer_name"/><!-- 经销商名称 -->
+		<result  property="department_inner_sn" column="department_inner_sn"/><!-- 部门内部编号 -->
+		<result property="parent_department_inner_sn" column="parent_department_inner_sn"/><!-- 上级部门内部编号 -->
+		<result property="parent_department_name" column="parent_department_name"/><!-- 上级部门名称 -->
+		<result property="director_inner_sn" column="director_inner_sn"/><!-- 主管员工内部编号  -->
+		<result property="director_name" column="director_name"/><!-- 主管员工名称  -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<!-- <result  property="is_delete" column="is_delete"/> --><!-- 已删除 -->
+		<result  property="name" column="name"/><!-- 名称* -->
+		<result  property="department_sn" column="department_sn"/><!-- 部门编号 -->
+		<result  property="phone" column="phone"/><!-- 电话 -->
+		<result  property="description" column="description"/><!-- 描述 -->
+		<result property="is_leaf" column="is_leaf"/>
+	</resultMap>
+	
+	<sql id="selectOrgDept">
+		select dealer_inner_sn, dealer_name, department_inner_sn, parent_department_inner_sn, parent_department_name, director_inner_sn, director_name, status, name, department_sn, phone, description,
+        	CASE WHEN (SELECT COUNT(*) FROM dealer_department WHERE dealer_inner_sn = #{id} AND parent_department_inner_sn = dd.department_inner_sn) = 0 THEN 1 ELSE 0 END AS is_leaf
+		from(
+			select dd.dealer_inner_sn, d.name as dealer_name, dd.department_inner_sn, dd.parent_department_inner_sn, dd1.name as parent_department_name, 
+				de.employee_inner_sn as director_inner_sn, de.name as director_name, dd.status, dd.is_delete,
+				dd.name, dd.department_sn, dd.phone, dd.description
+			from dealer_department dd
+			left join dealer d using(dealer_inner_sn)
+			left join dealer_department dd1 on dd.dealer_inner_sn=dd1.dealer_inner_sn and dd.parent_department_inner_sn = dd1.department_inner_sn
+			left join dealer_employee de on de.dealer_inner_sn=dd.dealer_inner_sn and de.employee_inner_sn = dd.director_inner_sn and de.is_delete=0
+		) dd
+	</sql>
+	
+	<select id="insertOrgDepartment" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call d_add_dealer_department(
+            #{org_id_i,mode=IN},
+            #{parent_department_inner_sn_i,mode=IN},
+            #{director_inner_sn_i,mode=IN},
+            #{name_i,mode=IN},
+            #{department_sn_i,mode=IN},
+            #{phone_i,mode=IN},
+            #{description_i,mode=IN},
+            #{department_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<select id="selectTopLevelOrgDeptListByOrgId" parameterType="Long" resultMap="DeptResult">
+		<include refid="selectOrgDept"/>
+		where dd.is_delete = 0 and dd.dealer_inner_sn = #{id} and dd.parent_department_inner_sn is null
+	</select>
+	
+	<select id="selectOrgDeptListByPid" parameterType="OrgDept" resultMap="DeptResult">
+		<include refid="selectOrgDept"/>
+		where dd.is_delete = 0 and dd.dealer_inner_sn = #{id} and dd.parent_department_inner_sn = #{parent_department_inner_sn}
+	</select>
+	
+	<select id="selectOrgDeptInfoById" parameterType="OrgDept" resultMap="DeptResult">
+		<include refid="selectOrgDept"/>
+		where dd.is_delete = 0 and dd.dealer_inner_sn = #{id} and dd.department_inner_sn = #{department_inner_sn}
+	</select>
+	
+	<select id="selectRelDeptList" parameterType="map" resultType="map">
+		SELECT
+		    dealer_inner_sn, department_inner_sn, name
+		FROM
+		    dealer_department
+		WHERE
+		    dealer_inner_sn = #{org_id}
+		AND is_delete=0 AND status=1
+		AND department_inner_sn IN
+		    (
+		        SELECT
+		            department_inner_sn
+		        FROM
+		            dealer_employee_dealer_department
+		        WHERE
+		            dealer_inner_sn = #{org_id}
+		        AND employee_inner_sn =
+		            (
+		                SELECT
+		                    employee_inner_sn
+		                FROM
+		                    dealer_employee
+		                WHERE
+		                    dealer_inner_sn = #{org_id}
+		                AND user_inner_sn = #{uid}))
+	</select>
+	
+	<update id="updateOrgDept" parameterType="OrgDept">
+		update dealer_department
+		<set>
+			<if test="parent_department_inner_sn != null">parent_department_inner_sn = #{parent_department_inner_sn},</if>
+			<if test="parent_department_inner_sn == -1">parent_department_inner_sn = null,</if>
+			<if test="director_inner_sn != null">director_inner_sn = #{director_inner_sn},</if>
+ 			<if test="status != null">status = #{status},</if>
+ 			<if test="name != null and name != ''">name = #{name},</if>
+ 			<if test="department_sn != null">department_sn = #{department_sn},</if>
+ 			<if test="phone != null">phone = #{phone},</if>
+ 			<if test="description != null">description = #{description},</if>
+		</set>
+		where is_delete = 0 and dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+	</update>
+	
+	<update id="deleteOrgDept" parameterType="OrgDept">
+		update dealer_department set is_delete = 1
+		where is_delete = 0 and dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+	</update>
+	
+	<delete id="trueDeleteOrgDept" parameterType="OrgDept">
+ 		delete from dealer_department where is_delete = 0 and dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+ 	</delete>
+ 	
+ 	<select id="existEmployeeInDept" parameterType="map" resultType="int">
+ 		select count(*) 
+ 		from dealer_employee_dealer_department 
+ 		where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+ 	</select>
+ 	
+ 	<select id="existWarehouseByDept" parameterType="map" resultType="int">
+ 		select count(*) 
+ 		from dealer_warehouse_model_dealer_department 
+ 		where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+ 	</select>
+ 	
+ 	<select id="existBusinessByDept" parameterType="map" resultType="int">
+ 		select sum(c) 
+ 		from(
+			select count(*) as c from dealer_ppl where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_po_dealer_so where dealer_a_inner_sn = #{id} and purchase_department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_po_vendor_so where dealer_inner_sn = #{id} and purchase_department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_dealer_grn where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_hospital_grn where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_vendor_grn where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_dealer_odo where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_hospital_odo where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_vendor_odo where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_dealer_pp where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_vendor_pp where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_dealer_rn where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_vendor_rn where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_dealer_sl where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+			union all
+			select count(*) as c from dealer_hospital_sl where dealer_inner_sn = #{id} and department_inner_sn = #{department_inner_sn}
+		) a
+ 	</select>
+	
+	<!-- 经销商人员管理 -->
+	<resultMap type="OrgEmployee" id="EmployeeResult">
+		<id      property="id" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result  property="org_name" column="dealer_name"/><!-- 机构名称 -->
+		<result  property="employee_inner_sn" column="employee_inner_sn"/><!-- 员工内部编号 -->
+		<result property="parent_employee_inner_sn" column="parent_employee_inner_sn"/><!-- 上级员工内部编号 -->
+		<result property="parent_employee_name" column="parent_employee_name"/><!-- 上级员工名称 -->
+		<result property="sex" column="sex"/><!-- 性别  -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<result  property="personal_certificate_type" column="personal_certificate_type"/><!-- 个人证件类别 -->
+		<result  property="degree" column="degree"/><!-- 学历 -->
+		<result  property="marriage_status" column="marriage_status"/><!-- 婚姻状况 -->
+		<!-- <result  property="is_delete" column="is_delete"/> --><!-- 已删除 -->
+		<result  property="birthday" column="birthday"/><!-- 生日 -->
+		<result  property="entry_date" column="entry_date"/><!-- 入职日期 -->
+		<result  property="departure_date" column="departure_date"/><!-- 离职日期 -->
+		<result  property="name" column="name"/><!-- 姓名* -->
+		<result  property="employee_sn" column="employee_sn"/><!-- 员工编号 -->
+		<result  property="nation" column="nation"/><!-- 民族 -->
+		<result  property="position" column="position"/><!-- 职位 -->
+		<result  property="personal_certificate_sn" column="personal_certificate_sn"/><!-- 个人证件号 -->
+		<result  property="phone" column="phone"/><!-- 电话 -->
+		<result  property="email" column="email"/><!-- 电子邮件 -->
+		<result  property="qq" column="qq"/><!-- QQ -->
+		<result  property="description" column="description"/><!-- 描述 -->
+		<result  property="photo_url" column="photo_url"/><!-- 照片URL -->
+		<result  property="user_inner_sn" column="user_inner_sn"/><!-- 上帝内部编号 -->
+		<result  property="login_account_status" column="login_account_status"/><!-- 登录账号状态 -->
+		<result  property="department_inner_sn" column="department_inner_sn"/><!-- 员工部门id列表（逗号分隔） -->
+		<result  property="department_name" column="department_name"/><!-- 员工部门名称列表（逗号分隔） -->
+	</resultMap>
+	
+	<sql id="selectOrgEmployee">
+		select e.dealer_inner_sn, dd.name as dealer_name,e.employee_inner_sn, e.parent_employee_inner_sn, e.sex, e.status, e.personal_certificate_type, e.degree,
+			e.marriage_status, e.birthday, e.entry_date, e.departure_date, e.name, e.employee_sn, e.nation, e.position, e.personal_certificate_sn,
+			e.phone, e.email, e.qq, e.description, e.photo_url, e.user_inner_sn, e.login_account_status, 
+			group_concat(d.department_inner_sn) as department_inner_sn,
+			group_concat(d.name) as department_name
+		from dealer_employee e
+		left join dealer dd using(dealer_inner_sn)
+		left join dealer_employee_dealer_department r using(dealer_inner_sn,employee_inner_sn)
+		left join dealer_department d on d.dealer_inner_sn = e.dealer_inner_sn and d.department_inner_sn = r.department_inner_sn
+	</sql>
+	
+	<select id="insertOrgEmployee" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call d_add_dealer_employee(
+            #{org_id_i,mode=IN},
+            #{parent_employee_inner_sn_i,mode=IN},
+            #{sex_i,mode=IN},
+            #{status_i,mode=IN},
+            #{personal_certificate_type_i,mode=IN},
+            #{degree_i,mode=IN},
+            #{marriage_status_i,mode=IN},
+            #{birthday_i,mode=IN},
+            #{entry_date_i,mode=IN},
+            #{departure_date_i,mode=IN},
+            #{name_i,mode=IN},
+            #{employee_sn_i,mode=IN},
+            #{nation_i,mode=IN},
+            #{position_i,mode=IN},
+            #{department_inner_sns_i,mode=IN},
+            #{personal_certificate_sn_i,mode=IN},
+            #{phone_i,mode=IN},
+            #{email_i,mode=IN},
+            #{qq_i,mode=IN},
+            #{description_i,mode=IN},
+            #{photo_url_i,mode=IN},
+            #{user_inner_sn_i,mode=IN},
+            #{login_account_status_i,mode=IN},
+            #{employee_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<select id="selectOrgEmployeeListById" parameterType="OrgEmployee" resultMap="EmployeeResult">
+		<include refid="selectOrgEmployee"/>
+		where e.is_delete = 0  
+			and e.dealer_inner_sn = #{id}
+			<if test="name != null and name != ''">and e.name like concat('%', #{name}, '%')</if>
+		group by e.dealer_inner_sn, e.employee_inner_sn
+	</select>
+	
+	<select id="selectOrgEmployeeInfoById" parameterType="map" resultMap="EmployeeResult">
+		<include refid="selectOrgEmployee"/>
+		where 1=1 
+			and e.dealer_inner_sn = #{id} and e.employee_inner_sn = #{employee_inner_sn}
+		group by e.dealer_inner_sn, e.employee_inner_sn
+	</select>
+
+	<select id="selectOrgEmployeeInfoByUid" parameterType="map" resultMap="EmployeeResult">
+		<include refid="selectOrgEmployee"/>
+		where 1=1
+		and e.dealer_inner_sn = #{id} and e.user_inner_sn = #{user_inner_sn}
+		group by e.dealer_inner_sn, e.employee_inner_sn
+	</select>
+	
+	<select id="selectTopLevelOrgEmpListByOrgId" parameterType="OrgEmployee" resultMap="EmployeeResult">
+		<include refid="selectOrgEmployee"/>
+		where e.is_delete = 0 
+			and e.dealer_inner_sn = #{id} and e.parent_employee_inner_sn is null
+		group by e.dealer_inner_sn, e.employee_inner_sn
+	</select>
+	
+	<select id="selectOrgEmployeeListByPid" parameterType="OrgEmployee" resultMap="EmployeeResult">
+		<include refid="selectOrgEmployee"/>
+		where e.is_delete = 0 
+			and e.dealer_inner_sn = #{id} and e.parent_employee_inner_sn = #{parent_employee_inner_sn}
+		group by e.dealer_inner_sn, e.employee_inner_sn
+	</select>
+	
+	<update id="updateOrgEmployee" parameterType="map">
+		update dealer_employee
+		<set>
+			<if test="parent_employee_inner_sn != null">parent_employee_inner_sn = #{parent_employee_inner_sn},</if>
+			<if test="parent_employee_inner_sn == null and parent_employee_inner_sn_null ==1">parent_employee_inner_sn = null,</if>
+			<if test="sex != null">sex = #{sex},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="personal_certificate_type != null">personal_certificate_type = #{personal_certificate_type},</if>
+ 			<if test="degree != null">degree = #{degree},</if>
+ 			<if test="marriage_status != null">marriage_status = #{marriage_status},</if>
+ 			<if test="birthday != null">birthday = #{birthday},</if>
+ 			<if test="birthday == null and birthday_null == 1">birthday = null,</if>
+ 			<if test="entry_date != null">entry_date = #{entry_date},</if>
+ 			<if test="entry_date == null and entry_date_null == 1">entry_date = null,</if>
+ 			<if test="departure_date != null">departure_date = #{departure_date},</if>
+ 			<if test="departure_date == null and departure_date_null == 1">departure_date = null,</if>
+ 			<if test="name != null and name != ''">name = #{name},</if>
+ 			<if test="employee_sn != null">employee_sn = #{employee_sn},</if>
+ 			<if test="nation != null">nation = #{nation},</if>
+ 			<if test="position != null">position = #{position},</if>
+ 			<if test="personal_certificate_sn != null">personal_certificate_sn = #{personal_certificate_sn},</if>
+ 			<if test="phone != null">phone = #{phone},</if>
+ 			<if test="email != null">email = #{email},</if>
+ 			<if test="qq != null">qq = #{qq},</if>
+ 			<if test="description != null">description = #{description},</if>
+ 			<if test="photo_url != null">photo_url = #{photo_url},</if>
+ 			<if test="user_inner_sn != null">user_inner_sn = #{user_inner_sn},</if>
+ 			<if test="login_account_status != null">login_account_status = #{login_account_status},</if>
+		</set>
+		where is_delete = 0 and dealer_inner_sn = #{id} and employee_inner_sn = #{employee_inner_sn}
+	</update>
+	
+	<update id="deleteOrgEmployee" parameterType="OrgEmployee">
+		update dealer_employee set is_delete = 1
+		where is_delete = 0 and dealer_inner_sn = #{id} and employee_inner_sn = #{employee_inner_sn}
+	</update>
+	
+	<delete id="deleteOrgEmployeeRelDept" parameterType="OrgEmployee">
+		delete from dealer_employee_dealer_department 
+		where dealer_inner_sn = #{id} and employee_inner_sn = #{employee_inner_sn}
+	</delete>
+	
+	<insert id="insertOrgEmployeeRelDept" parameterType="OrgEmployeeRelDept">
+		insert into 
+			dealer_employee_dealer_department
+			(
+				dealer_inner_sn,
+				employee_inner_sn,
+				department_inner_sn
+			)
+ 		values
+ 			(
+	 			#{id},
+	 			#{employee_inner_sn},
+	 			#{department_inner_sn}
+ 			)
+	</insert>
+	
+	<select id="selectOrgEmployeeInfoByUserId" parameterType="Long" resultMap="EmployeeResult">
+		<include refid="selectOrgEmployee"/>
+		where 1=1
+			and e.user_inner_sn = #{id}
+		group by e.dealer_inner_sn, e.employee_inner_sn
+	</select>
+	
+	<select id="checkExistOrg" parameterType="map" resultType="CheckCompany">
+		select dealer_inner_sn as id, administrative_division_sn, register_time, '' as alias, social_credit_code, name, address, phone, email, description
+		from dealer
+		where 1=1
+		<if test="name != null and name != ''"> and name = #{name}</if>
+		<if test="social_credit_code != null and social_credit_code != ''"> or social_credit_code = #{social_credit_code}</if>
+		limit 1
+	</select>
+
+	<select id="deptList" resultType="orgDept" parameterType="map">
+		SELECT
+			dd.`dealer_inner_sn`,dd.`department_inner_sn`,dd.`name`,dd.`department_sn`,dd.`phone`,dd.`status`,dd.`description`
+		FROM `dealer_department` dd
+				 INNER JOIN `dealer_employee_dealer_department` USING(`dealer_inner_sn`,`department_inner_sn`)
+				 INNER JOIN `dealer_employee` de USING(`dealer_inner_sn`,`employee_inner_sn`)
+		WHERE de.`user_inner_sn`=#{uid} AND de.`dealer_inner_sn`=#{oid} AND dd.`status`=1 AND dd.`is_delete`=0
+	</select>
+</mapper>

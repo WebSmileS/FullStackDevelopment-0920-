@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.premium.mapper.PremiumRuleMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.premium.domain.PremiumRule">
+    <!--@mbg.generated-->
+    <!--@Table premium_rule-->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="org_id" jdbcType="BIGINT" property="orgId" />
+    <result column="org_name" jdbcType="VARCHAR" property="orgName" />
+    <result column="min_price" jdbcType="DECIMAL" property="minPrice" />
+    <result column="max_price" jdbcType="DECIMAL" property="maxPrice" />
+    <result column="percent" jdbcType="DECIMAL" property="percent" />
+    <result column="remake" jdbcType="LONGVARCHAR" property="remake" />
+    <result column="update_user_id" jdbcType="BIGINT" property="updateUserId" />
+    <result column="update_user_name" jdbcType="BIGINT" property="updateUserName" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, org_id, org_name, min_price, max_price, `percent`, remake, update_user_id, update_user_name
+  </sql>
+</mapper>

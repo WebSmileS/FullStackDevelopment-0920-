@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.order.mapper.VendorHospitalSaleRecordMapper">
+
+	<select id="insertSaleOrder" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call v_add_vendor_hospital_sl(
+			#{org_id, mode=IN},
+			#{organization_inner_sn_i, mode=IN},
+			#{seller_inner_sn_i, mode=IN},
+			#{making_people_inner_sn_i, mode=IN},
+			#{department_inner_sn_i, mode=IN},
+			#{status_i, mode=IN},
+			#{collection_date_i, mode=IN},
+			#{billing_time_i, mode=IN},
+			#{sl_sn_i, mode=IN},
+			#{purchaser_linkman_i, mode=IN},
+			#{purchaser_phone_i, mode=IN},
+			#{seller_linkman_i, mode=IN},
+			#{seller_phone_i, mode=IN},
+			#{organization_name_i, mode=IN},
+			#{seller_name_i, mode=IN},
+			#{making_people_name_i, mode=IN},
+			#{department_name_i, mode=IN},
+			#{po_so_inner_sn_i, mode=IN},
+			#{warehouse_inner_sn_i, mode=IN},
+			#{description_i, mode=IN},
+			#{data_i, mode=IN},
+			#{sl_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<!-- 销售单查询 -->
+	<resultMap type="SaleRecord" id="SaleRecordResult">
+		<result  property="partA" column="organization_inner_sn"/><!-- 采购方机构编号 -->
+		<result  property="partA_name" column="organization_name"/><!-- 采购方名称 -->
+		<result  property="partB" column="vendor_inner_sn"/><!-- 销售方机构编号 -->
+		<result  property="seller_inner_sn" column="seller_inner_sn"/><!-- 销售员内部编号 -->
+		<result  property="seller_name" column="seller_name"/><!-- 销售员姓名(冗余) -->
+		<result  property="making_people_inner_sn" column="making_people_inner_sn"/><!-- 制单人内部编号 -->
+		<result  property="making_people_name" column="making_people_name"/><!-- 制单人姓名(冗余) -->
+		<result  property="department_inner_sn" column="department_inner_sn"/><!-- 部门内部编号 -->
+		<result property="department_name" column="department_name"/><!-- 部门名称(冗余)  -->
+		<result property="auditor_inner_sn" column="auditor_inner_sn"/><!-- 审核人内部编号  -->
+		<result property="auditor_name" column="auditor_name"/><!-- 审核人姓名(冗余)  -->
+		<result property="status" column="status"/><!-- 状态 0-草稿 1-正式 2-已审核 3-已过账  -->
+		<!-- <result property="delivery_date" column="delivery_date"/>送货日期  -->
+		<result property="collection_date" column="collection_date"/><!-- 收款日期 -->
+		<result property="billing_time" column="billing_time"/><!-- 开单时间  -->
+		<result property="sl_sn" column="sl_sn"/><!-- 销售单编号  -->
+		<result property="purchaser_linkman" column="purchaser_linkman"/><!-- 采购方联系人  -->
+		<result property="purchaser_phone" column="purchaser_phone"/><!-- 采购方联系电话 -->
+		<result property="voucher_inner_sn_c" column="voucher_inner_sn_c"/><!-- 销售单关联单据 -->
+		<result property="seller_linkman" column="seller_linkman"/><!-- 销售方联系人  -->
+		<result property="seller_phone" column="seller_phone"/><!-- 销售方联系电话  -->
+		<result property="description" column="description"/><!-- 描述  -->
+		<!-- <result property="delivery_address" column="delivery_address"/>送(收)货地址  -->
+		<result property="billsType" column="billsType"/><!-- 单据类型  0-DealerDealer 1-DealerVendor 2-DealerHospital 3-HospitalHospital 4-hospitalDealer 5-hospitalVendor  -->
+	</resultMap>
+	
+	<resultMap type="Sl" id="SlResult">
+		<result  property="organization_inner_sn" column="organization_inner_sn"/><!-- 采购方机构编号 -->
+		<result  property="organization_name" column="organization_name"/><!-- 采购方名称 -->
+		<result  property="org_id" column="vendor_inner_sn"/><!-- 销售方机构编号 -->
+		<result  property="seller_inner_sn" column="seller_inner_sn"/><!-- 销售员内部编号 -->
+		<result  property="seller_name" column="seller_name"/><!-- 销售员姓名(冗余) -->
+		<result  property="making_people_inner_sn" column="making_people_inner_sn"/><!-- 制单人内部编号 -->
+		<result  property="making_people_name" column="making_people_name"/><!-- 制单人姓名(冗余) -->
+		<result  property="department_inner_sn" column="department_inner_sn"/><!-- 部门内部编号 -->
+		<result property="department_name" column="department_name"/><!-- 部门名称(冗余)  -->
+		<result property="auditor_inner_sn" column="auditor_inner_sn"/><!-- 审核人内部编号  -->
+		<result property="auditor_name" column="auditor_name"/><!-- 审核人姓名(冗余)  -->
+		<result property="status" column="status"/><!-- 状态 0-草稿 1-正式 2-已审核 3-已过账  -->
+		<result property="collection_date" column="collection_date"/><!-- 收款日期 -->
+		<result property="billing_time" column="billing_time"/><!-- 开单时间  -->
+		<result property="sl_sn" column="sl_sn"/><!-- 销售单编号  -->
+		<result property="purchaser_linkman" column="purchaser_linkman"/><!-- 采购方联系人  -->
+		<result property="purchaser_phone" column="purchaser_phone"/><!-- 采购方联系电话 -->
+		<result property="voucher_inner_sn_c" column="voucher_inner_sn_c"/><!-- 销售单关联单据 -->
+		<result property="seller_linkman" column="seller_linkman"/><!-- 销售方联系人  -->
+		<result property="seller_phone" column="seller_phone"/><!-- 销售方联系电话  -->
+		<result property="description" column="description"/><!-- 描述  -->
+		<result property="billsType" column="billsType"/><!-- 单据类型  0-DealerDealer 1-DealerVendor 2-DealerHospital 3-HospitalHospital 4-hospitalDealer 5-hospitalVendor  -->
+	</resultMap>
+	
+	<select id="selectSaleRecordList" parameterType="map" resultMap="SaleRecordResult">
+		select vendor_inner_sn, sl_inner_sn, organization_inner_sn, seller_inner_sn, making_people_inner_sn, department_inner_sn,
+			auditor_inner_sn, status, collection_date, billing_time, sl_sn, purchaser_linkman, purchaser_phone, voucher_inner_sn_c,
+			seller_linkman, seller_phone, organization_name, seller_name, making_people_name, department_name, 
+			auditor_name, 5 as billsType, description
+			from vendor_hospital_sl dh
+			left join (
+			        select distinct vendor_inner_sn, sl_inner_sn, voucher_inner_sn_c
+			        from vendor_hospital_sl_product_detail
+			        ) a using(vendor_inner_sn, sl_inner_sn)
+			where 1=1
+			and vendor_inner_sn = #{partB}
+			and organization_inner_sn = #{partA}
+			<if test="po_so_inner_sn">and a.voucher_inner_sn_c = #{po_so_inner_sn}</if>
+			<if test="sl_inner_sn">and dh.sl_inner_sn = #{sl_inner_sn}</if>
+	</select>
+	
+	<select id="selectSaleRecordInfo" parameterType="map" resultMap="SlResult">
+		select vendor_inner_sn, sl_inner_sn, organization_inner_sn, seller_inner_sn, making_people_inner_sn, department_inner_sn,
+			auditor_inner_sn, status, collection_date, billing_time, sl_sn, purchaser_linkman, purchaser_phone,
+			seller_linkman, seller_phone, organization_name, seller_name, making_people_name, department_name, 
+			auditor_name, 7 as billsType, description
+			from vendor_hospital_sl
+			where 1=1
+			and vendor_inner_sn = #{org_id}
+			<if test="sl_inner_sn">and sl_inner_sn = #{sl_inner_sn}</if>
+	</select>
+	
+	<update id="updateSaleRecord" parameterType="map">
+		UPDATE
+		    vendor_hospital_sl
+		<set>
+			<if test="seller_inner_sn != null ">seller_inner_sn = #{seller_inner_sn},</if>
+		    <if test="department_inner_sn != null ">department_inner_sn = #{department_inner_sn},</if>
+		    <if test="auditor_inner_sn != null ">auditor_inner_sn = #{auditor_inner_sn},</if>
+		    <if test="status != null ">status = #{status},</if>
+		    <if test="collection_date != null ">collection_date = #{collection_date},</if>
+		    <if test="purchaser_linkman != null ">purchaser_linkman = #{purchaser_linkman},</if>
+		    <if test="purchaser_phone != null ">purchaser_phone = #{purchaser_phone},</if>
+		    <if test="seller_linkman != null ">seller_linkman = #{seller_linkman},</if>
+		    <if test="seller_phone != null ">seller_phone = #{seller_phone},</if>
+		    <if test="seller_name != null ">seller_name = #{seller_name},</if>
+		    <if test="department_name != null ">department_name = #{department_name},</if>
+		    <if test="auditor_name != null ">auditor_name = #{auditor_name},</if>
+		    <if test="description != null ">description = #{description},</if>
+		</set>
+		WHERE
+		    vendor_inner_sn = #{org_id}
+		AND sl_inner_sn = #{sl_inner_sn}
+	</update>
+	
+	<delete id="deleteSaleRecord" parameterType="map">
+		DELETE FROM vendor_hospital_sl
+		WHERE vendor_inner_sn = #{org_id} and sl_inner_sn = #{sl_inner_sn}
+	</delete>
+	
+	<resultMap type="SaleRecordDetail" id="SaleRecordDetailResult">
+		<result  property="partB" column="dealer_inner_sn"/><!-- 销售方机构编号 -->
+		<result  property="sl_inner_sn" column="sl_inner_sn"/><!-- 销售单内部编号 -->
+		<result  property="detail_inner_sn" column="detail_inner_sn"/><!-- 明细内部编号 -->
+		<result  property="product_vendor_inner_sn" column="product_vendor_inner_sn"/><!-- 产品厂商编号 -->
+		<result  property="product_vendor_name" column="product_vendor_name"/><!-- 产品厂商编号 -->
+		<result  property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result property="product_name" column="product_name"/>
+		<result property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号  -->
+		<result property="specification" column="specification"/>
+		<result property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号  -->
+		<result property="unit" column="unit"/>
+		<result property="quantity" column="quantity"/><!-- 数量  -->
+		<result property="unit_price" column="unit_price"/><!-- 单价  -->
+		<result property="discount" column="discount"/><!-- 折扣  -->
+		<result property="rate" column="rate"/><!-- 税率 -->
+		<result property="sort_number" column="sort_number"/><!-- 排序号  -->
+		<result property="batch_number" column="batch_number"/><!-- 批号  -->
+		<result property="product_type" column="product_type"/><!-- 产品类型 0:经销商(自建)产品   1:厂商产品  -->
+		<result property="mdrf_inner_sn" column="mdrf_inner_sn"/><!-- 注册证ID  -->
+		<result property="mdrf_sn" column="mdrf_sn"/><!-- 注册证号  -->
+		<result property="outOfStock_quantity" column="outOfStock_quantity"/><!-- 已出库数量  -->
+		<result property="toBeOutOfStock_quantity" column="toBeOutOfStock_quantity"/><!-- 未出库数量  -->
+		<result property="health_care_sn" column="health_care_sn"/><!-- 医保编号 -->
+		<result property="sun_sn" column="sun_sn"/><!-- 阳光流水号 -->
+	</resultMap>
+	
+	<resultMap type="SlDetail" id="SlDetailResult">
+		<result property="sl_inner_sn" column="sl_inner_sn"/><!-- 销售单内部编号 -->
+		<result property="detail_inner_sn" column="detail_inner_sn"/><!-- 明细内部编号 -->
+		<result property="product_vendor_inner_sn" column="product_vendor_inner_sn"/><!-- 产品厂商编号 -->
+		<result property="product_vendor_name" column="product_vendor_name"/><!-- 产品厂商编号 -->
+		<result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result property="product_name" column="product_name"/>
+		<result property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号  -->
+		<result property="specification" column="specification"/>
+		<result property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号  -->
+		<result property="unit_name" column="unit"/>
+		<result property="quantity" column="quantity"/><!-- 数量  -->
+		<result property="unit_price" column="unit_price"/><!-- 单价  -->
+		<result property="discount" column="discount"/><!-- 折扣  -->
+		<result property="rate" column="rate"/><!-- 税率 -->
+		<result property="sort_number" column="sort_number"/><!-- 排序号  -->
+		<result property="batch_number" column="batch_number"/><!-- 批号  -->
+		<result property="product_type" column="product_type"/><!-- 产品类型 0:经销商(自建)产品   1:厂商产品  -->
+		<result property="mdrf_inner_sn" column="mdrf_inner_sn"/><!-- 注册证ID  -->
+		<result property="mdrf_sn" column="mdrf_sn"/><!-- 注册证号  -->
+		<result property="voucher_type_c" column="voucher_type_c"/><!-- 单据类型C -->
+		<result property="voucher_inner_sn_c" column="voucher_inner_sn_c"/><!-- 单据内部编号C -->
+		<result property="voucher_detail_inner_sn_c" column="voucher_detail_inner_sn_c"/><!-- 单据明细内部编号C -->
+		<result property="health_care_sn" column="health_care_sn"/><!-- 医保编号 -->
+		<result property="sun_sn" column="sun_sn"/><!-- 阳光流水号 -->
+	</resultMap>
+	
+	<select id="selectSaleRecordDetailList" parameterType="map" resultMap="SaleRecordDetailResult">
+		select
+			vendor_inner_sn, sl_inner_sn, detail_inner_sn, product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn, batch_number,
+			quantity/1000 as quantity, unit_price/10000 as unit_price, discount, rate, sort_number, product_vendor_name, product_name, specification, unit, 1 as product_type, 
+			mdrf_inner_sn, mdrf_sn, 0 as outOfStock_quantity, 0 as toBeOutOfStock_quantity, pd.health_care_sn, pd.sun_sn
+		from vendor_hospital_sl_product_detail pd
+		where vendor_inner_sn = #{org_id} and sl_inner_sn = #{sl_inner_sn}
+	</select>
+	
+	<select id="searchSaleRecordDetailList" parameterType="map" resultMap="SlDetailResult">
+		select
+			sl_inner_sn, detail_inner_sn, product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn, batch_number,
+			quantity/1000 as quantity, unit_price/10000 as unit_price, discount, rate, sort_number, product_vendor_name, product_name, specification, unit, 1 as product_type, 
+			mdrf_inner_sn, mdrf_sn, voucher_type_c, voucher_inner_sn_c, voucher_detail_inner_sn_c, pd.health_care_sn, pd.sun_sn
+		from vendor_hospital_sl_product_detail pd
+		where vendor_inner_sn = #{org_id} and sl_inner_sn = #{sl_inner_sn}
+		<if test="detail_inner_sn != null ">and detail_inner_sn = #{detail_inner_sn}</if>
+	</select>
+	
+	<select id="insertVendorSaleRecordDetail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call v_add_vendor_hospital_sl_product_detail(
+			#{org_id, mode=IN},
+			#{sl_inner_sn_i, mode=IN},
+			#{product_vendor_inner_sn_i, mode=IN},
+			#{product_inner_sn_i, mode=IN},
+			#{specification_inner_sn_i, mode=IN},
+			#{unit_inner_sn_i, mode=IN},
+			#{quantity_i, mode=IN},
+			#{unit_price_i, mode=IN},
+			#{discount_i, mode=IN},
+			#{rate_i, mode=IN},
+			#{sort_number_i, mode=IN},
+			#{product_vendor_name_i, mode=IN},
+			#{product_name_i, mode=IN},
+			#{specification_i, mode=IN},
+			#{unit_i, mode=IN},
+			#{organization_inner_sn, mode=IN},
+			#{po_so_inner_sn_i, mode=IN},
+			#{detail_inner_sn_i, mode=IN},
+			#{batch_number_i, mode=IN},
+			#{mdrf_inner_sn_i, mode=IN},
+			#{mdrf_sn_i, mode=IN},
+			#{voucher_type_c_i, mode=IN},
+			#{health_care_sn_i, mode=IN},
+			#{sun_sn_i, mode=IN},
+			#{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<update id="updateVendorSaleRecordDetail" parameterType="map">
+		UPDATE
+		    vendor_hospital_sl_product_detail
+		<set>
+			<if test="unit_inner_sn != null ">unit_inner_sn = #{unit_inner_sn},</if>
+		    <if test="unit != null ">unit = #{unit},</if>
+		    <if test="quantity != null ">quantity = #{quantity},</if>
+		    <if test="unit_price != null ">unit_price = #{unit_price},</if>
+		    <if test="discount != null ">discount = #{discount},</if>
+		    <if test="rate != null ">rate = #{rate},</if>
+		    <if test="batch_number != null ">batch_number = #{batch_number},</if>
+		    <if test="mdrf_inner_sn != null ">mdrf_inner_sn = #{mdrf_inner_sn},</if>
+		    <if test="mdrf_sn != null ">mdrf_sn = #{mdrf_sn},</if>
+		    <if test="status != null ">status = #{status},</if>
+		    <if test="health_care_sn != null ">health_care_sn = #{health_care_sn},</if>
+		    <if test="sun_sn != null ">sun_sn = #{sun_sn},</if>
+	    </set>
+		WHERE
+		    vendor_inner_sn = #{org_id}
+		AND sl_inner_sn = #{sl_inner_sn} and detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<delete id="deleteVendorSaleRecordDetail" parameterType="map">
+		DELETE FROM vendor_hospital_sl_product_detail
+		WHERE vendor_inner_sn = #{org_id} and sl_inner_sn = #{sl_inner_sn}
+		<if test="detail_inner_sn != null ">and detail_inner_sn = #{detail_inner_sn}</if>
+	</delete>
+	
+	<!-- 检查销售单明细是否已全部生成出库单 -->
+	<select id="checkSaleRecordFinish" parameterType="map" resultType="map">
+		select sl_inner_sn, detail_inner_sn
+		from vendor_hospital_sl_product_detail
+		where vendor_inner_sn = #{org_id} and sl_inner_sn = #{sl_inner_sn}
+		and status = #{checkStatus}
+	</select>
+	
+</mapper>

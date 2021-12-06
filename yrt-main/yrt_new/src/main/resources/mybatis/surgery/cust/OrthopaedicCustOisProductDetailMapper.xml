@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.surgery.cust.mapper.OrthopaedicCustOisProductDetailMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.surgery.cust.OrthopaedicCustOisProductDetail">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="ois_id" jdbcType="BIGINT" property="ois_id" />
+    <result column="product_vendor_inner_sn" jdbcType="INTEGER" property="product_vendor_inner_sn" />
+    <result column="product_inner_sn" jdbcType="INTEGER" property="product_inner_sn" />
+    <result column="specification_inner_sn" jdbcType="SMALLINT" property="specification_inner_sn" />
+    <result column="unit_inner_sn" jdbcType="SMALLINT" property="unit_inner_sn" />
+    <result column="quantity" jdbcType="BIGINT" property="quantity" />
+    <result column="sort_number" jdbcType="SMALLINT" property="sort_number" />
+    <result column="product_vendor_name" jdbcType="VARCHAR" property="product_vendor_name" />
+    <result column="product_name" jdbcType="VARCHAR" property="product_name" />
+    <result column="specification" jdbcType="VARCHAR" property="specification" />
+    <result column="unit" jdbcType="VARCHAR" property="unit" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    id, ois_id, product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn, 
+    quantity/1000 as quantity, sort_number, product_vendor_name, product_name, specification, unit
+  </sql>
+  <select id="selectByExample_o" parameterType="com.yrt.project.modular.surgery.cust.OrthopaedicCustOisProductDetailExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from orthopaedic_cust_ois_product_detail
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from orthopaedic_cust_ois_product_detail
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from orthopaedic_cust_ois_product_detail
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.yrt.project.modular.surgery.cust.OrthopaedicCustOisProductDetailExample">
+    delete from orthopaedic_cust_ois_product_detail
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.yrt.project.modular.surgery.cust.OrthopaedicCustOisProductDetail">
+    insert into orthopaedic_cust_ois_product_detail (id, ois_id, product_vendor_inner_sn, 
+      product_inner_sn, specification_inner_sn, 
+      unit_inner_sn, quantity, sort_number, 
+      product_vendor_name, product_name, specification, 
+      unit)
+    values (#{id,jdbcType=BIGINT}, #{ois_id,jdbcType=BIGINT}, #{product_vendor_inner_sn,jdbcType=INTEGER}, 
+      #{product_inner_sn,jdbcType=INTEGER}, #{specification_inner_sn,jdbcType=SMALLINT}, 
+      #{unit_inner_sn,jdbcType=SMALLINT}, #{quantity,jdbcType=BIGINT} *1000, #{sort_number,jdbcType=SMALLINT}, 
+      #{product_vendor_name,jdbcType=VARCHAR}, #{product_name,jdbcType=VARCHAR}, #{specification,jdbcType=VARCHAR}, 
+      #{unit,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.yrt.project.modular.surgery.cust.OrthopaedicCustOisProductDetail">
+    insert into orthopaedic_cust_ois_product_detail
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="ois_id != null">
+        ois_id,
+      </if>
+      <if test="product_vendor_inner_sn != null">
+        product_vendor_inner_sn,
+      </if>
+      <if test="product_inner_sn != null">
+        product_inner_sn,
+      </if>
+      <if test="specification_inner_sn != null">
+        specification_inner_sn,
+      </if>
+      <if test="unit_inner_sn != null">
+        unit_inner_sn,
+      </if>
+      <if test="quantity != null">
+        quantity,
+      </if>
+      <if test="sort_number != null">
+        sort_number,
+      </if>
+      <if test="product_vendor_name != null">
+        product_vendor_name,
+      </if>
+      <if test="product_name != null">
+        product_name,
+      </if>
+      <if test="specification != null">
+        specification,
+      </if>
+      <if test="unit != null">
+        unit,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="ois_id != null">
+        #{ois_id,jdbcType=BIGINT},
+      </if>
+      <if test="product_vendor_inner_sn != null">
+        #{product_vendor_inner_sn,jdbcType=INTEGER},
+      </if>
+      <if test="product_inner_sn != null">
+        #{product_inner_sn,jdbcType=INTEGER},
+      </if>
+      <if test="specification_inner_sn != null">
+        #{specification_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="unit_inner_sn != null">
+        #{unit_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="quantity != null">
+        #{quantity,jdbcType=BIGINT} *1000,
+      </if>
+      <if test="sort_number != null">
+        #{sort_number,jdbcType=SMALLINT},
+      </if>
+      <if test="product_vendor_name != null">
+        #{product_vendor_name,jdbcType=VARCHAR},
+      </if>
+      <if test="product_name != null">
+        #{product_name,jdbcType=VARCHAR},
+      </if>
+      <if test="specification != null">
+        #{specification,jdbcType=VARCHAR},
+      </if>
+      <if test="unit != null">
+        #{unit,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.yrt.project.modular.surgery.cust.OrthopaedicCustOisProductDetailExample" resultType="java.lang.Long">
+    select count(*) from orthopaedic_cust_ois_product_detail
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update orthopaedic_cust_ois_product_detail
+    <set>
+      <if test="record.id != null">
+        id = #{record.id,jdbcType=BIGINT},
+      </if>
+      <if test="record.ois_id != null">
+        ois_id = #{record.ois_id,jdbcType=BIGINT},
+      </if>
+      <if test="record.product_vendor_inner_sn != null">
+        product_vendor_inner_sn = #{record.product_vendor_inner_sn,jdbcType=INTEGER},
+      </if>
+      <if test="record.product_inner_sn != null">
+        product_inner_sn = #{record.product_inner_sn,jdbcType=INTEGER},
+      </if>
+      <if test="record.specification_inner_sn != null">
+        specification_inner_sn = #{record.specification_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="record.unit_inner_sn != null">
+        unit_inner_sn = #{record.unit_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="record.quantity != null">
+        quantity = #{record.quantity,jdbcType=BIGINT} *1000,
+      </if>
+      <if test="record.sort_number != null">
+        sort_number = #{record.sort_number,jdbcType=SMALLINT},
+      </if>
+      <if test="record.product_vendor_name != null">
+        product_vendor_name = #{record.product_vendor_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.product_name != null">
+        product_name = #{record.product_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.specification != null">
+        specification = #{record.specification,jdbcType=VARCHAR},
+      </if>
+      <if test="record.unit != null">
+        unit = #{record.unit,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update orthopaedic_cust_ois_product_detail
+    set id = #{record.id,jdbcType=BIGINT},
+      ois_id = #{record.ois_id,jdbcType=BIGINT},
+      product_vendor_inner_sn = #{record.product_vendor_inner_sn,jdbcType=INTEGER},
+      product_inner_sn = #{record.product_inner_sn,jdbcType=INTEGER},
+      specification_inner_sn = #{record.specification_inner_sn,jdbcType=SMALLINT},
+      unit_inner_sn = #{record.unit_inner_sn,jdbcType=SMALLINT},
+      quantity = #{record.quantity,jdbcType=BIGINT} *1000,
+      sort_number = #{record.sort_number,jdbcType=SMALLINT},
+      product_vendor_name = #{record.product_vendor_name,jdbcType=VARCHAR},
+      product_name = #{record.product_name,jdbcType=VARCHAR},
+      specification = #{record.specification,jdbcType=VARCHAR},
+      unit = #{record.unit,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.yrt.project.modular.surgery.cust.OrthopaedicCustOisProductDetail">
+    update orthopaedic_cust_ois_product_detail
+    <set>
+      <if test="ois_id != null">
+        ois_id = #{ois_id,jdbcType=BIGINT},
+      </if>
+      <if test="product_vendor_inner_sn != null">
+        product_vendor_inner_sn = #{product_vendor_inner_sn,jdbcType=INTEGER},
+      </if>
+      <if test="product_inner_sn != null">
+        product_inner_sn = #{product_inner_sn,jdbcType=INTEGER},
+      </if>
+      <if test="specification_inner_sn != null">
+        specification_inner_sn = #{specification_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="unit_inner_sn != null">
+        unit_inner_sn = #{unit_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="quantity != null">
+        quantity = #{quantity,jdbcType=BIGINT} *1000,
+      </if>
+      <if test="sort_number != null">
+        sort_number = #{sort_number,jdbcType=SMALLINT},
+      </if>
+      <if test="product_vendor_name != null">
+        product_vendor_name = #{product_vendor_name,jdbcType=VARCHAR},
+      </if>
+      <if test="product_name != null">
+        product_name = #{product_name,jdbcType=VARCHAR},
+      </if>
+      <if test="specification != null">
+        specification = #{specification,jdbcType=VARCHAR},
+      </if>
+      <if test="unit != null">
+        unit = #{unit,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.yrt.project.modular.surgery.cust.OrthopaedicCustOisProductDetail">
+    update orthopaedic_cust_ois_product_detail
+    set ois_id = #{ois_id,jdbcType=BIGINT},
+      product_vendor_inner_sn = #{product_vendor_inner_sn,jdbcType=INTEGER},
+      product_inner_sn = #{product_inner_sn,jdbcType=INTEGER},
+      specification_inner_sn = #{specification_inner_sn,jdbcType=SMALLINT},
+      unit_inner_sn = #{unit_inner_sn,jdbcType=SMALLINT},
+      quantity = #{quantity,jdbcType=BIGINT} *1000,
+      sort_number = #{sort_number,jdbcType=SMALLINT},
+      product_vendor_name = #{product_vendor_name,jdbcType=VARCHAR},
+      product_name = #{product_name,jdbcType=VARCHAR},
+      specification = #{specification,jdbcType=VARCHAR},
+      unit = #{unit,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  
+  <!-- 产品编码: specification_vendor_sn -->
+  <select id="selectByExample" parameterType="com.yrt.project.modular.surgery.cust.OrthopaedicCustOisProductDetailExample" resultMap="BaseResultMap">
+    WITH prd AS (
+      select 
+        d.*,
+        spec.specification_vendor_sn
+      from orthopaedic_cust_ois_product_detail d
+      left join product_specification spec on 
+            spec.vendor_inner_sn = d.product_vendor_inner_sn
+            and spec.product_inner_sn = d.product_inner_sn
+            and spec.specification_inner_sn=d.specification_inner_sn
+    )
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />,specification_vendor_sn
+    from prd
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+</mapper>

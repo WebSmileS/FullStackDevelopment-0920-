@@ -1,0 +1,138 @@
+{
+    "Runtime": "dev",
+    "Port": "80",
+    "GZip": false,
+    "Cros": false,
+    "TLSCert": {
+        "Enable": true,
+        "Key": "cert/bjyixiu.com.key",
+        "Pem": "cert/bjyixiu.com.pem"
+    },
+    "Views": {
+        "静态页面根目录":"",
+        "Path": "/Users/yangtao/Downloads/dist",
+        "前端路由目录":"",
+        "Dir": [
+            "ptm", 
+            "logger",
+            "RegistAudit"
+        ],
+        "静态资源目录":"",
+        "StaticDir": [
+            "favicon.ico",
+            "images",
+            "jsonCfg",
+            "static",
+            "style",
+            "js"
+        ]
+    },
+    "FrontEnd": [
+        {
+            "Domain": "yrt.baitian.com",
+            "HomePath": "/Users/yangtao/Documents/ws/vue/ant/dist"
+        },
+        {
+            "Domain": "yxk.baitian.com",
+            "HomePath": "/Users/yangtao/Documents/ws/react/ikkyu-pc/dist"
+        },
+        {
+            "Domain": "",
+            "HomePath": "/Users/yangtao/Documents/ws/vue/data_screen/dist"
+        }
+    ],
+    "Proxies":[
+        {
+          "Enable": true,
+            "reverse:反向代理 cros: 跨域代理":"",
+            "type": "reverse",
+            "要代理的路由前缀": "",
+            "Prefix": "/v3",
+            "代理地址，Java服务一般为http://127.0.0.1:8080":"",
+            "Url": "http://yrttest.bjyixiu.com:8083"
+        },
+        {
+            "Enable": true,
+            "reverse:反向代理 cros: 跨域代理":"",
+            "type": "reverse",
+            "要代理的路由前缀": "",
+            "Prefix": "/v1",
+            "代理地址，Java服务一般为http://127.0.0.1:8080":"",
+            "Url": "http://yrtdev.bjyixiu.com:8080"
+        },
+        {
+            "Enable": true,
+            "reverse:反向代理 cros: 跨域代理":"",
+            "type": "reverse",
+            "要代理的路由前缀": "",
+            "Prefix": "/msg",
+            "代理地址，Java服务一般为http://127.0.0.1:8080":"",
+            "Url": "http://yrttest.bjyixiu.com:8084"
+        }
+    ],
+    "Logger": {
+        "Enable": true,
+        "日志的输出方式，ledis和mongodb(暂无)":"",
+        "Output": "ledis"
+    },
+    "Object": {
+        "Image": {
+            "Service": "QiNiu",
+            "AccessKey": "CSCkkxGgnGcDva7W_x5x20dZUulOQdchyWBtmNPi",
+            "SecretKey": "tQcw2D7w166B2iGn0GOgdfEh--BAbLJtHwPQP3-l",
+            "CallbackUrl": "http://yrtdev.bjyixiu.com/v1/qiniu/upcallback",
+            "Backet": "yrtdev",
+            "DownloadHost": "imgdev.bjyixiu.com",
+            "Expire": 3600
+      },
+        "Attachment": {
+            "Service": "QiNiu",
+            "AccessKey": "CSCkkxGgnGcDva7W_x5x20dZUulOQdchyWBtmNPi",
+            "SecretKey": "tQcw2D7w166B2iGn0GOgdfEh--BAbLJtHwPQP3-l",
+            "CallbackUrl": "http://yrtdev.bjyixiu.com/v1/qiniu/upcallback",
+            "Backet": "yrtdev_att",
+            "DownloadHost": "attdev.bjyixiu.com",
+            "Expire": 3600
+      }
+    },
+    "Pika": {
+        "Host": "yrtdev.bjyixiu.com:6379",
+        "Password": "tQxt525vshi0Qk"
+    },
+    "Mysql" : {
+        "Host": "rm-wz98pa666f242ic2rlo.mysql.rds.aliyuncs.com",
+        "Port": "3306",
+        "User": "dev_yrtcode",
+        "Password": "45KLauIHfE!uu8LKhL",
+        "Database": "yrt"
+    },
+    "MysqlEnt":{
+        "Host":"rm-wz98pa666f242ic2rlo.mysql.rds.aliyuncs.com",
+        "Port":"3306",
+        "User":"dev_arion",
+        "Password":"Viz6s0xBW$NuP6JFtZ",
+        "Database":"ent"
+    },
+    "SMS": {
+        "URL": "http://v.juhe.cn/sms/send",
+        "Key": "e024ba5badef109ce732494c54278d97",
+        "Expire": 300
+    },
+    "MPushYRT": {
+        "AppKey": "m30ee9ab8476b8",
+        "AppSecret": "89be142c40accad5c0a89b1ba5ae42d3"
+    },
+    "MPushYXK": {
+        "AppKey": "32bc997fb03e6",
+        "AppSecret": "e05fdd7bc096218c34fe873d76ccc3ee"
+    },
+    "KVDB": {
+        "Host": "yrtdev.bjyixiu.com:6379",
+        "Password": "tQxt525vshi0Qk"
+    },
+    "Session": {
+        "CookieName": "bjyixiu",
+        "Expire": 2592000,
+        "WXExpire": 2592000
+    }
+}

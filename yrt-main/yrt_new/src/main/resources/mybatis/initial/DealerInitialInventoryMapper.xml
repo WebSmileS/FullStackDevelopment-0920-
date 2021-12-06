@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.initial.mapper.DealerInitialInventoryMapper">
+
+	<select id="selectInventoryProductList" parameterType="map" resultType="ImportInventoryProduct">
+		SELECT
+		    id, org_id, sn, warehouse_id, warehouse_name, vendor_id, vendor_name, product_id, product_name,
+		    product_spec_id, product_spec, product_unit_id, product_unit, batch_number, produce_date,
+		    overdue_date, quantity, unit_price, create_date, create_id, create_by, product_type,
+		    status, error_msg
+		FROM
+		    dealer_initial_inventory
+		where 1=1
+			and org_id = #{org_id}
+			<if test="status != null">and status = #{status}</if>
+			<if test="warehouse_id != null">and warehouse_id = #{warehouse_id}</if>
+			<if test="vendor_name != null and vendor_name !=''">and vendor_name like concat('%', #{vendor_name}, '%')</if>
+			<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+	</select>
+	
+	<select id="selectInventoryProduct" parameterType="map" resultType="ImportInventoryProduct">
+		SELECT
+		    id, org_id, sn, warehouse_id, warehouse_name, vendor_id, vendor_name, product_id, product_name,
+		    product_spec_id, product_spec, product_unit_id, product_unit, batch_number, produce_date,
+		    overdue_date, quantity, unit_price, create_date, create_id, create_by, product_type,
+		    status, error_msg
+		FROM
+		    dealer_initial_inventory
+		where org_id = #{org_id} and id = #{id}
+	</select>
+	
+	<insert id="insertInitialInventory" parameterType="map">
+		INSERT INTO dealer_initial_inventory (
+	        id,
+	        org_id,
+	        sn,
+	        warehouse_id,
+	        warehouse_name,
+	        vendor_id,
+	        vendor_name,
+	        product_id,
+	        product_name,
+	        product_spec_id,
+	        product_spec,
+	        product_unit_id,
+	        product_unit,
+	        batch_number,
+	        produce_date,
+	        overdue_date,
+	        quantity,
+	        unit_price,
+	        create_date,
+	        create_id,
+	        create_by,
+	        product_type,
+	        status,
+	        error_msg
+	    ) VALUES (
+	        #{id},
+	        #{org_id},
+	        #{sn},
+	        #{warehouse_id},
+	        #{warehouse_name},
+	        #{vendor_id},
+	        #{vendor_name},
+	        #{product_id},
+	        #{product_name},
+	        #{product_spec_id},
+	        #{product_spec},
+	        #{product_unit_id},
+	        #{product_unit},
+	        #{batch_number},
+	        #{produce_date},
+	        #{overdue_date},
+	        #{quantity},
+	        #{unit_price},
+	        #{create_date},
+	        #{create_id},
+	        #{create_by},
+	        #{product_type},
+	        #{status},
+	        #{error_msg}
+	    )
+	</insert>
+	
+	<update id="updateInitialInventory" parameterType="map">
+		update dealer_initial_inventory
+		<set>
+			<if test="warehouse_id != null">warehouse_id = #{warehouse_id},</if>
+			<if test="warehouse_name != null">warehouse_name = #{warehouse_name},</if>
+			<if test="product_unit_id != null">product_unit_id = #{product_unit_id},</if>
+			<if test="product_unit != null">product_unit = #{product_unit},</if>
+			<if test="batch_number != null">batch_number = #{batch_number},</if>
+			<if test="produce_date != null">produce_date = #{produce_date},</if>
+			<if test="produce_date == null">produce_date = null,</if>
+			<if test="overdue_date != null">overdue_date = #{overdue_date},</if>
+			<if test="quantity != null">quantity = #{quantity},</if>
+			<if test="unit_price != null">unit_price = #{unit_price},</if>
+			<if test="status != null">status = #{status},</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="deleteInitialInventory" parameterType="long">
+		delete from dealer_initial_inventory 
+		where status = 0 and id = #{id}
+	</delete>
+	
+	<delete id="cleanInitialInventory" parameterType="long">
+		delete from dealer_initial_inventory 
+		where status = 0 and org_id = #{org_id}
+	</delete>
+</mapper> 

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.LogisticsMapper">
+
+	<insert id="insertLogisticsRecord" parameterType="map">
+ 		INSERT INTO odo_logistics_record
+	    (
+	        id,
+	        org_id,
+	        logistics_mode,
+	        third_logistics_company,
+	        logistics_sn,
+	        status,
+	        created_by,
+	        created_time,
+	        confirm_by,
+	        confirm_time
+	    ) VALUES
+	    (
+	        #{id},
+	        #{org_id},
+	        #{logistics_mode},
+	        #{third_logistics_company},
+	        #{logistics_sn},
+	        #{status},
+	        #{created_by},
+	        #{created_time},
+	        #{confirm_by},
+	        #{confirm_time}
+	    )
+	</insert>
+	
+	<update id="updateLogisticsRecord" parameterType="map">
+		UPDATE odo_logistics_record
+		<set>
+		    <if test="logistics_mode != null">logistics_mode = #{logistics_mode},</if>
+		    <if test="third_logistics_company != null and third_logistics_company != ''">third_logistics_company = #{third_logistics_company},</if>
+		    <if test="logistics_sn != null and logistics_sn != ''">logistics_sn = #{logistics_sn},</if>
+		    <if test="status != null">status = #{status},</if>
+		    <if test="confirm_by != null and confirm_by != ''">confirm_by = #{confirm_by},</if>
+		    <if test="confirm_time != null">confirm_time = #{confirm_time},</if>
+	    </set>
+		WHERE
+		    id = #{id}
+	</update>
+	
+	<delete id="deleteLogisticsRecord" parameterType="Long">
+ 		delete from odo_logistics_record where id = #{id}
+ 	</delete>
+ 	
+	<select id="selectLogisticsRecordList" parameterType="map" resultType="OdoLogisticsRecord">
+		SELECT
+		    id, org_id, logistics_mode, third_logistics_company, logistics_sn, status,
+		    created_by, created_time, confirm_by, confirm_time
+		FROM
+		    odo_logistics_record
+		WHERE org_id = #{org_id}
+		<if test="logistics_sn != null and dealer_name != ''">and logistics_sn like concat('%', #{logistics_sn}, '%')</if>
+		<if test="logistics_mode != null">and logistics_mode = #{logistics_mode}</if>
+		<if test="status != null">and status = #{status}</if>
+		<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+		<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+	</select>
+	
+	<select id="selectLogisticsRecordById" parameterType="Long" resultType="OdoLogisticsRecord">
+		SELECT
+		    id, org_id, logistics_mode, third_logistics_company, logistics_sn, status,
+		    created_by, created_time, confirm_by, confirm_time
+		FROM
+		    odo_logistics_record
+		WHERE id = #{id}
+	</select>
+	
+	<insert id="insertLogisticsRefOdoNotice" parameterType="map">
+ 		INSERT INTO logistics_ref_odo_notice
+	    (
+	        id,
+	        odo_notice_id,
+	        logistics_record_id
+	    ) VALUES
+	    (
+	        #{id},
+	        #{odo_notice_id},
+	        #{logistics_record_id}
+	    )
+	</insert>
+	
+	<delete id="deleteLogisticsRefOdoNotice" parameterType="Long">
+ 		delete from logistics_ref_odo_notice where logistics_record_id = #{logistics_record_id}
+ 	</delete>
+ 	
+ 	<select id="selectLogisticsRefOdoNotice" parameterType="Long" resultType="OdoNotice">
+		SELECT
+		    n.id, org_id, notice_id, dealer_inner_sn, dealer_name, purchasing_company_name,
+		    odo_inner_sn, sn, warehouse_name, bills_type, product_vendor_inner_sn,
+		    product_inner_sn, specification_inner_sn, unit_inner_sn, mdrf_inner_sn,
+		    product_vendor_name, product_name, specification, unit, mdrf_sn,
+		    batch_number, unit_price/10000 as unit_price, quantity/1000 as quantity, rate, produce_date, overdue_date,
+		    product_type, status, created_by, created_time, confirm_by, confirm_time
+		FROM odo_notice n
+		JOIN logistics_ref_odo_notice r on r.odo_notice_id = n.id
+		WHERE logistics_record_id = #{logistics_record_id}
+	</select>
+</mapper>

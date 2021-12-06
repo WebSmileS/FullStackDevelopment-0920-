@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.contract.mapper.HospitalDealerContractMapper">
+
+	<resultMap type="Contract" id="ContractResult">
+		<result  property="partA" column="hospital_inner_sn"/><!-- 医院内部编号 -->
+		<result  property="partA_name" column="hospital_name"/><!-- 医院名称 -->
+		<result  property="partA_address" column="partA_address"/><!-- 医院名称 -->
+		<result  property="partA_phone" column="partA_phone"/><!-- 医院名称 -->
+		<result  property="partB" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result  property="partB_name" column="dealer_name"/><!-- 经销商名称 -->
+		<result  property="partB_address" column="partB_address"/><!-- 经销商内部编号 -->
+		<result  property="partB_phone" column="partB_phone"/><!-- 经销商名称 -->
+		<result  property="contract_inner_sn" column="contract_inner_sn"/><!-- 合同内部编号 -->
+		<result  property="employee_inner_sn" column="employee_inner_sn"/><!-- 销售代表内部编号 -->
+		<result  property="employee_name" column="employee_name"/><!-- 销售代表名字 -->
+		<result  property="inputer_inner_sn" column="inputer_inner_sn"/><!-- 录入人员内部编号 -->
+		<result  property="inputer_name" column="inputer_name"/><!-- 录入人员名字 -->
+		<result property="payment_period" column="payment_period"/><!-- 回款周期 -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<result property="begin_date" column="begin_date"/><!-- 开始日期  -->
+		<result property="end_date" column="end_date"/><!-- 截止日期  -->
+		<result property="sign_date" column="sign_date"/><!-- 签订日期  -->
+		<result property="name" column="name"/><!-- 名称  -->
+		<result property="contract_sn" column="contract_sn"/><!-- 合同编号 -->
+		<result property="content" column="content"/><!-- 内容  -->
+		<result property="hospital_dept_inner_sn" column="hospital_dept_inner_sn"/><!-- 医院部门内部编号（逗号分隔）  -->
+		<result property="hospital_dept_name" column="hospital_dept_name"/><!-- 医院部门名称（逗号分隔）  -->
+		<result property="contract_type" column="contract_type"/><!-- 合同类型  0 hospitalDealer 1 hospitalVendor 2 dealerVendor 3 dealerDealer  -->
+	</resultMap>
+	
+		<sql id="selectContract">
+		select c.hospital_inner_sn, h.name as hospital_name, c.dealer_inner_sn, d.name as dealer_name, c.contract_inner_sn, 
+			c.sale_representative_inner_sn as employee_inner_sn, c.sale_representative_name as employee_name,
+			c.inputer_inner_sn, c.inputer_name, c.payment_period, c.status, c.begin_date, c.end_date, c.sign_date, c.name, c.contract_sn, c.content, 0 as contract_type
+		from hospital_dealer_contract c
+		inner join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		inner join dealer d on  d.dealer_inner_sn = c.dealer_inner_sn
+	</sql>
+
+	<select id="selectContractInfo" parameterType="map" resultMap="ContractResult">
+		select c.hospital_inner_sn, h.name as hospital_name, h.address as partA_address, h.phone as partA_phone, c.dealer_inner_sn, d.name as dealer_name, 
+			d.address as partB_address, d.phone as partB_phone, c.contract_inner_sn, 
+			c.sale_representative_inner_sn as employee_inner_sn, c.sale_representative_name as employee_name,
+			c.inputer_inner_sn, c.inputer_name, c.payment_period, c.status, c.begin_date, c.end_date, c.sign_date, c.name, c.contract_sn, c.content, 0 as contract_type
+			,group_concat(hdcd.department_inner_sn) as hospital_dept_inner_sn
+			,group_concat(hd.name) as hospital_dept_name
+		from hospital_dealer_contract c
+		inner join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		inner join dealer d on  d.dealer_inner_sn = c.dealer_inner_sn
+		left join hospital_dealer_contract_hospital_department hdcd on c.hospital_inner_sn = hdcd.hospital_inner_sn and c.dealer_inner_sn = hdcd.dealer_inner_sn and c.contract_inner_sn = hdcd.contract_inner_sn
+		left join hospital_department hd on hdcd.hospital_inner_sn = hd.hospital_inner_sn and hdcd.department_inner_sn = hd.department_inner_sn
+		where  c.hospital_inner_sn = #{partA} and c.dealer_inner_sn = #{partB} and c.contract_inner_sn = #{contract_inner_sn}		
+	</select>
+	
+	<select id="selectContractList" parameterType="map" resultMap="ContractResult">
+		<include refid="selectContract"/>
+		where  c.is_delete = 0
+		 <if test="status != null and status != ''">and c.status in (${status}) </if>
+		 <if test="partA != null   ">and c.hospital_inner_sn = #{partA}</if>
+		 <if test="partB != null  ">and c.dealer_inner_sn = #{partB}</if>
+		<if test="begin_date_s != null and begin_date_e != null"> begin_date betwwen #{begin_date_s} an  #{begin_date_e}</if>
+		<if test="end_date_s != null and end_date_e != null"> end_date = betwwen #{end_date_s} an  #{end_date_e}</if>
+		<if test="sign_date_s != null and sign_date_e != null"> sign_date = betwwen #{sign_date_s} an  #{end_date_e}</if>
+		 <if test="name != null and name != ''">and c.name like concat('%', #{name}, '%')</if>
+		 <if test="inputer_inner_sn != null and inputer_inner_sn != ''">and c.inputer_inner_sn = #{inputer_inner_sn}</if>
+		 <if test="employee_inner_sn != null and employee_inner_sn != ''">and c.sale_representative_inner_sn = #{employee_inner_sn}</if>
+		 <if test="contract_sn != null and contract_sn != ''">and c.contract_sn like concat('%', #{contract_sn}, '%')</if>
+		 <if test="partA_name != null and partA_name != ''">and h.name like concat('%', #{partA_name}, '%')</if>
+		 <if test="partB_name != null and partB_name != ''">and d.name like concat('%', #{partB_name}, '%')</if>
+	</select>
+	
+	<select id="addContract" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		 call hd_add_hospital_dealer_contract(
+	 		#{partA_i, mode=IN},
+			#{partB_i, mode=IN},
+	 		#{sale_representative_inner_sn_i, mode=IN},
+	 		#{inputer_inner_sn_i, mode=IN},
+	 		#{payment_period_i, mode=IN},
+	 		#{begin_date_i, mode=IN},
+	 		#{end_date_i, mode=IN},
+	 		#{sign_date_i, mode=IN},
+	 		#{name_i, mode=IN},
+	 		#{contract_sn_i, mode=IN},
+	 		#{content_i, mode=IN},
+	 		#{status_i, mode=IN},
+	 		#{sale_representative_name_i, mode=IN},
+			#{inputer_name_i, mode=IN},
+	 		#{contract_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+	 	    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+	 	    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+	 	    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+	 	    #{message_string_o ,mode=OUT,jdbcType=VARCHAR})
+	</select>
+	
+	<insert id = "insertCRelHD" parameterType="map">
+	 	INSERT INTO  hospital_dealer_contract_hospital_department(
+	 		hospital_inner_sn,
+			dealer_inner_sn,
+			contract_inner_sn,
+			department_inner_sn)
+		VALUES(
+			#{partA},
+			#{partB},
+			#{contract_inner_sn},
+			#{department_inner_sn}
+		)
+	</insert>
+	
+	<delete id="deleteCRelHD" parameterType="map">
+		delete from hospital_dealer_contract_hospital_department
+		where hospital_inner_sn = #{partA} and dealer_inner_sn = #{partB} and contract_inner_sn = #{contract_inner_sn}
+	</delete>
+	
+	<update id = "updateContract" parameterType = "map">
+		update hospital_dealer_contract
+		<set>
+			<if test="employee_inner_sn != null and employee_inner_sn != ''"> sale_representative_inner_sn = #{employee_inner_sn},</if>
+			<if test="employee_inner_sn == -1"> sale_representative_inner_sn = null,</if>
+			<if test="employee_name != null"> sale_representative_name = #{employee_name},</if>
+			<if test="inputer_inner_sn != null and inputer_inner_sn != ''"> inputer_inner_sn = #{inputer_inner_sn},</if>
+			<if test="payment_period != null"> payment_period = #{payment_period},</if>
+			<if test="status != null and status != ''"> status = #{status},</if>
+			<if test="begin_date != null "> begin_date = #{begin_date},</if>
+			<if test="end_date != null "> end_date = #{end_date},</if>
+			<if test="end_date != null "> end_date = #{end_date},</if>
+			<if test="sign_date != null "> sign_date = #{sign_date},</if>
+			<if test="sign_date == null and sign_date_null == 1"> sign_date = #{sign_date},</if>
+			<if test="name != null and name != ''"> name = #{name},</if>
+			<if test="contract_sn != null and contract_sn != ''"> contract_sn = #{contract_sn},</if>
+			<if test="content != null">content = #{content},</if>
+		</set>
+		where hospital_inner_sn = #{partA}
+		and	dealer_inner_sn = #{partB}
+		and contract_inner_sn = #{contract_inner_sn}
+	</update>	
+	
+	<delete id = "deleteContract" parameterType = "map">
+		delete from hospital_dealer_contract
+		where hospital_inner_sn = #{partA}
+			and	dealer_inner_sn = #{partB}
+			and contract_inner_sn = #{contract_inner_sn}
+	</delete>
+	
+	<select id="selectAllContract" parameterType="Contract" resultMap="ContractResult">
+		select c.hospital_inner_sn, h.name as hospital_name, c.dealer_inner_sn, d.name as dealer_name, c.contract_inner_sn, 
+			c.sale_representative_inner_sn as employee_inner_sn,c.sale_representative_name as employee_name,
+			c.inputer_inner_sn, c.inputer_name, c.payment_period, c.status, c.begin_date, c.end_date, c.sign_date, c.name, c.contract_sn, c.content, 0 as contract_type
+		from hospital_dealer_contract c
+		inner join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		inner join dealer d on  d.dealer_inner_sn = c.dealer_inner_sn
+		left join dealer_employee f on d.dealer_inner_sn = f.dealer_inner_sn and c.sale_representative_inner_sn = f.employee_inner_sn
+	</select>
+	
+	<update id="startContract" parameterType="map">
+	update Hospital_dealer_contract
+		 set status = 4	
+		 where
+		 status = 3
+		 and contract_inner_sn = #{contract_inner_sn}
+		 and hospital_inner_sn = #{hospital_inner_sn}
+		 and dealer_inner_sn = #{dealer_inner_sn}
+	</update>
+	
+	<update id="stopContract" parameterType="map">
+	update Hospital_dealer_contract
+		 set status = 5 	
+		 where
+		 status = 4 
+		 and contract_inner_sn = #{contract_inner_sn}
+		 and hospital_inner_sn = #{hospital_inner_sn}
+		 and dealer_inner_sn = #{dealer_inner_sn}
+	
+	</update>
+	<!-- 合同附件   -->
+					
+	<resultMap type="ContractAttachment" id="ContractAttachmentResult">
+		<result  property="partA" column="hospital_inner_sn"/><!-- 医院内部编号 -->
+		<result  property="partB" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result  property="contract_inner_sn" column="contract_inner_sn"/><!-- 合同内部编号 -->
+		<result  property="attachment_inner_sn" column="attachment_inner_sn"/><!-- 合同附件内部编号 -->
+		<result  property="attachment_name" column="attachment_name"/><!-- 合同附件名字 -->
+		<result  property="attachment_url" column="attachment_url"/><!-- 合同附件url -->
+				
+	</resultMap>
+	
+	<select id="selectContractAttachment" parameterType = "map" resultMap="ContractAttachmentResult">
+		select hospital_inner_sn
+				,dealer_inner_sn
+				,contract_inner_sn
+				,attachment_inner_sn
+				,name as attachment_name
+				,url as attachment_url
+		 from hospital_dealer_contract_attachment
+		where hospital_inner_sn = #{partA}
+		and	dealer_inner_sn = #{partB}
+		and contract_inner_sn = #{contract_inner_sn}
+	</select>
+	
+	<select id="addContractAttachment" parameterType = "map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call hd_add_hospital_dealer_contract_attachment(
+			#{partA_i, mode=IN},
+	 		#{partB_i, mode=IN},
+	 		#{contract_inner_sn_i, mode=IN},
+	 		#{name_i, mode=IN},
+	 		#{url_i, mode=IN},
+	 		#{attachment_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+	 	    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+	 	    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+	 	    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+	 	    #{message_string_o ,mode=OUT,jdbcType=VARCHAR});
+	</select>
+	
+	<delete id="deleteContractAttachment" parameterType = "map" >
+		delete from hospital_dealer_contract_attachment
+		where hospital_inner_sn = #{hospital_inner_sn}
+		and	dealer_inner_sn = #{dealer_inner_sn}
+		and contract_inner_sn = #{contract_inner_sn}
+		and attachment_inner_sn = #{attachment_inner_sn}
+	</delete>
+	
+	<delete id="deleteAllContractAttachment" parameterType = "map" >
+		delete from hospital_dealer_contract_attachment
+		where hospital_inner_sn = #{partA}
+		and	dealer_inner_sn = #{partB}
+		and contract_inner_sn = #{contract_inner_sn}
+	</delete>
+	 
+	 <!-- 合同商品部分 -->
+	<resultMap type="ContractVendorProduct" id="ContractProductResult">
+		<result  property="partA" column="hospital_inner_sn"/><!-- 医院内部编号 -->
+		<result  property="partB" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result  property="partB_name" column="dealer_name"/><!-- 经销商名称 -->
+		<result  property="product_vendor_inner_sn" column="product_vendor_inner_sn"/><!-- 厂商内部编号 -->
+		<result  property="product_vendor_name" column="product_vendor_name"/><!-- 厂商名称 -->
+		<result  property="product_inner_cn" column="product_inner_cn"/><!-- 商品内部编号 -->
+		<result  property="product_name" column="product_name"/><!-- 商品名称 -->
+		<result  property="specification_inner_sn" column="specification_inner_sn"/><!-- 规格型号编号 -->
+		<result  property="specification_name" column="specification_name"/><!-- 规格型号名称 -->
+		<result  property="inputer_inner_sn" column="inputer_inner_sn"/><!-- 录入人员内部编号 -->
+		<result  property="inputer_name" column="inputer_name"/><!-- 录入人员名字 -->
+		<result property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编码 -->
+		<result property="unit_name" column="unit_name"/><!-- 单位名称 -->
+		<result property="price" column="price"/><!-- 价格  -->
+		<result property="product_type" column="product_type"/><!-- 商品类型 0 自建 1平台 -->
+		<result property="hasCertImage" column="hasCertImage"/><!-- 是否存在注册证图片  -->
+	</resultMap>
+	
+	<select id="selectAllContractProductList"  parameterType="map" resultMap="ContractProductResult">
+		select hospital_inner_sn
+			,dealer_inner_sn
+	        ,contract_inner_sn
+	        ,dealer_inner_sn as product_vendor_inner_sn
+	        ,product_dealer_name as product_vendor_name 
+	        ,product_inner_sn
+	        ,product_name as product_name
+	        ,specification_inner_sn
+	        ,specification as specification_name
+	        ,unit_inner_sn
+	        ,unit as unit_name
+	        ,price/10000 as price
+			,0 as product_type
+			,0 as hasCertImage
+		from hospital_dealer_contract_dealer_product cp
+		where cp.hospital_inner_sn = #{partA} and cp.dealer_inner_sn = #{partB} and cp.contract_inner_sn = #{contract_inner_sn}
+		union all
+		select hospital_inner_sn
+			,dealer_inner_sn
+	        ,contract_inner_sn
+	        ,product_vendor_inner_sn
+	        ,product_vendor_name		        
+	        ,cp.product_inner_sn
+	        ,product_name
+	        ,specification_inner_sn
+	        ,specification as specification_name
+	        ,unit_inner_sn
+	        ,unit as unit_name
+	        ,price/10000 as price
+			,1 as product_type
+			,IFNULL(hasMdrf,0) as hasCertImage
+		from hospital_dealer_contract_product cp
+		LEFT JOIN (
+	        SELECT vendor_inner_sn, product_inner_sn, 
+	        CASE when IFNULL(COUNT(*),0)>0 then 1 else 0 end as hasMdrf
+	        FROM product_mdrf m 
+	        where m.is_delete = 0
+	        GROUP BY vendor_inner_sn,product_inner_sn
+		) i on i.vendor_inner_sn=cp.product_vendor_inner_sn and i.product_inner_sn = cp.product_inner_sn
+		where cp.hospital_inner_sn = #{partA} and cp.dealer_inner_sn = #{partB} and cp.contract_inner_sn = #{contract_inner_sn}
+	</select>
+	
+	<insert id="insertContractDealerProduct" parameterType="map">
+		INSERT INTO  hospital_dealer_contract_dealer_product
+			(hospital_inner_sn,
+			dealer_inner_sn,
+			contract_inner_sn,
+			product_inner_sn,
+			specification_inner_sn,
+			unit_inner_sn,
+			price,
+			product_dealer_name,
+			product_name,
+			specification,
+			unit)
+		VALUES(
+			#{partA},
+			#{partB},
+			#{contract_inner_sn},
+			#{product_inner_sn},
+			#{specification_inner_sn},
+			#{unit_inner_sn},
+			#{price},
+			#{product_vendor_name},
+			#{product_name},
+			#{specification},
+			#{unit_name}
+		)
+	</insert>
+	
+	<insert id="insertContractProduct" parameterType="map">
+		INSERT INTO  hospital_dealer_contract_product
+			(hospital_inner_sn,
+			dealer_inner_sn,
+			contract_inner_sn,
+			product_vendor_inner_sn,
+			product_inner_sn,
+			specification_inner_sn,
+			unit_inner_sn,
+			price,
+			product_vendor_name,
+			product_name,
+			specification,
+			unit)
+		VALUES(
+			#{partA},
+			#{partB},
+			#{contract_inner_sn},
+			#{product_vendor_inner_sn},
+			#{product_inner_sn},
+			#{specification_inner_sn},
+			#{unit_inner_sn},
+			#{price},
+			#{product_vendor_name},
+			#{product_name},
+			#{specification},
+			#{unit_name}
+		)
+	</insert>
+	
+	<update id="updateContractDealerProduct" parameterType="map">
+		update hospital_dealer_contract_dealer_product
+		set price = #{price}
+		where hospital_inner_sn = #{hospital_inner_sn}
+		and dealer_inner_sn = #{dealer_inner_sn}
+		and contract_inner_sn = #{contract_inner_sn}
+		and product_inner_sn = #{product_inner_sn}
+		and specification_inner_sn = #{specification_inner_sn}
+		and unit_inner_sn = #{unit_inner_sn}
+	</update>
+	
+	<update id="updateContractProduct" parameterType="map">
+		update hospital_dealer_contract_dealer_product
+		set price = #{price}
+		where hospital_inner_sn = #{hospital_inner_sn}
+		and dealer_inner_sn = #{dealer_inner_sn}
+		and contract_inner_sn = #{contract_inner_sn}
+		and vendor_inner_sn = #{vendor_inner_sn}
+		and product_inner_sn = #{product_inner_sn}
+		and specification_inner_sn = #{specification_inner_sn}
+		and unit_inner_sn = #{unit_inner_sn}
+	</update>
+	
+	
+	<delete id="deleteContractDealerProduct" parameterType="map">
+		delete from hospital_dealer_contract_dealer_product
+		where hospital_inner_sn = #{hospital_inner_sn}
+		and dealer_inner_sn = #{dealer_inner_sn}
+		and contract_inner_sn = #{contract_inner_sn}
+		and product_inner_sn = #{product_inner_sn}
+		and specification_inner_sn = #{specification_inner_sn}
+		and unit_inner_sn = #{unit_inner_sn}
+	</delete>
+	
+	<delete id="deleteAllContractDealerProduct" parameterType="map">
+		delete from hospital_dealer_contract_dealer_product
+		where hospital_inner_sn = #{partA}
+		and dealer_inner_sn = #{partB}
+		and contract_inner_sn = #{contract_inner_sn}
+	</delete>
+	
+	<delete id="deleteContractProduct" parameterType="map">
+		delete from hospital_dealer_contract_dealer_product
+		where hospital_inner_sn = #{hospital_inner_sn}
+		and dealer_inner_sn = #{dealer_inner_sn}
+		and contract_inner_sn = #{contract_inner_sn}
+		and vendor_inner_sn = #{vendor_inner_sn}
+		and product_inner_sn = #{product_inner_sn}
+		and specification_inner_sn = #{specification_inner_sn}
+		and unit_inner_sn = #{unit_inner_sn}
+	</delete>
+	
+	<delete id="deleteAllContractProduct" parameterType="map">
+		delete from hospital_dealer_contract_product
+		where hospital_inner_sn = #{partA}
+		and dealer_inner_sn = #{partB}
+		and contract_inner_sn = #{contract_inner_sn}
+	</delete>
+	
+	 <!-- 合同审批部分 -->
+	<select id="selectContractApproveNextId" parameterType="map" resultType="String">
+		SELECT approve_inner_sn 
+			from hospital_dealer_contract_approve
+			where hospital_inner_sn = #{partA}
+			and	dealer_inner_sn = #{partB}
+			and contract_inner_sn = #{contract_inner_sn}
+			and previous_approve_inner_sn =  #{approve_inner_sn}
+			limit 1
+	</select>
+	
+	<select id="selectContracctListByApprover" parameterType="map" resultType="map">
+		select distinct c.hospital_inner_sn as partA
+			,c.dealer_inner_sn as partB
+			,c.contract_inner_sn
+			,c.contract_sn 
+			,c.name as contract_name
+			,h.name as partA_name
+	        ,d.name as partB_name
+	        ,c.status 
+	        ,a.approver_inner_sn
+	        ,a.approver_name
+     		,0 as contract_type
+		from hospital_dealer_contract c
+		inner join  hospital_dealer_contract_approve x on c.hospital_inner_sn = x.hospital_inner_sn 
+															and c.dealer_inner_sn = x.dealer_inner_sn 
+															and c.contract_inner_sn = x.contract_inner_sn 
+															and x.approver_inner_sn = #{user_id}
+		left join hospital h on c.hospital_inner_sn = h.hospital_inner_sn
+		left join dealer d  on d.dealer_inner_sn = c.dealer_inner_sn
+		left join hospital_dealer_contract_approve a on c.hospital_inner_sn = a.hospital_inner_sn 
+														and c.dealer_inner_sn = a.dealer_inner_sn 
+														and c.contract_inner_sn = a.contract_inner_sn 
+														and a.status in(2,4)
+		where c.status in(1,2)
+			<if test="name != null and name != ''">and c.name like concat('%', #{name}, '%')</if>
+			<if test="contract_sn != null and contract_sn != ''">and c.contract_sn like concat('%', #{contract_sn}, '%')</if>
+			<if test="partA_name != null and partA_name != ''">and h.name like concat('%', #{partA_name}, '%')</if>
+			<if test="partB_name != null and partB_name != ''">and d.name like concat('%', #{partB_name}, '%')</if>
+	</select>
+	
+	<select id="addContractApprove" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call hd_add_hospital_dealer_contract_approve( 
+				#{partA_i, mode=IN},
+		 		#{partB_i, mode=IN},
+		 		#{contract_inner_sn_i, mode=IN},
+		 		#{approver_inner_sn_i, mode=IN},
+		 		#{previous_approve_inner_sn_i, mode=IN},
+		 		#{approver_name_i, mode=IN},
+		 		#{approve_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		 	    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		 	    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		 	    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		 	    #{message_string_o ,mode=OUT,jdbcType=VARCHAR});
+	</select>
+	
+	<update id="updateContractApprove" parameterType="map" >
+		update hospital_dealer_contract_approve
+		<set>
+			<if test="approve_time != null "> approve_time = #{approve_time},</if>	
+			<if test="status != null "> status = #{status},</if>			  
+			<if test="description != null and description != ''"> description = #{description},</if>
+		</set>
+		where hospital_inner_sn = #{partA}
+			and	dealer_inner_sn = #{partB}
+			and contract_inner_sn = #{contract_inner_sn}
+			and approve_inner_sn = #{approve_inner_sn}	
+	</update>
+		
+	<!-- 合同审批备注 -->
+	<select id="selectContractApproveCommentList" parameterType="map" resultType="map">
+		SELECT 	hospital_inner_sn as partA,
+				dealer_inner_sn as partB,
+				contract_inner_sn,
+				approve_inner_sn,
+				previous_approve_inner_sn,
+				approver_inner_sn,
+		        a.approver_name,
+				a.status,
+				a.approve_time,
+				a.description,
+				b.comment_inner_sn,
+				b.comment_time,
+				b.comment
+		from  hospital_dealer_contract_approve a
+		left join hospital_dealer_contract_approve_comment b using(hospital_inner_sn,dealer_inner_sn,contract_inner_sn,approve_inner_sn)
+		where hospital_inner_sn = #{partA}
+		and	dealer_inner_sn = #{partB}
+		and contract_inner_sn = #{contract_inner_sn}
+	</select>
+	
+	<select id="addContractApproveComment" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map" >
+		call hd_add_hospital_dealer_contract_approve_comment( 
+			#{partA_i, mode=IN},
+	 		#{partB_i, mode=IN},
+	 		#{contract_inner_sn_i, mode=IN},
+	 		#{approve_inner_sn_i, mode=IN},
+	 		#{comment_i, mode=IN},
+	 		#{comment_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+	 	    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+	 	    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+	 	    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+	 	    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+ 	    )
+	</select>
+
+	<select id="analyseContract" parameterType="map" resultType="map">
+		
+	</select>
+	
+	<select id="selectContractProductList" parameterType="map" resultType="ContractProduct">
+		select product_vendor_inner_sn, product_vendor_name, product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, price/10000 as price, 1 as product_type
+		from hospital_dealer_contract_product p
+		inner join hospital_dealer_contract c using(hospital_inner_sn, dealer_inner_sn, contract_inner_sn)
+		where c.status in(4,5,7)
+			and hospital_inner_sn = #{org_id}
+			and dealer_inner_sn = #{organization_inner_sn}
+			and product_vendor_inner_sn = #{product_vendor_inner_sn}
+			and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn}
+	</select>
+	
+	<select id="selectContractDealerProductList" parameterType="map" resultType="ContractProduct">
+		select dealer_inner_sn as  product_vendor_inner_sn, product_dealer_name as product_vendor_name, product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, price/10000 as price, 0 as product_type
+		from hospital_dealer_contract_dealer_product p
+		inner join hospital_dealer_contract c using(hospital_inner_sn, dealer_inner_sn, contract_inner_sn)
+		where c.status in(4,5,7)
+			and hospital_inner_sn = #{org_id}
+			and dealer_inner_sn = #{organization_inner_sn}
+			and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn}
+	</select>
+	
+	<select id="searchContractDetail" parameterType="map" resultType="SearchContractDetail">
+		select partA, h.name as partA_name, partB, d.name as partB_name, contract_sn, price/10000 as price, product_vendor_name, product_name, specification, unit, 
+			product_type, 0 as contract_type, c.status, c.name as contract_name
+		from(
+			select hospital_inner_sn as partA, dealer_inner_sn as partB, contract_inner_sn, price, product_vendor_name, product_name, specification, unit, 1 as product_type
+			from hospital_dealer_contract_product
+			where hospital_inner_sn = #{org_id} 
+		        <if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+		        <if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+		        <if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			union all
+			select hospital_inner_sn as partA, dealer_inner_sn as partB, contract_inner_sn, price, product_dealer_name as product_vendor_name, product_name, specification, unit, 0 as product_type
+			from hospital_dealer_contract_dealer_product
+			where hospital_inner_sn = #{org_id} 
+		        <if test="product_vendor_name != null and product_vendor_name != ''">and product_dealer_name like concat('%', #{product_vendor_name}, '%')</if>
+		        <if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+		        <if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+		)a
+		join hospital h on h.hospital_inner_sn=a.partA
+		join dealer d on d.dealer_inner_sn=a.partB
+		join hospital_dealer_contract c on c.hospital_inner_sn=a.partA and c.dealer_inner_sn=a.partB and c.contract_inner_sn=a.contract_inner_sn
+		where c.status in (3,4,5,6,7) and c.is_delete = 0
+		union all
+		select partA, h.name as partA_name, partB, d.name as partB_name, contract_sn, price/10000 as price, product_vendor_name, product_name, specification, unit, 
+			product_type, 1 as contract_type, c.status, c.name as contract_name
+		from(
+			select hospital_inner_sn as partA, vendor_inner_sn as partB, contract_inner_sn, price, product_vendor_name, product_name, specification, unit, 1 as product_type
+			from hospital_vendor_contract_product
+			where hospital_inner_sn = #{org_id} 
+		        <if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+		        <if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+		        <if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+		)a
+		join hospital h on h.hospital_inner_sn=a.partA
+		join vendor d on d.vendor_inner_sn=a.partB
+		join hospital_vendor_contract c on c.hospital_inner_sn=a.partA and c.vendor_inner_sn=a.partB and c.contract_inner_sn=a.contract_inner_sn
+		where c.status in (3,4,5,6,7) and c.is_delete = 0
+	</select>
+</mapper>

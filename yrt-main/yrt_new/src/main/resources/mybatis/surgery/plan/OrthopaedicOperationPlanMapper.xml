@@ -1,0 +1,624 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.surgery.plan.mapper.OrthopaedicOperationPlanMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlan">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="creator_user_inner_sn" jdbcType="BIGINT" property="creator_user_inner_sn" />
+    <result column="creator_user_name" jdbcType="VARCHAR" property="creator_user_name" />
+    <result column="creator_org_inner_sn" jdbcType="BIGINT" property="creator_org_inner_sn" />
+    <result column="creator_org_type" jdbcType="TINYINT" property="creator_org_type" />
+    <result column="doctor_employee_inner_sn" jdbcType="BIGINT" property="doctor_employee_inner_sn" />
+    <result column="doctor_name" jdbcType="VARCHAR" property="doctor_name" />
+    <result column="hospital_inner_sn" jdbcType="BIGINT" property="hospital_inner_sn" />
+    <result column="hospital_name" jdbcType="VARCHAR" property="hospital_name" />
+    <result column="hospital_department_inner_sn" jdbcType="BIGINT" property="hospital_department_inner_sn" />
+    <result column="hospital_department_name" jdbcType="VARCHAR" property="hospital_department_name" />
+    <result column="patient_name" jdbcType="VARCHAR" property="patient_name" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="keywords" jdbcType="VARCHAR" property="keywords" />
+    <result column="operation_time" jdbcType="TIMESTAMP" property="operation_time" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+    <result column="is_delete" jdbcType="BIT" property="is_delete" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="created_time" />
+    <result column="last_modified_time" jdbcType="TIMESTAMP" property="last_modified_time" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    id, creator_user_inner_sn, creator_user_name, creator_org_inner_sn, creator_org_type, 
+    doctor_employee_inner_sn, doctor_name, hospital_inner_sn, hospital_name, hospital_department_inner_sn, 
+    hospital_department_name, patient_name, name, description, keywords, operation_time, 
+    status, is_delete, created_time, last_modified_time
+  </sql>
+  <select id="selectByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from orthopaedic_operation_plan
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from orthopaedic_operation_plan
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from orthopaedic_operation_plan
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanExample">
+    delete from orthopaedic_operation_plan
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlan">
+    insert into orthopaedic_operation_plan (id, creator_user_inner_sn, creator_user_name, 
+      creator_org_inner_sn, creator_org_type, 
+      doctor_employee_inner_sn, doctor_name, hospital_inner_sn, 
+      hospital_name, hospital_department_inner_sn, 
+      hospital_department_name, patient_name, 
+      name, description, keywords, 
+      operation_time, status, is_delete, 
+      created_time, last_modified_time)
+    values (#{id,jdbcType=BIGINT}, #{creator_user_inner_sn,jdbcType=BIGINT}, #{creator_user_name,jdbcType=VARCHAR}, 
+      #{creator_org_inner_sn,jdbcType=BIGINT}, #{creator_org_type,jdbcType=TINYINT}, 
+      #{doctor_employee_inner_sn,jdbcType=BIGINT}, #{doctor_name,jdbcType=VARCHAR}, #{hospital_inner_sn,jdbcType=BIGINT}, 
+      #{hospital_name,jdbcType=VARCHAR}, #{hospital_department_inner_sn,jdbcType=BIGINT}, 
+      #{hospital_department_name,jdbcType=VARCHAR}, #{patient_name,jdbcType=VARCHAR}, 
+      #{name,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{keywords,jdbcType=VARCHAR}, 
+      #{operation_time,jdbcType=TIMESTAMP}, #{status,jdbcType=TINYINT}, #{is_delete,jdbcType=BIT}, 
+      #{created_time,jdbcType=TIMESTAMP}, #{last_modified_time,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlan">
+    insert into orthopaedic_operation_plan
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="creator_user_inner_sn != null">
+        creator_user_inner_sn,
+      </if>
+      <if test="creator_user_name != null">
+        creator_user_name,
+      </if>
+      <if test="creator_org_inner_sn != null">
+        creator_org_inner_sn,
+      </if>
+      <if test="creator_org_type != null">
+        creator_org_type,
+      </if>
+      <if test="doctor_employee_inner_sn != null">
+        doctor_employee_inner_sn,
+      </if>
+      <if test="doctor_name != null">
+        doctor_name,
+      </if>
+      <if test="hospital_inner_sn != null">
+        hospital_inner_sn,
+      </if>
+      <if test="hospital_name != null">
+        hospital_name,
+      </if>
+      <if test="hospital_department_inner_sn != null">
+        hospital_department_inner_sn,
+      </if>
+      <if test="hospital_department_name != null">
+        hospital_department_name,
+      </if>
+      <if test="patient_name != null">
+        patient_name,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="description != null">
+        description,
+      </if>
+      <if test="keywords != null">
+        keywords,
+      </if>
+      <if test="operation_time != null">
+        operation_time,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="is_delete != null">
+        is_delete,
+      </if>
+      <if test="created_time != null">
+        created_time,
+      </if>
+      <if test="last_modified_time != null">
+        last_modified_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="creator_user_inner_sn != null">
+        #{creator_user_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="creator_user_name != null">
+        #{creator_user_name,jdbcType=VARCHAR},
+      </if>
+      <if test="creator_org_inner_sn != null">
+        #{creator_org_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="creator_org_type != null">
+        #{creator_org_type,jdbcType=TINYINT},
+      </if>
+      <if test="doctor_employee_inner_sn != null">
+        #{doctor_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="doctor_name != null">
+        #{doctor_name,jdbcType=VARCHAR},
+      </if>
+      <if test="hospital_inner_sn != null">
+        #{hospital_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="hospital_name != null">
+        #{hospital_name,jdbcType=VARCHAR},
+      </if>
+      <if test="hospital_department_inner_sn != null">
+        #{hospital_department_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="hospital_department_name != null">
+        #{hospital_department_name,jdbcType=VARCHAR},
+      </if>
+      <if test="patient_name != null">
+        #{patient_name,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="keywords != null">
+        #{keywords,jdbcType=VARCHAR},
+      </if>
+      <if test="operation_time != null">
+        #{operation_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=TINYINT},
+      </if>
+      <if test="is_delete != null">
+        #{is_delete,jdbcType=BIT},
+      </if>
+      <if test="created_time != null">
+        #{created_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="last_modified_time != null">
+        #{last_modified_time,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanExample" resultType="java.lang.Long">
+    select count(*) from orthopaedic_operation_plan
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update orthopaedic_operation_plan
+    <set>
+      <if test="record.id != null">
+        id = #{record.id,jdbcType=BIGINT},
+      </if>
+      <if test="record.creator_user_inner_sn != null">
+        creator_user_inner_sn = #{record.creator_user_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.creator_user_name != null">
+        creator_user_name = #{record.creator_user_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.creator_org_inner_sn != null">
+        creator_org_inner_sn = #{record.creator_org_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.creator_org_type != null">
+        creator_org_type = #{record.creator_org_type,jdbcType=TINYINT},
+      </if>
+      <if test="record.doctor_employee_inner_sn != null">
+        doctor_employee_inner_sn = #{record.doctor_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.doctor_name != null">
+        doctor_name = #{record.doctor_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.hospital_inner_sn != null">
+        hospital_inner_sn = #{record.hospital_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.hospital_name != null">
+        hospital_name = #{record.hospital_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.hospital_department_inner_sn != null">
+        hospital_department_inner_sn = #{record.hospital_department_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.hospital_department_name != null">
+        hospital_department_name = #{record.hospital_department_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.patient_name != null">
+        patient_name = #{record.patient_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.name != null">
+        name = #{record.name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.description != null">
+        description = #{record.description,jdbcType=VARCHAR},
+      </if>
+      <if test="record.keywords != null">
+        keywords = #{record.keywords,jdbcType=VARCHAR},
+      </if>
+      <if test="record.operation_time != null">
+        operation_time = #{record.operation_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.status != null">
+        status = #{record.status,jdbcType=TINYINT},
+      </if>
+      <if test="record.is_delete != null">
+        is_delete = #{record.is_delete,jdbcType=BIT},
+      </if>
+      <if test="record.created_time != null">
+        created_time = #{record.created_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.last_modified_time != null">
+        last_modified_time = #{record.last_modified_time,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update orthopaedic_operation_plan
+    set id = #{record.id,jdbcType=BIGINT},
+      creator_user_inner_sn = #{record.creator_user_inner_sn,jdbcType=BIGINT},
+      creator_user_name = #{record.creator_user_name,jdbcType=VARCHAR},
+      creator_org_inner_sn = #{record.creator_org_inner_sn,jdbcType=BIGINT},
+      creator_org_type = #{record.creator_org_type,jdbcType=TINYINT},
+      doctor_employee_inner_sn = #{record.doctor_employee_inner_sn,jdbcType=BIGINT},
+      doctor_name = #{record.doctor_name,jdbcType=VARCHAR},
+      hospital_inner_sn = #{record.hospital_inner_sn,jdbcType=BIGINT},
+      hospital_name = #{record.hospital_name,jdbcType=VARCHAR},
+      hospital_department_inner_sn = #{record.hospital_department_inner_sn,jdbcType=BIGINT},
+      hospital_department_name = #{record.hospital_department_name,jdbcType=VARCHAR},
+      patient_name = #{record.patient_name,jdbcType=VARCHAR},
+      name = #{record.name,jdbcType=VARCHAR},
+      description = #{record.description,jdbcType=VARCHAR},
+      keywords = #{record.keywords,jdbcType=VARCHAR},
+      operation_time = #{record.operation_time,jdbcType=TIMESTAMP},
+      status = #{record.status,jdbcType=TINYINT},
+      is_delete = #{record.is_delete,jdbcType=BIT},
+      created_time = #{record.created_time,jdbcType=TIMESTAMP},
+      last_modified_time = #{record.last_modified_time,jdbcType=TIMESTAMP}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlan">
+    update orthopaedic_operation_plan
+    <set>
+      <if test="creator_user_inner_sn != null">
+        creator_user_inner_sn = #{creator_user_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="creator_user_name != null">
+        creator_user_name = #{creator_user_name,jdbcType=VARCHAR},
+      </if>
+      <if test="creator_org_inner_sn != null">
+        creator_org_inner_sn = #{creator_org_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="creator_org_type != null">
+        creator_org_type = #{creator_org_type,jdbcType=TINYINT},
+      </if>
+      <if test="doctor_employee_inner_sn != null">
+        doctor_employee_inner_sn = #{doctor_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="doctor_name != null">
+        doctor_name = #{doctor_name,jdbcType=VARCHAR},
+      </if>
+      <if test="hospital_inner_sn != null">
+        hospital_inner_sn = #{hospital_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="hospital_name != null">
+        hospital_name = #{hospital_name,jdbcType=VARCHAR},
+      </if>
+      <if test="hospital_department_inner_sn != null">
+        hospital_department_inner_sn = #{hospital_department_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="hospital_department_name != null">
+        hospital_department_name = #{hospital_department_name,jdbcType=VARCHAR},
+      </if>
+      <if test="patient_name != null">
+        patient_name = #{patient_name,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="keywords != null">
+        keywords = #{keywords,jdbcType=VARCHAR},
+      </if>
+      <if test="operation_time != null">
+        operation_time = #{operation_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=TINYINT},
+      </if>
+      <if test="is_delete != null">
+        is_delete = #{is_delete,jdbcType=BIT},
+      </if>
+      <if test="created_time != null">
+        created_time = #{created_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="last_modified_time != null">
+        last_modified_time = #{last_modified_time,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlan">
+    update orthopaedic_operation_plan
+    set creator_user_inner_sn = #{creator_user_inner_sn,jdbcType=BIGINT},
+      creator_user_name = #{creator_user_name,jdbcType=VARCHAR},
+      creator_org_inner_sn = #{creator_org_inner_sn,jdbcType=BIGINT},
+      creator_org_type = #{creator_org_type,jdbcType=TINYINT},
+      doctor_employee_inner_sn = #{doctor_employee_inner_sn,jdbcType=BIGINT},
+      doctor_name = #{doctor_name,jdbcType=VARCHAR},
+      hospital_inner_sn = #{hospital_inner_sn,jdbcType=BIGINT},
+      hospital_name = #{hospital_name,jdbcType=VARCHAR},
+      hospital_department_inner_sn = #{hospital_department_inner_sn,jdbcType=BIGINT},
+      hospital_department_name = #{hospital_department_name,jdbcType=VARCHAR},
+      patient_name = #{patient_name,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      description = #{description,jdbcType=VARCHAR},
+      keywords = #{keywords,jdbcType=VARCHAR},
+      operation_time = #{operation_time,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=TINYINT},
+      is_delete = #{is_delete,jdbcType=BIT},
+      created_time = #{created_time,jdbcType=TIMESTAMP},
+      last_modified_time = #{last_modified_time,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  
+  <!-- join list -->
+  <select id="selectForHospital" parameterType="com.yrt.project.modular.surgery.plan.PlanSearchParam" resultMap="BaseResultMap">
+    select distinct
+       p.id, p.creator_user_inner_sn, p.creator_user_name, p.creator_org_inner_sn, p.creator_org_type, 
+       p.doctor_employee_inner_sn, p.doctor_name, p.hospital_inner_sn, p.hospital_name, p.hospital_department_inner_sn, 
+       p.hospital_department_name, p.patient_name, p.name, p.description, p.keywords, p.operation_time, 
+       p.status, p.is_delete, p.created_time, p.last_modified_time,
+       (select group_concat(type_inner_sn) from orthopaedic_operation_plan_type where plan_id=p.id) as types
+    from orthopaedic_operation_plan p
+    <if test="types != null">
+        JOIN orthopaedic_operation_plan_type t on t.plan_id=p.id 
+          and t.type_inner_sn in <foreach open="(" separator="," close=")" collection="types" item="listItem" >#{listItem}</foreach>
+    </if>
+    <if test="packageStatuses != null">
+      join orthopaedic_operation_plan_ois_instance ois on ois.plan_id = p.id
+          and ois.status in <foreach open="(" separator="," close=")" collection="packageStatuses" item="listItem" >#{listItem}</foreach>
+    </if>
+    where p.is_delete = 0
+      and p.hospital_inner_sn = #{currentOrgId} <!-- target hospital -->
+      and (<!-- draft: isCreator -->
+         p.status not in(${@com.yrt.project.modular.surgery.OperationPlanStatus@DRAFT.value()})
+         or(
+           p.creator_org_type = ${currentOrgType.value()}
+           and p.creator_org_inner_sn = #{currentOrgId} 
+           and p.creator_user_inner_sn = #{currentUserId} 
+         ) 
+      )
+      <if test="statuses != null">
+        and p.status in <foreach open="(" separator="," close=")" collection="statuses" item="listItem" >#{listItem}</foreach>
+      </if>
+      <if test="operationTimeFrom != null">and p.operation_time >= #{operationTimeFrom}</if>
+      <if test="operationTimeTo != null">and p.operation_time &lt;= #{operationTimeTo}</if>
+      <if test="q != null">
+      and (
+        p.name like #{q}
+        OR p.keywords like #{q}
+        OR p.doctor_name like #{q}
+        OR p.patient_name like #{q}
+      )</if>
+    order by created_time desc
+  </select>
+  
+   <select id="selectForDealer" parameterType="com.yrt.project.modular.surgery.plan.PlanSearchParam" resultMap="BaseResultMap">
+    select distinct
+       p.id, p.creator_user_inner_sn, p.creator_user_name, p.creator_org_inner_sn, p.creator_org_type, 
+       p.doctor_employee_inner_sn, p.doctor_name, p.hospital_inner_sn, p.hospital_name, p.hospital_department_inner_sn, 
+       p.hospital_department_name, p.patient_name, p.name, p.description, p.keywords, p.operation_time, 
+       p.status, p.is_delete, p.created_time, p.last_modified_time,
+       (select group_concat(type_inner_sn) from orthopaedic_operation_plan_type where plan_id=p.id) as types
+    from orthopaedic_operation_plan p
+    <if test="types != null">
+        JOIN orthopaedic_operation_plan_type t on t.plan_id=p.id 
+          and t.type_inner_sn in <foreach open="(" separator="," close=")" collection="types" item="listItem" >#{listItem}</foreach>
+    </if>
+    <choose>
+        <when test="packageStatuses != null">
+          join orthopaedic_operation_plan_ois_instance ois on ois.plan_id = p.id
+             and ois.dealer_inner_sn = #{currentOrgId}
+             and ois.status in <foreach open="(" separator="," close=")" collection="packageStatuses" item="listItem" >#{listItem}</foreach>
+        </when>
+        <otherwise> <!-- 无 packageStatues -->
+          LEFT join orthopaedic_operation_plan_ois_instance ois on ois.plan_id = p.id
+              and ois.dealer_inner_sn = #{currentOrgId}
+        </otherwise>
+    </choose>
+    where p.is_delete = 0
+      and( 
+        ois.id is not null <!-- 有关联手术包 -->
+        OR(<!-- 无关联手术包：isCreatorOrg-->
+          p.creator_org_type = ${currentOrgType.value()}  
+          and p.creator_org_inner_sn = #{currentOrgId}
+        )
+      )
+      and (<!-- draft: isCreator -->
+         p.status not in(${@com.yrt.project.modular.surgery.OperationPlanStatus@DRAFT.value()})
+         or(
+           p.creator_org_type = ${currentOrgType.value()} 
+           and p.creator_org_inner_sn = #{currentOrgId} 
+           and p.creator_user_inner_sn = #{currentUserId} 
+         )
+      )
+      <if test="statuses != null">
+        and p.status in <foreach open="(" separator="," close=")" collection="statuses" item="listItem" >#{listItem}</foreach>
+      </if>
+     
+      <if test="operationTimeFrom != null">and p.operation_time >= #{operationTimeFrom}</if>
+      <if test="operationTimeTo != null">and p.operation_time &lt;= #{operationTimeTo}</if>
+      
+      <if test="hospitalName != null">
+        and p.hospital_name like #{hospitalName}
+      </if>
+      <if test="q != null">
+      and (
+        p.name like #{q}
+        OR p.keywords like #{q}
+        OR p.doctor_name like #{q}
+        OR p.patient_name like #{q}
+      )</if>
+    order by created_time desc
+  </select>
+  
+  <resultMap type="com.yrt.project.modular.surgery.plan.PlanOisView" id="OisView" extends="com.yrt.project.modular.surgery.plan.mapper.OrthopaedicOperationPlanOisInstanceMapper.BaseResultMap">
+  </resultMap>
+  <select id="selectOisView" parameterType="com.yrt.project.modular.surgery.plan.PlanSearchParam" resultMap="OisView">
+    select distinct
+       ois.*,
+       p.name as plan_name, 
+       p.doctor_name, 
+       p.hospital_name, 
+       p.hospital_department_name,
+       p.patient_name, 
+       p.operation_time,
+       t2.name type_name,
+       b2.name brand_name
+       <if test="aggMoneyForSelectOisView">
+         ,
+         (
+             ifnull(
+               (select 
+                 sum(d1.sale_quantity * d1.unit_price) 
+               from orthopaedic_operation_plan_ois_product_detail d1 
+               where d1.ois_ins_id = ois.id
+               )
+             , 0) 
+             + ifnull(
+              (select 
+                sum(d2.sale_quantity * d2.unit_price) 
+              from orthopaedic_operation_plan_kit_product_detail d2
+              join orthopaedic_operation_plan_kit_instance kit 
+                 on kit.id = d2.kit_ins_id 
+               where kit.ois_ins_id = ois.id 
+              )
+             ,0)
+           )  / (1000 * 10000)
+           as total_money
+       </if>
+    from orthopaedic_operation_plan p
+    <if test="types != null">
+        JOIN orthopaedic_operation_plan_type t on t.plan_id=p.id 
+          and t.type_inner_sn in <foreach open="(" separator="," close=")" collection="types" item="listItem" >#{listItem}</foreach>
+    </if>
+    join orthopaedic_operation_plan_ois_instance ois on ois.plan_id = p.id
+    left join orthopaedic_operation_top_type t2 on t2.type_inner_sn = ois.type_inner_sn
+    left join orthopaedic_ois_brand b2 on b2.brand_inner_sn = ois.brand_inner_sn
+    where p.is_delete = 0
+      <choose>
+        <when test="isHospital">and p.hospital_inner_sn = #{currentOrgId}</when>
+        <otherwise>and ois.dealer_inner_sn = #{currentOrgId}</otherwise>
+      </choose>
+      
+      <if test="statuses != null">
+        and p.status in <foreach open="(" separator="," close=")" collection="statuses" item="listItem" >#{listItem}</foreach>
+      </if>
+      <if test="packageStatuses != null">
+          and ois.status in <foreach open="(" separator="," close=")" collection="packageStatuses" item="listItem" >#{listItem}</foreach>
+      </if>
+      
+      <if test="operationTimeFrom != null">and p.operation_time >= #{operationTimeFrom}</if>
+      <if test="operationTimeTo != null">and p.operation_time &lt;= #{operationTimeTo}</if>
+      
+      <if test="hospitalName != null">
+        and p.hospital_name like #{hospitalName}
+      </if>
+      <if test="q != null">
+      and (
+        p.name like #{q}
+        OR p.keywords like #{q}
+        OR p.doctor_name like #{q}
+        OR p.patient_name like #{q}
+      )</if>
+    order by p.id desc, ois.created_time asc
+  </select>
+</mapper>

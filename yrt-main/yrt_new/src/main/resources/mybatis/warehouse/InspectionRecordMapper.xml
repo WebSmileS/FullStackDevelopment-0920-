@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.InspectionRecordMapper">
+
+	<select id="selectInspectionRecordList" parameterType="map" resultType="InspectionRecord">
+		SELECT
+		    id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, 
+		    warehouse_inner_sn, warehouse_name, inspection_status, is_cancel, description, cancel_reason,
+		    created_by, created_time, inspection_by, inspection_time, confirm_by, confirm_time, cancel_by, cancel_time
+		FROM inspection_record
+		WHERE org_id = #{org_id} AND system_type = #{system_type}
+			<if test="history == 1">and (is_cancel = 1 or inspection_status in (${inspection_status}))</if>
+			<if test="history == 0">and is_cancel = 0 and inspection_status = #{inspection_status}</if>
+			<if test="bills_type != null">and bills_type = #{bills_type}</if>
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn}</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(inspection_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(inspection_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+	</select>
+	
+	<select id="selectInspectionRecordInfo" parameterType="Long" resultType="InspectionRecord">
+		SELECT
+		    id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, 
+		    warehouse_inner_sn, warehouse_name, inspection_status, is_cancel, description, cancel_reason,
+		    created_by, created_time, inspection_by, inspection_time, confirm_by, confirm_time, cancel_by, cancel_time
+		FROM inspection_record
+		WHERE id = #{id}
+	</select>
+	
+	<select id="selectInspectionRecordDetailList" parameterType="map" resultType="InspectionRecordDetail">
+		SELECT
+		    id, inspection_record_id, product_vendor_inner_sn, product_vendor_name, product_inner_sn, product_name,
+		    specification_inner_sn, specification, unit_inner_sn, unit, batch_number, arrival_quantity, qualified_quantity,
+		    unqualified_quantity, unqualified_reason, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, product_type,
+		    voucher_type_c, voucher_inner_sn_c, arrival_detail_id, finish_quantity
+		FROM inspection_record_detail
+		WHERE 1 = 1
+			<if test="id != null">and id = #{id}</if>
+			<if test="inspection_record_id != null">and inspection_record_id = #{inspection_record_id}</if>
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+	</select>
+	
+	<select id="sumInspectionRecordDetailByArrival" parameterType="map" resultType="BigDecimal">
+		SELECT
+		    sum(qualified_quantity + unqualified_quantity) as sumQuantity
+		FROM inspection_record_detail d
+		INNER JOIN inspection_record r on r.id = d.inspection_record_id
+        WHERE r.is_cancel = 0 and r.inspection_status in (0,1,2) and d.voucher_type_c = 13
+			and arrival_detail_id = #{arrival_detail_id}
+		GROUP BY arrival_detail_id
+	</select>
+	
+	<insert id="insertInspectionRecord" parameterType="InspectionRecord">
+		INSERT INTO inspection_record (
+        	id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, 
+		    warehouse_inner_sn, warehouse_name, inspection_status, description,
+		    created_by, created_time, inspection_by, inspection_time
+	    ) VALUES (
+	        #{id}, #{org_id}, #{system_type}, #{bills_type}, #{sn}, #{organization_inner_sn}, #{organization_name}, 
+	        #{warehouse_inner_sn}, #{warehouse_name}, #{inspection_status}, #{description},
+	        #{created_by}, #{created_time}, #{inspection_by}, #{inspection_time}
+	    )
+	</insert>
+	
+	<update id="updateInspectionRecord" parameterType="map">
+		update inspection_record
+		<set>
+			<if test="organization_inner_sn != null">organization_inner_sn = #{organization_inner_sn},</if>
+			<if test="organization_name != null">organization_name = #{organization_name},</if>
+			<if test="bills_type != null">bills_type = #{bills_type},</if>
+			<if test="warehouse_inner_sn != null">warehouse_inner_sn = #{warehouse_inner_sn},</if>
+			<if test="warehouse_name != null">warehouse_name = #{warehouse_name},</if>
+			<if test="description != null">description = #{description},</if>
+			<if test="cancel_reason != null">cancel_reason = #{cancel_reason},</if>
+			<if test="is_cancel != null">is_cancel = #{is_cancel},</if>
+			<if test="inspection_status != null">inspection_status = #{inspection_status},</if>
+			<if test="inspection_by != null and inspection_by != ''">inspection_by = #{inspection_by},</if>
+			<if test="inspection_time != null">inspection_time = #{inspection_time},</if>
+			<if test="confirm_by != null and confirm_by != ''">confirm_by = #{confirm_by},</if>
+			<if test="confirm_time != null">confirm_time = #{confirm_time},</if>
+			<if test="cancel_by != null and cancel_by != ''">cancel_by = #{cancel_by},</if>
+			<if test="cancel_time != null">cancel_time = #{cancel_time},</if>
+		</set>
+		where 1 = 1
+			<if test="id != null">and id = #{id}</if>
+	</update>
+	
+	<delete id="deleteInspectionRecord" parameterType="map">
+		delete from inspection_record 
+		where id = #{id}
+	</delete>
+	
+	<insert id="insertInspectionRecordDetail" parameterType="InspectionRecordDetail">
+		INSERT INTO inspection_record_detail (
+        	id, inspection_record_id, product_vendor_inner_sn, product_vendor_name, product_inner_sn, product_name,
+		    specification_inner_sn, specification, unit_inner_sn, unit, batch_number, arrival_quantity, qualified_quantity,
+		    unqualified_quantity, unqualified_reason, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, product_type,
+		    voucher_type_c, voucher_inner_sn_c, arrival_detail_id, finish_quantity
+	    ) VALUES (
+	        #{id}, #{inspection_record_id}, #{product_vendor_inner_sn}, #{product_vendor_name}, #{product_inner_sn}, #{product_name}, 
+	        #{specification_inner_sn}, #{specification}, #{unit_inner_sn}, #{unit}, #{batch_number}, #{arrival_quantity}, #{qualified_quantity},
+	        #{unqualified_quantity},#{unqualified_reason},#{mdrf_inner_sn},#{mdrf_sn},#{produce_date},#{overdue_date},#{product_type}, 
+	        #{voucher_type_c}, #{voucher_inner_sn_c}, #{arrival_detail_id}, #{finish_quantity}
+	    )
+	</insert>
+	
+	<update id="updateInspectionRecordDetail" parameterType="map">
+		update inspection_record_detail
+		<set>
+			<if test="finish_quantity != null">finish_quantity = #{finish_quantity},</if>
+			<if test="arrival_detail_id != null">arrival_detail_id = #{arrival_detail_id},</if>
+		</set>
+		where 1 = 1
+			<if test="id != null">and id = #{id}</if>
+	</update>
+	
+	<delete id="deleteInspectionRecordDetail" parameterType="map">
+		delete from inspection_record_detail 
+		where 1 = 1
+			<if test="inspection_record_id != null">and inspection_record_id = #{inspection_record_id}</if>
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+	</delete>
+	
+	<select id="selectExistInspectionRecord" parameterType="map" resultType="CheckPurchasingRecord">
+		SELECT
+		    CASE WHEN (d.id) > 0 THEN 1 ELSE 0 END AS isExist,
+		    IFNULL(p.quantity,0) as order_quantity,
+		    CASE WHEN IFNULL(p.arrival_quantity,0) = 0 THEN 0 ELSE d.arrival_quantity END as arrival_quantity,
+		    CASE WHEN IFNULL(p.qualified_quantity,0) = 0 THEN 0 ELSE d.qualified_quantity END as qualified_quantity,
+		    CASE WHEN IFNULL(p.unqualified_quantity,0) = 0 THEN 0 ELSE d.unqualified_quantity END as unqualified_quantity,
+		    d.batch_number, d.voucher_inner_sn_c, d.warehouse_inner_sn, d.warehouse_name,
+		    d.mdrf_inner_sn, d.mdrf_sn, d.produce_date, d.overdue_date, inspection_detail_id
+		FROM (
+	        SELECT count(d.id) as id, d.id as inspection_detail_id, SUM(arrival_quantity) AS arrival_quantity, 
+                SUM(qualified_quantity) AS qualified_quantity, 
+                SUM(unqualified_quantity) AS unqualified_quantity, 
+                batch_number, voucher_inner_sn_c, warehouse_inner_sn, warehouse_name,
+                mdrf_inner_sn, mdrf_sn, produce_date, overdue_date
+	        FROM inspection_record_detail d
+	        INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	        WHERE 1 = 1 and r.is_cancel = 0 and r.inspection_status in (1,2)
+	        	<if test="batch_number != null">and d.batch_number = #{batch_number}</if>
+                <if test="voucher_type_c != null">and d.voucher_type_c = #{voucher_type_c}</if>
+                <if test="voucher_inner_sn_c != null">and d.voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+	        GROUP BY voucher_inner_sn_c, d.id, warehouse_inner_sn, warehouse_name
+		) d
+		LEFT JOIN purchasing_record p on p.id = d.voucher_inner_sn_c
+	</select>
+	
+	<select id="isExistInspectionRecord" parameterType="map" resultType="Boolean">
+		SELECT
+		    CASE WHEN (d.id) > 0 THEN 1 ELSE 0 END AS isExist
+		FROM (
+	        SELECT count(d.id) as id, voucher_inner_sn_c
+	        FROM inspection_record_detail d
+	        INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	        WHERE 1 = 1 and r.is_cancel = 0 and r.inspection_status in (0,1,2)
+			<if test="voucher_type_c != null">and d.voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and d.voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+			<if test="arrival_detail_id != null">and d.arrival_detail_id = #{arrival_detail_id}</if>
+	        GROUP BY voucher_inner_sn_c
+		) d
+		LEFT JOIN purchasing_record p on p.id = d.voucher_inner_sn_c
+	</select>
+	
+	<select id="selectControlUsablePurchasingRecordList" parameterType="map" resultType="PurchasingRecordProduct">
+		select id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, mdrf_inner_sn, mdrf_sn,
+		    produce_date, overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.arrival_quantity - ifnull(a.finish_quantity,0)) as order_quantity,
+		    product_type, created_by, created_time, 1 as product_type, arrival_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.arrival_detail_id, arrival_quantity, batch_number
+		        FROM(
+	                SELECT d.id as arrival_detail_id, arrival_quantity, voucher_inner_sn_c, batch_number
+	                FROM arrival_record_detail d
+	                INNER JOIN arrival_record r on r.id = d.arrival_record_id
+	                WHERE r.is_cancel = 0 and r.arrival_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.arrival_detail_id, sum(qualified_quantity+unqualified_quantity) as finish_quantity
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (0,1,2) and d.voucher_type_c = 13
+	                GROUP BY d.arrival_detail_id
+		        ) i on i.arrival_detail_id = a.arrival_detail_id
+		        WHERE (i.arrival_detail_id is null or finish_quantity &lt; arrival_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c
+		WHERE record_status = 2 and org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn} and bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+	</select>
+</mapper>

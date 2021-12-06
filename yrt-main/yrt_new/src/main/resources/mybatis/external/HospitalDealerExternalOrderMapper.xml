@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.external.mapper.HospitalDealerExternalOrderMapper">
+
+	<select id="insertPurchaseOrder" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call hd_add_hospital_po_dealer_so(
+			#{org_id_i, mode=IN},
+			#{organization_inner_sn_i, mode=IN},
+			#{buyer_inner_sn_i, mode=IN},
+			#{purchase_department_inner_sn_i, mode=IN},
+			#{purchase_creator_inner_sn_i, mode=IN},
+			#{purchase_auditor_inner_sn_i, mode=IN},
+			#{sale_creator_inner_sn_i, mode=IN},
+			#{sale_auditor_inner_sn_i, mode=IN},
+			#{purchase_warehouse_inner_sn_i, mode=IN},
+			#{po_sn_i, mode=IN},
+			#{so_sn_i, mode=IN},
+			#{expect_aog_date_i, mode=IN},
+			#{status_i, mode=IN},
+			#{create_organization_type_i, mode=IN},
+			#{create_time_i, mode=IN},
+			#{audit_time_i, mode=IN},
+			#{confirm_time_i, mode=IN},
+			#{description_i, mode=IN},
+			#{purchase_affirmant_inner_sn_i, mode=IN},
+			#{sale_affirmant_inner_sn_i, mode=IN},
+			#{buyer_name_i, mode=IN},
+			#{purchase_department_i, mode=IN},
+			#{purchase_creator_name_i, mode=IN},
+			#{purchase_auditor_name_i, mode=IN},
+			#{sale_creator_name_i, mode=IN},
+			#{sale_auditor_name_i, mode=IN},
+			#{purchase_warehouse_name_i, mode=IN},
+			#{purchase_affirmant_name_i, mode=IN},
+			#{sale_affirmant_name_i, mode=IN},
+			#{po_so_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<select id="insertPurchaseOrderVendorDetail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call hd_add_hospital_po_dealer_so_product_detail(
+			#{org_id_i, mode=IN},
+			#{organization_inner_sn_i, mode=IN},
+			#{po_so_inner_sn_i, mode=IN},
+			#{product_vendor_inner_sn_i, mode=IN},
+			#{product_inner_sn_i, mode=IN},
+			#{specification_inner_sn_i, mode=IN},
+			#{unit_inner_sn_i, mode=IN},
+			#{quantity_i, mode=IN},
+			#{unit_price_i, mode=IN},
+			#{discount_i, mode=IN},
+			#{rate_i, mode=IN},
+			#{sort_number_i, mode=IN},
+			#{status_i, mode=IN},
+			#{product_vendor_name_i, mode=IN},
+			#{product_name_i, mode=IN},
+			#{specification_i, mode=IN},
+			#{unit_i, mode=IN},
+			#{batch_number_i, mode=IN},
+			#{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<select id="insertPurchaseOrderDealerDetail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call hd_add_hospital_po_dealer_so_dealer_product_detail(
+			#{org_id_i, mode=IN},
+			#{organization_inner_sn_i, mode=IN},
+			#{po_so_inner_sn_i, mode=IN},
+			#{product_dealer_inner_sn_i, mode=IN},
+			#{product_inner_sn_i, mode=IN},
+			#{specification_inner_sn_i, mode=IN},
+			#{unit_inner_sn_i, mode=IN},
+			#{quantity_i, mode=IN},
+			#{unit_price_i, mode=IN},
+			#{discount_i, mode=IN},
+			#{rate_i, mode=IN},
+			#{sort_number_i, mode=IN},
+			#{status_i, mode=IN},
+			#{product_dealer_name_i, mode=IN},
+			#{product_name_i, mode=IN},
+			#{specification_i, mode=IN},
+			#{unit_i, mode=IN},
+			#{batch_number_i, mode=IN},
+			#{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+</mapper> 

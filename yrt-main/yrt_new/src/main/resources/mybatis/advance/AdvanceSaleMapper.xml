@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.advance.mapper.AdvanceSaleMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.advance.domain.AdvanceSale">
+    <!--@mbg.generated-->
+    <!--@Table advance_sale-->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="advance_sale_no" jdbcType="VARCHAR" property="advanceSaleNo" />
+    <result column="sellers_id" jdbcType="BIGINT" property="sellersId" />
+    <result column="sellers_name" jdbcType="VARCHAR" property="sellersName" />
+    <result column="buyer_id" jdbcType="BIGINT" property="buyerId" />
+    <result column="buyer_name" jdbcType="VARCHAR" property="buyerName" />
+    <result column="create_user_id" jdbcType="BIGINT" property="createUserId" />
+    <result column="create_user_name" jdbcType="VARCHAR" property="createUserName" />
+    <result column="audit_user_id" jdbcType="BIGINT" property="auditUserId" />
+    <result column="audit_user_name" jdbcType="VARCHAR" property="auditUserName" />
+    <result column="audit_time" jdbcType="TIMESTAMP" property="auditTime" />
+    <result column="audit_status" jdbcType="TINYINT" property="auditStatus" />
+    <result column="description" jdbcType="LONGVARCHAR" property="description" />
+    <result column="expect_aog_date" jdbcType="TIMESTAMP" property="expectAogDate" />
+    <result column="warehouse_id" jdbcType="BIGINT" property="warehouseId" />
+    <result column="warehouse_name" jdbcType="VARCHAR" property="warehouseName" />
+    <result column="warehouse_user_id" jdbcType="BIGINT" property="warehouseUserId" />
+    <result column="warehouse_user_name" jdbcType="VARCHAR" property="warehouseUserName" />
+    <result column="agent_user_id" jdbcType="BIGINT" property="agentUserId" />
+    <result column="agent_user_name" jdbcType="VARCHAR" property="agentUserName" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, advance_sale_no, sellers_id, sellers_name, buyer_id, buyer_name,
+    create_user_id, create_user_name, audit_user_id, audit_user_name, audit_time,
+    audit_status, description, expect_aog_date, warehouse_id, warehouse_name,
+    warehouse_user_id, warehouse_user_name, agent_user_id, agent_user_name
+  </sql>
+</mapper>

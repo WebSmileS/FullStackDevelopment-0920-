@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.DealerInventoryMapper">
+
+	<!-- 经销商库存 -->
+	<resultMap type="InventoryProduct" id="InventoryProductResult">
+		<id      property="org_id" column="org_id"/><!-- 机构ID -->
+		<result  property="warehouse_inner_sn" column="warehouse_inner_sn"/><!-- 仓库内部编号 -->
+		<result  property="warehouse_name" column="warehouse_name"/><!-- 仓库名称 -->
+		<result  property="product_vendor_inner_sn" column="product_vendor_inner_sn"/><!-- 产品)厂商内部编号 -->
+		<result  property="product_vendor_name" column="product_vendor_name"/><!-- (产品)厂商名称(冗余) -->
+		<result  property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result  property="product_name" column="product_name"/><!-- 产品名称(冗余) -->
+		<result  property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号 -->
+		<result  property="specification" column="specification"/><!-- 型号规格(冗余) -->
+		<!-- <result  property="unit_inner_sn" column="unit_inner_sn"/> --><!-- 单位内部编号 -->
+		<result  property="unit" column="unit"/><!-- 单位(冗余) -->
+		<!-- <result  property="inventory_inner_sn" column="inventory_inner_sn"/>库存内部编号
+		<result  property="mdrf_inner_sn" column="mdrf_inner_sn"/>登记表内部编号(自建产品无)
+		<result  property="mdrf_sn" column="mdrf_sn"/> --><!-- 医疗器械注册证号(冗余)(自建产品无) -->
+		<result  property="unit_price" column="unit_price"/><!-- 单价 -->
+		<result  property="quantity" column="quantity"/><!-- 数量 -->
+		<result  property="produce_date" column="produce_date"/><!-- 生产日期 -->
+		<result  property="overdue_date" column="overdue_date"/><!-- 失效日期 -->
+		<!-- <result  property="in_time" column="in_time"/>入库时间
+		<result  property="status" column="status"/>类别内部编号
+		<result  property="type" column="type"/> --><!-- 类别 -->
+		<result  property="batch_number" column="batch_number"/><!-- 批号 -->
+		<result  property="product_type" column="product_type"/><!-- 产品类型 0:经销商(自建)产品   1:厂商产品 -->
+	</resultMap>
+	
+	<select id="selectFirstProductName" parameterType="map" resultType="String">
+		SELECT * FROM(
+			SELECT d.product_name
+			from dealer_product_inventory d
+			where d.dealer_inner_sn = #{org_id}
+			union all
+			SELECT d.product_name
+			from dealer_dealer_product_min_unit_inventory d
+			where d.dealer_inner_sn = #{org_id}
+		) A LIMIT 1
+	</select>
+	
+	<select id="selectInventoryProductLevel1" parameterType="map" resultMap="InventoryProductResult">
+		<if test="selectVendor == 1">
+		SELECT d.dealer_inner_sn AS org_id, d.product_vendor_inner_sn, d.product_vendor_name, 
+	        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit,
+	        CAST(sum((d.average_price/10000)*(d.quantity/1000))/(sum(d.quantity)/1000) AS DECIMAL(16,4)) as unit_price, sum(d.quantity)/1000 as quantity, 1 as product_type
+		from dealer_product_min_unit_inventory d
+		where d.dealer_inner_sn = #{org_id} AND d.quantity != 0 AND date_format(now(),'%y%m%d') &lt;= date_format(d.overdue_date,'%y%m%d')
+		  <if test="warehouseIds != null and warehouseIds.size > 0">
+			AND d.`warehouse_inner_sn` IN
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>
+		  </if>
+	        <if test="product_vendor_inner_sn != null">and d.product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+	        <if test="product_inner_sn != null">and d.product_inner_sn = #{product_inner_sn}</if>
+	        <if test="specification_inner_sn != null">and d.specification_inner_sn = #{specification_inner_sn}</if>
+	        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+	        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+	        <if test="specification !=null and specification !=''">and d.specification like concat('%', #{specification}, '%')</if>
+	        <if test="batch_number !=null and batch_number !=''">and d.batch_number like concat('%', #{batch_number}, '%')</if>
+	        <if test="key !=null and key !=''">and (d.batch_number like concat('%', #{key}, '%') or d.specification like concat('%', #{key}, '%') or d.product_name like concat('%', #{key}, '%'))</if>
+		group by d.dealer_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn
+		</if>
+		<if test="selectVendor == 1 and selectDealer == 1">
+        UNION ALL
+        </if>
+        <if test="selectDealer == 1">
+		SELECT d.dealer_inner_sn AS org_id ,d.product_dealer_inner_sn as product_vendor_inner_sn, d.product_dealer_name as product_vendor_name, 
+	        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit,
+	        CAST(sum((d.average_price/10000)*(d.quantity/1000))/(sum(d.quantity)/1000) AS DECIMAL(16,4)) as unit_price, sum(d.quantity)/1000 as quantity,  0 as product_type
+		from dealer_dealer_product_min_unit_inventory d
+		where d.dealer_inner_sn = #{org_id} AND d.quantity != 0 AND date_format(now(),'%y%m%d') &lt;= date_format(d.overdue_date,'%y%m%d')
+		<if test="warehouseIds != null and warehouseIds.size > 0">
+		AND d.`warehouse_inner_sn` IN
+		<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+			#{warehouseId}
+		</foreach>
+		</if>
+			<if test="product_vendor_inner_sn != null">and d.product_dealer_inner_sn = #{product_vendor_inner_sn}</if>
+	        <if test="product_inner_sn != null">and d.product_inner_sn = #{product_inner_sn}</if>
+	        <if test="specification_inner_sn != null">and d.specification_inner_sn = #{specification_inner_sn}</if>
+	        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+	        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+	        <if test="specification !=null and specification !=''">and d.specification like concat('%', #{specification}, '%')</if>
+	        <if test="batch_number !=null and batch_number !=''">and d.batch_number like concat('%', #{batch_number}, '%')</if>
+	        <if test="key !=null and key !=''">and (d.batch_number like concat('%', #{key}, '%') or d.specification like concat('%', #{key}, '%') or d.product_name like concat('%', #{key}, '%'))</if>
+		group by d.dealer_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn
+		</if>
+	</select>
+	
+	<select id="selectInventoryProductLevel2" parameterType="map" resultMap="InventoryProductResult">
+		<if test="selectVendor == 1">
+		SELECT d.dealer_inner_sn AS org_id, d.warehouse_inner_sn, m.name as warehouse_name ,d.product_vendor_inner_sn, d.product_vendor_name, 
+	        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit,
+	        CAST(sum((d.average_price/10000)*(d.quantity/1000))/(sum(d.quantity)/1000) AS DECIMAL(16,4)) as unit_price, sum(d.quantity)/1000 as quantity, 1 as product_type
+		from dealer_product_min_unit_inventory d
+		left join dealer_warehouse_model m on d.dealer_inner_sn=m.dealer_inner_sn and d.warehouse_inner_sn=m.warehouse_model_inner_sn
+		where d.dealer_inner_sn = #{org_id} AND d.quantity != 0 AND date_format(now(),'%y%m%d') &lt;= date_format(d.overdue_date,'%y%m%d')
+		<if test="warehouseIds != null and warehouseIds.size > 0">
+		AND d.`warehouse_inner_sn` IN
+		<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+			#{warehouseId}
+		</foreach>
+		</if>
+	        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+	        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+	        <if test="specification !=null and specification !=''">and d.specification like concat('%', #{specification}, '%')</if>
+	        <if test="batch_number !=null and batch_number !=''">and d.batch_number like concat('%', #{batch_number}, '%')</if>
+	        <if test="key !=null and key !=''">and (d.batch_number like concat('%', #{key}, '%') or d.specification like concat('%', #{key}, '%') or d.product_name like concat('%', #{key}, '%'))</if>
+	        <if test="product_vendor_inner_sn !=null">and d.product_vendor_inner_sn=#{product_vendor_inner_sn}</if>
+	        <if test="product_inner_sn !=null">and d.product_inner_sn=#{product_inner_sn}</if>
+	        <if test="specification_inner_sn !=null">and d.specification_inner_sn=#{specification_inner_sn}</if>
+		group by d.dealer_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.warehouse_inner_sn
+		</if>
+		<if test="selectVendor == 1 and selectDealer == 1">
+        UNION ALL
+        </if>
+        <if test="selectDealer == 1">
+		SELECT d.dealer_inner_sn AS org_id, d.warehouse_inner_sn, m.name as warehouse_name ,d.product_dealer_inner_sn as product_vendor_inner_sn, d.product_dealer_name as product_vendor_name, 
+	        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit,
+	        CAST(sum((d.average_price/10000)*(d.quantity/1000))/(sum(d.quantity)/1000) AS DECIMAL(16,4)) as unit_price, sum(d.quantity)/1000 as quantity,  0 as product_type
+		from dealer_dealer_product_min_unit_inventory d
+		left join dealer_warehouse_model m on d.dealer_inner_sn=m.dealer_inner_sn and d.warehouse_inner_sn=m.warehouse_model_inner_sn
+		where d.dealer_inner_sn = #{org_id} AND d.quantity != 0 AND date_format(now(),'%y%m%d') &lt;= date_format(d.overdue_date,'%y%m%d')
+		<if test="warehouseIds != null and warehouseIds.size > 0">
+		AND d.`warehouse_inner_sn` IN
+		<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+			#{warehouseId}
+		</foreach>
+		</if>
+	        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+	        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+	        <if test="specification !=null and specification !=''">and d.specification like concat('%', #{specification}, '%')</if>
+	        <if test="batch_number !=null and batch_number !=''">and d.batch_number like concat('%', #{batch_number}, '%')</if>
+	        <if test="key !=null and key !=''">and (d.batch_number like concat('%', #{key}, '%') or d.specification like concat('%', #{key}, '%') or d.product_name like concat('%', #{key}, '%'))</if>
+	        <if test="product_vendor_inner_sn !=null">and d.product_dealer_inner_sn=#{product_vendor_inner_sn}</if>
+	        <if test="product_inner_sn !=null">and d.product_inner_sn=#{product_inner_sn}</if>
+	        <if test="specification_inner_sn !=null">and d.specification_inner_sn=#{specification_inner_sn}</if>
+		group by d.dealer_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.warehouse_inner_sn
+		</if>
+	</select>
+	
+	<select id="selectInventoryProductLevel3" parameterType="map" resultMap="InventoryProductResult">
+		<if test="selectVendor == 1">
+			SELECT d.dealer_inner_sn AS org_id, d.warehouse_inner_sn, m.name as warehouse_name ,d.product_vendor_inner_sn, d.product_vendor_name,
+				d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit,
+				CAST(sum((d.average_price/10000)*(d.quantity/1000))/(sum(d.quantity)/1000) AS DECIMAL(16,4)) as unit_price,
+				sum(d.quantity)/1000 as quantity, max(d.produce_date) as produce_date, max(d.overdue_date) as overdue_date,
+				d.batch_number, 1 as product_type, case when d.overdue_date is null or date_format(now(),'%y%m%d') &lt;= date_format(d.overdue_date,'%y%m%d') then false else true end as isExpire
+			from dealer_product_min_unit_inventory d
+			left join dealer_warehouse_model m on d.dealer_inner_sn=m.dealer_inner_sn and d.warehouse_inner_sn=m.warehouse_model_inner_sn
+			where d.dealer_inner_sn = #{org_id} AND d.quantity != 0
+			<if test="warehouseIds != null and warehouseIds.size > 0">
+				AND d.`warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+			<if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+			<if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+			<if test="specification !=null and specification !=''">and d.specification like concat('%', #{specification}, '%')</if>
+			<if test="batch_number !=null and batch_number !=''">and d.batch_number like concat('%', #{batch_number}, '%')</if>
+			<if test="key !=null and key !=''">and (d.batch_number like concat('%', #{key}, '%') or d.specification like concat('%', #{key}, '%') or d.product_name like concat('%', #{key}, '%'))</if>
+			<if test="product_vendor_inner_sn !=null">and d.product_vendor_inner_sn=#{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn !=null">and d.product_inner_sn=#{product_inner_sn}</if>
+			<if test="specification_inner_sn !=null">and d.specification_inner_sn=#{specification_inner_sn}</if>
+			group by d.dealer_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.warehouse_inner_sn, d.batch_number, d.product_vendor_name,d.specification
+			<if test="selectDealer != 1">
+				<if test="orderByColumn != null and orderByColumn !=''">order by ${orderByColumn}</if>
+			</if>
+		</if>
+		<if test="selectVendor == 1 and selectDealer == 1">
+        UNION ALL
+        </if>
+        <if test="selectDealer == 1">
+		SELECT d.dealer_inner_sn AS org_id, d.warehouse_inner_sn, m.name as warehouse_name ,d.product_dealer_inner_sn as product_vendor_inner_sn, d.product_dealer_name as product_vendor_name, 
+	        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit,
+	        CAST(sum((d.average_price/10000)*(d.quantity/1000))/(sum(d.quantity)/1000) AS DECIMAL(16,4)) as unit_price, sum(d.quantity)/1000 as quantity, max(d.produce_date) as produce_date, 
+	        max(d.overdue_date) as overdue_date, d.batch_number, 0 as product_type, case  when date_format(now(),'%y%m%d') &lt;= date_format(d.overdue_date,'%y%m%d') then false else true end as isExpire
+		from dealer_dealer_product_min_unit_inventory d
+		left join dealer_warehouse_model m on d.dealer_inner_sn=m.dealer_inner_sn and d.warehouse_inner_sn=m.warehouse_model_inner_sn
+		where d.dealer_inner_sn = #{org_id} AND d.quantity != 0
+		<if test="warehouseIds != null and warehouseIds.size > 0">
+		AND d.`warehouse_inner_sn` IN
+		<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+			#{warehouseId}
+		</foreach>
+		</if>
+	        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+	        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+	        <if test="specification !=null and specification !=''">and d.specification like concat('%', #{specification}, '%')</if>
+	        <if test="batch_number !=null and batch_number !=''">and d.batch_number like concat('%', #{batch_number}, '%')</if>
+	        <if test="key !=null and key !=''">and (d.batch_number like concat('%', #{key}, '%') or d.specification like concat('%', #{key}, '%') or d.product_name like concat('%', #{key}, '%'))</if>
+	        <if test="product_vendor_inner_sn !=null">and d.product_dealer_inner_sn=#{product_vendor_inner_sn}</if>
+	        <if test="product_inner_sn !=null">and d.product_inner_sn=#{product_inner_sn}</if>
+	        <if test="specification_inner_sn !=null">and d.specification_inner_sn=#{specification_inner_sn}</if>
+		group by d.dealer_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.warehouse_inner_sn, d.batch_number
+			<if test="orderByColumn != null and orderByColumn !=''">order by ${orderByColumn}</if>
+		</if>
+	</select>
+	
+	<select id="selectInventoryMinUnitProduct" parameterType="map" resultType="InventoryMinUnitProduct">
+		SELECT dealer_inner_sn AS org_id, warehouse_inner_sn, product_vendor_inner_sn, product_vendor_name, 
+	        product_inner_sn, product_name, specification_inner_sn, specification, unit, average_price/10000 as average_price,
+	        quantity/1000 AS quantity, produce_date, overdue_date, batch_number, 1 as product_type
+		from dealer_product_min_unit_inventory
+		where dealer_inner_sn = #{orgId}
+			<if test="warehouseId != null">and warehouse_inner_sn=#{warehouseId}</if>
+			<if test="vendorId !=null">and product_vendor_inner_sn=#{vendorId}</if>
+	        <if test="productId !=null">and product_inner_sn=#{productId}</if>
+	        <if test="specificationId !=null">and specification_inner_sn=#{specificationId}</if>
+	        <if test="batchNumber !=null">and batch_number = #{batchNumber}</if>
+	</select>
+	
+	<select id="selectInventoryMinUnitDealerProduct" parameterType="map" resultType="InventoryMinUnitProduct">
+		SELECT dealer_inner_sn AS org_id, warehouse_inner_sn, product_dealer_inner_sn as product_vendor_inner_sn, product_dealer_name as product_vendor_name, 
+	        product_inner_sn, product_name, specification_inner_sn, specification, unit, average_price/10000 as average_price,
+	        quantity/1000 AS quantity, produce_date, overdue_date, batch_number, 0 as product_type
+		from dealer_dealer_product_min_unit_inventory
+		where dealer_inner_sn = #{orgId}
+			<if test="warehouseId != null">and warehouse_inner_sn=#{warehouseId}</if>
+			<if test="vendorId !=null">and product_dealer_inner_sn=#{vendorId}</if>
+	        <if test="productId !=null">and product_inner_sn=#{productId}</if>
+	        <if test="specificationId !=null">and specification_inner_sn=#{specificationId}</if>
+	        <if test="batchNumber !=null">and batch_number = #{batchNumber}</if>
+	</select>
+	
+	<update id="updateMinUnitInventory" parameterType="map">
+		update dealer_product_min_unit_inventory
+		<set>
+			<if test="quantity != null">quantity = quantity - #{quantity},</if>
+			<if test="average_price != null">average_price = #{average_price},</if>
+		</set>
+		where 1=1
+			and dealer_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} 
+			and product_vendor_inner_sn = #{product_vendor_inner_sn}
+			and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn}
+			and batch_number = #{batch_number}
+	</update>
+	
+	<update id="updateDealerMinUnitInventory" parameterType="map">
+		update dealer_dealer_product_min_unit_inventory
+		<set>
+			<if test="quantity != null">quantity = quantity - #{quantity},</if>
+			<if test="average_price != null">average_price = #{average_price},</if>
+		</set>
+		where 1=1
+			and dealer_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} 
+			and product_dealer_inner_sn = #{product_vendor_inner_sn}
+			and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn}
+			and batch_number = #{batch_number}
+	</update>
+	
+	<update id="updateProductInfo" parameterType="map">
+		update dealer_product_min_unit_inventory
+		<set>
+			<if test="product_vendor_name != null">product_vendor_name = #{product_vendor_name},</if>
+			<if test="product_name != null">product_name = #{product_name},</if>
+			<if test="specification != null">specification = #{specification},</if>
+			<if test="unit != null">unit = #{unit},</if>
+		</set>
+		where 1=1
+			and product_vendor_inner_sn = #{product_vendor_inner_sn}
+			and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn}
+			and unit_inner_sn = #{unit_inner_sn}
+	</update>
+</mapper>

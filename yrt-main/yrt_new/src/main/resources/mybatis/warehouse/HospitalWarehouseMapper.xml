@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.HospitalWarehouseMapper">
+
+	<resultMap type="WarehouseModel" id="HospitalWarehouseResult">
+		<id      property="org_id" column="hospital_inner_sn"/><!-- 医院内部编号 -->
+		<result  property="org_name" column="hospital_name"/><!-- 医院名称 -->
+		<result  property="warehouse_model_inner_sn" column="warehouse_model_inner_sn"/><!-- 仓库模型内部编号 -->
+		<result  property="parent_warehouse_model_inner_sn" column="parent_warehouse_model_inner_sn"/><!-- 上级仓库模型内部编号 -->
+		<result  property="warehouse_type_inner_sn" column="warehouse_type_inner_sn"/><!-- 仓库类别内部编号 -->
+		<result  property="name" column="name"/><!-- 名称* -->
+		<result property="warehouse_model_sn" column="warehouse_model_sn"/><!-- 仓库模型编号 -->
+		<result property="type" column="type"/><!-- 类别  -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<!-- <result property="is_delete" column="is_delete"/> --><!-- 已删除  -->
+		<result property="proportion" column="proportion"/><!-- 面积(区域专用)  -->
+		<result property="aisle_sn" column="aisle_sn"/><!-- 通道号(货架专用)  -->
+		<result property="phone" column="phone"/><!-- 电话(仓库专用)  -->
+		<result property="barcode" column="barcode"/><!-- 条码  -->
+		<result property="address" column="address"/><!-- 地址(仓库专用)  -->
+		<result property="description" column="description"/><!-- 描述  -->
+		<result property="departments" column="departments"/><!-- 部门ID  -->
+		<result property="department_names" column="department_names"/><!-- 部门名称  -->
+		<result property="is_leaf" column="is_leaf"/>
+	</resultMap>
+	
+	<sql id="selectHospitalWarehouse">
+		select hospital_inner_sn, hospital_name, warehouse_model_inner_sn, parent_warehouse_model_inner_sn, warehouse_type_inner_sn, barcode, name, warehouse_model_sn,
+	        type, status, proportion, aisle_sn, phone, address, description, administrative_division_sn, departments, department_names,
+	        CASE WHEN (SELECT COUNT(*) FROM hospital_warehouse_model WHERE hospital_inner_sn = #{org_id} AND is_delete = 0 AND parent_warehouse_model_inner_sn = w.warehouse_model_inner_sn) = 0 THEN 1 ELSE 0 END AS is_leaf
+		from(
+			select w.hospital_inner_sn, h.name as hospital_name, w.warehouse_model_inner_sn, w.parent_warehouse_model_inner_sn, warehouse_type_inner_sn, barcode,
+				w.name, w.warehouse_model_sn, w.type, w.status, w.proportion, w.aisle_sn, w.phone, w.address, w.description, w.administrative_division_sn, w.is_delete,
+				group_concat(distinct hwd.department_inner_sn) as departments,
+		        group_concat(distinct d.name) as department_names
+			from hospital_warehouse_model w
+			left join hospital h on h.hospital_inner_sn = w.hospital_inner_sn
+			left join hospital_warehouse_model_hospital_department hwd on hwd.hospital_inner_sn = w.hospital_inner_sn and hwd.warehouse_model_inner_sn = w.warehouse_model_inner_sn
+			left join hospital_department d on w.hospital_inner_sn = d.hospital_inner_sn and d.department_inner_sn = hwd.department_inner_sn and d.status = 1 and d.is_delete = 0
+			group by w.hospital_inner_sn, w.warehouse_model_inner_sn
+		) w
+	</sql>
+	
+	<select id="selectWarehouseModelInfo" parameterType="WarehouseModel" resultMap="HospitalWarehouseResult">
+		<include refid="selectHospitalWarehouse"/>
+		where 1=1
+			and w.hospital_inner_sn = #{org_id} and w.warehouse_model_inner_sn = #{warehouse_model_inner_sn} 
+			<if test="status != null">and w.status = #{status}</if>
+	</select>
+	
+	<select id="selectWarehouseListByPid" parameterType="WarehouseModel" resultMap="HospitalWarehouseResult">
+		<include refid="selectHospitalWarehouse"/>
+		where w.is_delete = 0
+			and w.hospital_inner_sn = #{org_id} and w.parent_warehouse_model_inner_sn = #{parent_warehouse_model_inner_sn}
+			<if test="status != null">and w.status = #{status}</if>
+	</select>
+	
+	<select id="selectTopLevelWarehouseList" parameterType="map" resultMap="HospitalWarehouseResult">
+		<include refid="selectHospitalWarehouse"/>
+		where w.is_delete = 0 
+			and w.parent_warehouse_model_inner_sn is null 
+			and w.hospital_inner_sn = #{org_id}
+			<if test="status != null">and w.status = #{status}</if>
+	</select>
+	
+	<select id="insertWarehouseModel" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         INSERT INTO hospital_warehouse_model (
+	        hospital_inner_sn,
+	        warehouse_model_inner_sn,
+	        type,
+	        status,
+	        is_delete,
+	        parent_warehouse_model_inner_sn,
+	        warehouse_type_inner_sn,
+	        administrative_division_sn,
+	        proportion,
+	        name,
+	        warehouse_model_sn,
+	        aisle_sn,
+	        phone,
+	        barcode,
+	        address,
+	        description
+	    ) VALUES (
+	        #{org_id_i},
+	        #{id},
+	        #{type_i},
+	        1,
+	        0,
+	        #{parent_warehouse_model_inner_sn_i},
+	        #{warehouse_type_inner_sn_i},
+	        #{administrative_division_sn_i},
+	        #{proportion_i},
+	        #{name_i},
+	        #{warehouse_model_sn_i},
+	        #{aisle_sn_i},
+	        #{phone_i},
+	        #{barcode_i},
+	        #{address_i},
+	        #{description_i}
+	    )
+	</select>
+	
+	<!-- 机构 仓库相关人员 -->
+	<resultMap type="WarehouseRelEmployee" id="WarehouseRelEmployeeResult">
+		<result  property="org_id" column="hospital_inner_sn"/> <!-- 机构内部编号 -->
+		<result  property="employee_inner_sn" column="employee_inner_sn"/> <!-- 人员内部编号 -->
+		<result  property="warehouse_model_inner_sn" column="warehouse_model_inner_sn"/><!-- 仓库内部编号 -->
+		<result  property="employee_name" column="employee_name"/><!-- 人员名称 -->
+		<result  property="type" column="type"/><!-- 状态 -->
+	</resultMap>
+	
+	<select id="selectWarehouseRelEmpList" parameterType="WarehouseRelEmployee" resultMap="WarehouseRelEmployeeResult">
+		Select h.hospital_inner_sn, h.warehouse_model_inner_sn, h.employee_inner_sn, e.name as employee_name, h.type
+		from hospital_employee_hospital_warehouse_model h
+		join hospital_employee e using(hospital_inner_sn, employee_inner_sn)
+		where 1=1
+			AND e.status in (0,1)
+			AND e.is_delete = 0
+			AND h.hospital_inner_sn = #{org_id}
+			AND h.warehouse_model_inner_sn = #{warehouse_model_inner_sn}
+	</select>
+	
+	<update id="updateWarehouseModel" parameterType="WarehouseModel">
+		update hospital_warehouse_model
+		<set>
+			<if test="parent_warehouse_model_inner_sn != null">parent_warehouse_model_inner_sn = #{parent_warehouse_model_inner_sn},</if>
+			<if test="parent_warehouse_model_inner_sn == -1">parent_warehouse_model_inner_sn = null,</if>
+			<if test="warehouse_type_inner_sn !=null and warehouse_type_inner_sn !=-1">warehouse_type_inner_sn = #{warehouse_type_inner_sn},</if>
+			<if test="warehouse_type_inner_sn ==-1">warehouse_type_inner_sn = null,</if>
+			<if test="administrative_division_sn !=null and administrative_division_sn !=-1">administrative_division_sn = #{administrative_division_sn},</if>
+			<if test="administrative_division_sn ==-1">administrative_division_sn = null,</if>
+			<if test="name != null and name != ''">name = #{name},</if>
+			<if test="warehouse_model_sn != null">warehouse_model_sn = #{warehouse_model_sn},</if>
+			<if test="type != null">type = #{type},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="proportion != null">proportion = #{proportion},</if>
+			<if test="aisle_sn != null">aisle_sn = #{aisle_sn},</if>
+			<if test="phone != null">phone = #{phone},</if>
+			<if test="barcode != null">barcode = #{barcode},</if>
+			<if test="barcode == ''">barcode = null,</if>
+			<if test="address != null">address = #{address},</if>
+			<if test="description != null">description = #{description},</if>
+		</set>
+		where is_delete = 0
+			and hospital_inner_sn = #{org_id} and warehouse_model_inner_sn = #{warehouse_model_inner_sn} 
+	</update>
+	
+	<update id="deleteWarehouseModel" parameterType="WarehouseModel">
+		update hospital_warehouse_model
+			set is_delete = 1
+		where is_delete = 0
+			and hospital_inner_sn = #{org_id} and warehouse_model_inner_sn = #{warehouse_model_inner_sn} 
+	</update>
+	
+	<delete id="trueDeleteWarehouseModel" parameterType="WarehouseModel">
+		delete from hospital_warehouse_model 
+		where hospital_inner_sn = #{org_id} and warehouse_model_inner_sn = #{warehouse_model_inner_sn}
+	</delete>
+	
+	<delete id="deleteWarehouseRelDept" parameterType="WarehouseModel">
+		delete from hospital_warehouse_model_hospital_department 
+		where hospital_inner_sn = #{org_id} and warehouse_model_inner_sn = #{warehouse_model_inner_sn}
+	</delete>
+	
+	<insert id="insertWarehouseRelDept" parameterType="WarehouseRelDept">
+		insert into 
+			hospital_warehouse_model_hospital_department
+			(
+				hospital_inner_sn,
+				warehouse_model_inner_sn,
+				department_inner_sn
+			)
+ 		values
+ 			(
+	 			#{org_id},
+	 			#{warehouse_model_inner_sn},
+	 			#{department_inner_sn}
+ 			)
+	</insert>
+	
+	<delete id="deleteWarehouseRelEmployee" parameterType="WarehouseModel">
+		delete from hospital_employee_hospital_warehouse_model 
+		where hospital_inner_sn = #{org_id} and warehouse_model_inner_sn = #{warehouse_model_inner_sn}
+	</delete>
+	
+	<insert id="insertWarehouseRelEmployee" parameterType="WarehouseRelEmployee">
+		insert into 
+			hospital_employee_hospital_warehouse_model
+			(
+				hospital_inner_sn,
+				employee_inner_sn,
+				warehouse_model_inner_sn,
+				type
+			)
+ 		values
+ 			(
+	 			#{org_id},
+	 			#{employee_inner_sn},
+	 			#{warehouse_model_inner_sn},
+	 			#{type}
+ 			)
+	</insert>
+	
+	<!-- 机构 仓库类别 -->
+	<resultMap type="WarehouseType" id="WarehouseTypeResult">
+		<id      property="org_id" column="hospital_inner_sn"/><!-- 机构内部编号 -->
+		<result  property="type_inner_sn" column="type_inner_sn"/><!-- 类别内部编号 -->
+		<result  property="name" column="name"/><!-- 名称 -->
+		<result  property="status" column="status"/><!-- 状态 -->
+	</resultMap>
+	
+	<sql id="selectWarehouseType">
+		select hospital_inner_sn, type_inner_sn, name, status
+		from hospital_warehouse_type
+	</sql>
+	
+	<select id="selectWarehouseTypeList" parameterType="map" resultMap="WarehouseTypeResult">
+		<include refid="selectWarehouseType"/>
+		where status = 1 and is_delete = 0
+			and hospital_inner_sn = #{org_id}
+			<if test="status != null">and status = #{status}</if>
+	</select>
+	
+	<select id="selectWarehouseTypeInfo" parameterType="WarehouseType" resultMap="WarehouseTypeResult">
+		<include refid="selectWarehouseType"/>
+		where status = 1 and is_delete = 0
+			and hospital_inner_sn = #{org_id}
+			and type_inner_sn = #{type_inner_sn}
+	</select>
+	
+	<select id="insertWarehouseType" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call h_add_hospital_warehouse_type(
+            #{org_id_i ,mode=IN},
+            #{name_i ,mode=IN},
+            #{type_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )
+	</select>
+	
+	<update id="updateWarehouseType" parameterType="WarehouseType">
+		update hospital_warehouse_type
+		<set>
+			<if test="name != null and name != ''">name = #{name},</if>
+			<if test="status != null">status = #{status},</if>
+		</set>
+		where is_delete = 0
+			and hospital_inner_sn = #{org_id} and type_inner_sn = #{type_inner_sn} 
+	</update>
+	
+	<update id="deleteWarehouseType" parameterType="WarehouseType">
+		update hospital_warehouse_type set is_delete = 1
+		where hospital_inner_sn = #{org_id} and type_inner_sn = #{type_inner_sn} 
+	</update>
+	
+	<select id="checkWarehouseSn" parameterType="map" resultMap="HospitalWarehouseResult">
+		select * from hospital_warehouse_model
+		where hospital_inner_sn = #{org_id}
+			and warehouse_model_sn = #{warehouse_model_sn}
+			<if test="warehouse_model_inner_sn != null">and warehouse_model_inner_sn != #{warehouse_model_inner_sn}</if>
+			<if test="parent_warehouse_model_inner_sn != null">and parent_warehouse_model_inner_sn = #{parent_warehouse_model_inner_sn}</if>
+			<if test="parent_warehouse_model_inner_sn == null">and parent_warehouse_model_inner_sn is null</if>
+	</select>
+	
+	<select id="SelectWarehouseSnIndex" parameterType="map" resultType="int">
+		select count(*) from hospital_warehouse_model
+		where hospital_inner_sn = #{org_id}
+			and warehouse_model_sn like concat(#{warehouse_model_sn}, '%')
+			<if test="warehouse_model_inner_sn != null">and warehouse_model_inner_sn != #{warehouse_model_inner_sn}</if>
+			<if test="parent_warehouse_model_inner_sn != null">and parent_warehouse_model_inner_sn = #{parent_warehouse_model_inner_sn}</if>
+			<if test="parent_warehouse_model_inner_sn == null">and parent_warehouse_model_inner_sn is null</if>
+	</select>
+	
+	<select id="selectWarehouseModeInfoByBarcode" parameterType="map" resultMap="HospitalWarehouseResult">
+		select hospital_inner_sn, hospital_name, warehouse_model_inner_sn, parent_warehouse_model_inner_sn, warehouse_type_inner_sn, barcode, name, warehouse_model_sn,
+	        type, status, proportion, aisle_sn, phone, address, description, administrative_division_sn, departments, department_names,
+	        CASE WHEN (SELECT COUNT(*) FROM hospital_warehouse_model WHERE hospital_inner_sn = #{org_id} AND parent_warehouse_model_inner_sn = w.warehouse_model_inner_sn) = 0 THEN 1 ELSE 0 END AS is_leaf
+		from(
+			select w.hospital_inner_sn, h.name as hospital_name, w.warehouse_model_inner_sn, w.parent_warehouse_model_inner_sn, warehouse_type_inner_sn, barcode,
+				w.name, w.warehouse_model_sn, w.type, w.status, w.proportion, w.aisle_sn, w.phone, w.address, w.description, w.administrative_division_sn, w.is_delete,
+				group_concat(distinct hwd.department_inner_sn) as departments,
+		        group_concat(distinct d.name) as department_names
+			from hospital_warehouse_model w
+			left join hospital h on h.hospital_inner_sn = w.hospital_inner_sn
+			left join hospital_warehouse_model_hospital_department hwd on hwd.hospital_inner_sn = w.hospital_inner_sn and hwd.warehouse_model_inner_sn = w.warehouse_model_inner_sn
+			left join hospital_department d on w.hospital_inner_sn = d.hospital_inner_sn and d.department_inner_sn = hwd.department_inner_sn and d.status = 1 and d.is_delete = 0
+			group by w.hospital_inner_sn, w.warehouse_model_inner_sn
+		) w
+		where w.is_delete = 0
+			and w.hospital_inner_sn = #{org_id} and w.barcode = #{barcode}
+	</select>
+	
+	<select id="selectAllChildrenWarehouseModeIDS" parameterType="map" resultType="string">
+		select h_get_hospital_warehouse_model_inner_sns(#{org_id},#{warehouse_model_inner_sn})
+	</select>
+	
+	<select id="checkWarehouseQuantity" parameterType="map" resultType="BigDecimal">
+		select IFNULL(SUM(quantity),0) AS quantity from(
+	        select hospital_inner_sn, warehouse_inner_sn, quantity from hospital_dealer_product_min_unit_inventory where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn}
+	        union all
+	        select hospital_inner_sn, warehouse_inner_sn, quantity from hospital_product_min_unit_inventory where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn}
+		) a
+		group by hospital_inner_sn, warehouse_inner_sn
+	</select>
+
+    <select id="warehouses" resultType="com.yrt.project.modular.warehouse.domain.WarehouseModel" parameterType="map">
+		SELECT DISTINCT
+			`hospital_inner_sn`,`warehouse_model_inner_sn`,`type`,`status`,`x`,`y`,`width`,`height`,
+			`administrative_division_sn`,`administrative_division_sn`,`proportion`,
+			`name`,`warehouse_model_sn`,`aisle_sn`,`phone`,`barcode`,`address`,`description`
+		FROM `hospital_warehouse_model`
+		WHERE `hospital_inner_sn`=#{oid}
+		AND `is_delete` = 0
+		AND `status` = 1
+		AND `parent_warehouse_model_inner_sn` IS NULL
+		AND
+		<if test="deptIds.size()>0">
+			(`warehouse_model_inner_sn` IN (
+			SELECT `warehouse_model_inner_sn`
+			FROM `hospital_warehouse_model_hospital_department`
+			WHERE `hospital_inner_sn`=#{oid}
+			AND `department_inner_sn` IN
+			<foreach item="item" index="index" collection="deptIds" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+			)
+			OR
+		</if>
+		`warehouse_model_inner_sn` NOT IN(SELECT `warehouse_model_inner_sn` FROM `hospital_warehouse_model_hospital_department` WHERE `hospital_inner_sn`=#{oid})
+		<if test="deptIds.size()>0">
+			)
+		</if>
+	</select>
+	
+	<select id="existWarehouse" parameterType="map" resultType="long">
+		SELECT warehouse_model_inner_sn
+		FROM hospital_warehouse_model
+		WHERE type in (0,7) and is_delete = 0 and status = 1 and hospital_inner_sn = #{orgId} and name = #{warehouseName}
+		limit 1
+	</select>
+</mapper>

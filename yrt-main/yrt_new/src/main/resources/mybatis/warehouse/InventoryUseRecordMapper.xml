@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.InventoryUseRecordMapper">
+	<insert id="addInventoryUseRecord">
+		INSERT INTO
+			`inventory_use_record`(`hospital_inner_sn`,`rv_inner_sn`,`rv_sn`,`warehouse_inner_sn`,`use_man`,use_type,
+			                       `proposer_inner_sn`,`proposer_name`,`medical_no`,`health_no`,`create_time`)
+		VALUES(#{hospital_inner_sn},#{rv_inner_sn},#{rv_sn},#{warehouse_inner_sn},#{use_man},#{use_type},
+			   #{proposer_inner_sn},#{proposer_name},#{medical_no},#{health_no},NOW())
+	</insert>
+
+	<insert id="addInventoryUseRecordDetail">
+		INSERT INTO `inventory_use_record_detail`(`hospital_inner_sn`,`detail_inner_sn`,`rv_inner_sn`,`vd_inner_sn`,`vd_name`,`product_type`,
+										  `product_inner_sn`,`product_name`,`specification_inner_sn`,`specification`,`batch_number`,
+										  `unit_inner_sn`,`unit_name`,`unit_price`,`quantity`,`default_health_care_sn`,`status`)
+		VALUES(#{hospital_inner_sn},#{detail_inner_sn},#{rv_inner_sn},#{vd_inner_sn},#{vd_name},#{product_type},#{product_inner_sn},
+		       #{product_name},#{specification_inner_sn},#{specification},#{batch_number},#{unit_inner_sn},#{unit_name},#{unit_price}*10000,#{quantity}*1000,
+			   #{default_health_care_sn},#{status})
+	</insert>
+
+
+	<delete id="deleteInventoryUseRecordDetails">
+		DELETE FROM `inventory_use_record_detail`
+		WHERE `rv_inner_sn` = #{rv_inner_sn}
+	</delete>
+
+
+	<select id="searchDealerProductBatchNumList"
+			resultType="com.yrt.project.api.business.warehouse.vo.record.BatchNumResult">
+		SELECT
+			`batch_number`,`produce_date`,`overdue_date`,`quantity`/1000 AS quantity
+		FROM `hospital_dealer_product_min_unit_inventory`
+		WHERE	`hospital_inner_sn`=#{org_id} AND `quantity`>0
+		AND `warehouse_inner_sn`=#{warehouse_inner_sn}
+		AND `product_dealer_inner_sn`=#{vd_inner_sn}
+		AND	`product_inner_sn`=#{product_inner_sn}
+		AND `specification_inner_sn`=#{specification_inner_sn}
+		<if test="batch_number !=null and batch_number!=''">
+			AND `batch_number`=#{batch_number}
+		</if>
+	</select>
+
+	<select id="searchVendorProductBatchNumList"
+			resultType="com.yrt.project.api.business.warehouse.vo.record.BatchNumResult">
+		SELECT
+			`batch_number`,`produce_date`,`overdue_date`,`quantity`/1000 AS quantity
+		FROM `hospital_product_min_unit_inventory`
+		WHERE	`hospital_inner_sn`=#{org_id} AND `quantity`>0 AND date_format(now(),'%y%m%d') &lt;= date_format(overdue_date,'%y%m%d')
+		AND `warehouse_inner_sn`=#{warehouse_inner_sn}
+		AND `product_vendor_inner_sn`=#{vd_inner_sn}
+		AND	`product_inner_sn`=#{product_inner_sn}
+		AND `specification_inner_sn`=#{specification_inner_sn}
+		<if test="batch_number !=null and batch_number!=''">
+			AND `batch_number`=#{batch_number}
+		</if>
+	</select>
+
+	<select id="searchInventoryUseRecord"
+			resultType="com.yrt.project.modular.warehouse.domain.InventoryUseRecord">
+		SELECT
+			r.*,w.`name` AS warehouse_name
+		FROM	`inventory_use_record` r
+		INNER JOIN `hospital_warehouse_model` w ON w.`hospital_inner_sn`=r.`hospital_inner_sn` AND w.`warehouse_model_inner_sn`=r.`warehouse_inner_sn`
+		WHERE r.`rv_inner_sn`=#{rv_inner_sn}
+		AND r.`warehouse_inner_sn` IN
+		<foreach item="item" collection="warehouseIds" separator="," open="(" close=")" index="">
+		       #{item}
+		</foreach>
+	</select>
+
+	<select id="searchInventoryUseRecordDetails"
+			resultType="com.yrt.project.modular.warehouse.domain.InventoryUseRecordDetail">
+		SELECT
+			r.*,w.`name` AS warehouse_name,d.`detail_inner_sn`,d.`rv_inner_sn`,d.`rv_inner_sn`,d.`vd_inner_sn`,
+		      d.`vd_name`,d.`product_type`,d.`product_inner_sn`,d.`product_name`,d.`specification_inner_sn`,d.`specification`,
+		       d.`batch_number`,d.`unit_inner_sn`,d.`unit_name`,d.`quantity`/1000 AS quantity,d.`unit_price`/10000 AS unit_price,
+		       d.`default_health_care_sn`,d.`status`
+		FROM `inventory_use_record` r
+		INNER JOIN `hospital_warehouse_model` w ON w.`hospital_inner_sn`=r.`hospital_inner_sn` AND w.`warehouse_model_inner_sn`=r.`warehouse_inner_sn`
+		INNER JOIN `inventory_use_record_detail` d ON d.`rv_inner_sn`=r.`rv_inner_sn`
+		<where>
+			r.`hospital_inner_sn`=#{hospital_inner_sn}
+			<if test="rv_inner_sn != null and rv_inner_sn != ''">AND r.`rv_inner_sn`=#{rv_inner_sn}</if>
+			<if test="rv_sn != null and rv_sn != ''">AND r.`rv_sn` LIKE concat('%', #{rv_sn}, '%')</if>
+			<if test="detail_inner_sn != null and detail_inner_sn != ''">AND d.`detail_inner_sn`=#{detail_inner_sn}</if>
+			<if test="proposer_inner_sn != null and proposer_inner_sn !=''">AND r.`proposer_inner_sn`= #{proposer_inner_sn}</if>
+			<if test="proposer_name != null and proposer_name !=''">AND r.`proposer_name` LIKE concat('%', #{proposer_name}, '%')</if>
+			<if test="start_date != null"> AND DATE_FORMAT(r.`create_time`,'%Y-%m-%d') &gt;= DATE_FORMAT(#{start_date},'%Y-%m-%d')</if>
+			<if test="end_date != null"> AND DATE_FORMAT(r.`create_time`,'%Y-%m-%d') &lt;= DATE_FORMAT(#{end_date},'%Y-%m-%d')</if>
+			<if test="warehouseIds.size()>0">
+				AND r.`warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+			ORDER BY r.create_time DESC , d.`detail_inner_sn` DESC
+		</where>
+	</select>
+
+	<select id="findInventoryUseRecordByRvInnerSn"
+			resultType="com.yrt.project.modular.warehouse.domain.InventoryUseRecord">
+		SELECT
+			r.*,w.`name` AS warehouse_name
+		FROM	`inventory_use_record` r
+		INNER JOIN `hospital_warehouse_model` w ON w.`hospital_inner_sn`=r.`hospital_inner_sn` AND w.`warehouse_model_inner_sn`=r.`warehouse_inner_sn`
+		WHERE r.`rv_inner_sn`=#{rv_inner_sn}
+	</select>
+
+	<select id="findInventoryUseRecords"
+			resultType="com.yrt.project.modular.warehouse.domain.InventoryUseRecord">
+		SELECT
+			r.*,w.`name` AS warehouse_name
+		FROM `inventory_use_record` r
+		INNER JOIN `hospital_warehouse_model` w ON w.`hospital_inner_sn`=r.`hospital_inner_sn` AND w.`warehouse_model_inner_sn`=r.`warehouse_inner_sn`
+		WHERE r.`hospital_inner_sn` =#{hospital_inner_sn}
+		<if test="warehouse_inner_sn !=null">
+			AND r.`warehouse_inner_sn` =#{warehouse_inner_sn}
+		</if>
+		<if test="rv_inner_sn !=null">
+			AND r.`rv_inner_sn` =#{rv_inner_sn}
+		</if>
+		<if test="rv_sn !=null and rv_sn!=''">
+			AND r.`rv_sn` LIKE CONCAT('%', #{rv_sn}, '%')
+		</if>
+		<if test="proposer_inner_sn !=null">
+			AND r.`proposer_inner_sn`=#{proposer_inner_sn}
+		</if>
+		<if test="proposer_name !=null and proposer_name !=''">
+			AND r.`proposer_name` LIKE CONCAT('%', #{proposer_name}, '%')
+		</if>
+		<if test="start_date != null"> AND DATE_FORMAT(v.`create_time`,'%Y-%m-%d') &gt;= DATE_FORMAT(#{start_date},'%Y-%m-%d')</if>
+		<if test="end_date != null"> AND DATE_FORMAT(v.`create_time`,'%Y-%m-%d') &lt;= DATE_FORMAT(#{end_date},'%Y-%m-%d')</if>
+	</select>
+
+	<update id="updateInventoryUseRecord">
+		UPDATE `inventory_use_record`
+		<set>
+			<if test="warehouse_inner_sn !=null">`warehouse_inner_sn`=#{warehouse_inner_sn},</if>
+			<if test="use_man !=null and use_man!=''">`use_man`=#{use_man},</if>
+			<if test="use_type !=null and use_type!=''">`use_type`=#{use_type},</if>
+			<if test="proposer_inner_sn !=null and proposer_inner_sn!=''">`proposer_inner_sn`=#{proposer_inner_sn},</if>
+			<if test="proposer_name !=null and proposer_name!=''">`proposer_name`=#{proposer_name},</if>
+
+			<if test="medical_no !=null and medical_no!=''">`medical_no`=#{medical_no},</if>
+			<if test="health_no !=null and health_no!=''">`health_no`=#{health_no},</if>
+		</set>
+		WHERE `rv_inner_sn`=#{rv_inner_sn}
+	</update>
+
+	<update id="reduceInventory">
+		<if test="product_type==1">
+			UPDATE `hospital_product_min_unit_inventory`
+			SET `quantity`=quantity-#{reduce_quantity}*1000
+			WHERE hospital_inner_sn=#{hospital_inner_sn} AND `warehouse_inner_sn` =#{warehouse_inner_sn}
+			  AND `product_vendor_inner_sn`=#{vd_inner_sn} AND `product_inner_sn`=#{product_inner_sn}
+			  AND specification_inner_sn=#{specification_inner_sn} AND `batch_number`=#{batch_number}
+		</if>
+		<if test="product_type==0">
+			UPDATE `hospital_dealer_product_min_unit_inventory`
+			SET `quantity`=quantity-#{reduce_quantity}*1000
+			WHERE hospital_inner_sn=#{hospital_inner_sn} AND `warehouse_inner_sn` =#{warehouse_inner_sn}
+			AND `product_dealer_inner_sn`=#{vd_inner_sn} AND `product_inner_sn`=#{product_inner_sn}
+			AND specification_inner_sn=#{specification_inner_sn} AND `batch_number`=#{batch_number}
+		</if>
+	</update>
+</mapper>

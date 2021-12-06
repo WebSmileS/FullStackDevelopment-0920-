@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.product.mapper.UDIRefProductMapper">
+
+	<select id="insertUDIRefProduct" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true">
+		INSERT INTO udi_ref_product (
+	        vendor_inner_sn, product_inner_sn, specification_inner_sn, udi_barcode
+	    ) VALUES (
+	        #{vendor_inner_sn}, #{product_inner_sn}, #{specification_inner_sn}, #{udi_barcode}
+	    )
+	</select>
+	
+	<delete id="deleteUDIRefProduct" parameterType="String">
+		delete from udi_ref_product 
+		where udi_barcode = #{id}
+	</delete>
+    
+	<select id="selectUDIRefProductInfo" parameterType="map" resultType="UDIRefProduct">
+		SELECT
+			vendor_inner_sn, product_inner_sn, specification_inner_sn, udi_barcode
+		FROM udi_ref_product
+		WHERE 1 = 1
+		<if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+		<if test="udi_barcode != null">and udi_barcode = #{udi_barcode}</if>
+	</select>
+	
+	<select id="selectProductBaseRefTagInfo" parameterType="map" resultType="ProductBaseRefTag">
+		SELECT
+			product_vendor_inner_sn, product_inner_sn, specification_inner_sn, product_name, specification, product_vendor_name, udi_barcode, status
+		FROM product_base_info_v
+		WHERE 1 = 1
+		<if test="product_vendor_name != null">and product_vendor_name = #{product_vendor_name}</if>
+		<if test="product_name != null">and product_name = #{product_name}</if>
+		<if test="specification != null">and specification = #{specification}</if>
+		<if test="udi_barcode != null">and udi_barcode = #{udi_barcode}</if>
+		<if test="product_vendor_inner_sn != null">and product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+	</select>
+	
+	<select id="selectProductBaseRefTagList" parameterType="map" resultType="ProductBaseRefTag">
+		SELECT
+			product_vendor_inner_sn, product_inner_sn, specification_inner_sn, product_name, specification, product_vendor_name, udi_barcode, status
+		FROM product_base_info_v
+		WHERE 1 = 1 
+		<if test="hasTag == 0">and udi_barcode is null or udi_barcode = ''</if>
+		<if test="hasTag == 1">and udi_barcode is not null and udi_barcode != ''</if>
+		<if test="product_vendor_name != null">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+		<if test="product_name != null">and product_name like concat('%', #{product_name}, '%')</if>
+		<if test="specification != null">and specification like concat('%', #{specification}, '%')</if>
+		<if test="udi_barcode != null">and udi_barcode = #{udi_barcode}</if>
+	</select>
+	
+	<select id="selectUDIDeviceRecordInfo" parameterType="map" resultType="UDIDeviceRecord">
+		SELECT
+			id, zxxsdycpbs, cpbsbmtxmc, zxxsdyzsydydsl, sydycpbs, cpbsfbrq, sfybtzjbs, btcpbsyzxxsdycpbssfyz, btcpbs, cpmctymc,
+	        spmc, ggxh, sfwblztlcp, cpms, cphhhbh, qxlb, yflbm, flbm, ylqxzcrbarmc, tyshxydm, ylqxzcrbarywmc, zczbhhzbapzbh,
+	        cplb, cgzmraqxgxx, sfbjwycxsy, zdcfsycs, sfwwjbz, syqsfxyjxmj, mjfs, qtxxdwzlj, ybbm, tsrq, scbssfbhph,
+	        scbssfbhxlh, scbssfbhscrq, scbssfbhsxrq, tscchcztj, tsccsm, versionNumber, versionTime, versionStauts
+		FROM udi_device_record
+		INNER JOIN (
+	        select id, MAX(versionNumber) as versionNumber from udi_device_record
+	        WHERE zxxsdycpbs = #{udi_barcode}
+	        group by id
+		) a using(id,versionNumber)
+		WHERE 1 = 1 and zxxsdycpbs = #{udi_barcode}
+	</select>
+	
+	<select id="selectVendorId" parameterType="String" resultType="Long">
+		select vendor_inner_sn
+		from vendor
+		where name = #{name}
+	</select>
+	
+	<select id="selectProductId" parameterType="map" resultType="Long">
+		select product_inner_sn
+        from product
+		where vendor_inner_sn = #{vendor_inner_sn} and name = #{name}
+	</select>
+	
+	<select id="selectSpecificationId" parameterType="map" resultType="Long">
+		select specification_inner_sn
+        from product_specification
+		where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+			and specification = #{specification}
+	</select>
+	
+	<!-- 获取厂商产品列表(平台所有发布产品) -->
+	<select id="selectVendorProductList" parameterType="map" resultType="map">
+		select 
+			concat(ps.vendor_inner_sn, '-',  ps.product_inner_sn, '-', ps.specification_inner_sn, '-1') as id,
+			ps.vendor_inner_sn, v.name as vendor_name, ps.product_inner_sn, p.name as product_name, ps.specification_inner_sn, ps.specification, 
+			1 as product_type, ps.specification_vendor_sn, case when p.status = 0 or p.is_delete = 1 then 0 else 1 end as status
+		from product_specification ps
+		join product p using(vendor_inner_sn, product_inner_sn)
+		join vendor v using(vendor_inner_sn)
+		join product_unit u on ps.vendor_inner_sn=u.vendor_inner_sn and ps.product_inner_sn=u.product_inner_sn 
+			and ps.specification_inner_sn = u.specification_inner_sn and u.parent_unit_inner_sn is null and u.is_delete = 0
+		where 1=1
+			and p.release_status = 1 and ps.status = 1 and ps.is_delete = 0 and length (trim(ps.common_use_unit))>0
+       		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+			<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+			<if test="product_name != null and product_name != ''">and (p.name like concat('%', #{product_name}, '%') OR p.pinyin like concat('%', #{product_name}, '%'))</if>
+			<if test="vendor_inner_sn != null">and p.vendor_inner_sn = #{vendor_inner_sn}</if>
+			<if test="specification_vendor_sn != null and specification_vendor_sn != ''">and ps.specification_vendor_sn like concat('%', #{specification_vendor_sn}, '%')</if>
+            <if test="specification != null and specification != ''">and ps.specification like concat('%', #{specification}, '%')</if>
+            <if test="product_inner_sn != null">AND ps.product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND ps.specification_inner_sn = #{specification_inner_sn}</if>
+	</select>
+</mapper>

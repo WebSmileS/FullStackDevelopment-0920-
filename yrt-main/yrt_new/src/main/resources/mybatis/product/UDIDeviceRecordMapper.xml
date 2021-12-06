@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.product.mapper.UDIDeviceRecordMapper">
+
+	<select id="insertUDIDeviceRecord" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true">
+		INSERT INTO udi_device_record (
+	        id, zxxsdycpbs, cpbsbmtxmc, zxxsdyzsydydsl, sydycpbs, cpbsfbrq, sfybtzjbs, btcpbsyzxxsdycpbssfyz, btcpbs, cpmctymc,
+	        spmc, ggxh, sfwblztlcp, cpms, cphhhbh, qxlb, yflbm, flbm, ylqxzcrbarmc, tyshxydm, ylqxzcrbarywmc, zczbhhzbapzbh,
+	        cplb, cgzmraqxgxx, sfbjwycxsy, zdcfsycs, sfwwjbz, syqsfxyjxmj, mjfs, qtxxdwzlj, ybbm, tsrq, scbssfbhph,
+	        scbssfbhxlh, scbssfbhscrq, scbssfbhsxrq, tscchcztj, tsccsm, versionNumber, versionTime, versionStauts
+	    ) VALUES (
+	        #{id}, #{zxxsdycpbs}, #{cpbsbmtxmc}, #{zxxsdyzsydydsl}, #{sydycpbs}, #{cpbsfbrq}, #{sfybtzjbs}, #{btcpbsyzxxsdycpbssfyz}, #{btcpbs}, #{cpmctymc},
+	        #{spmc}, #{ggxh}, #{sfwblztlcp}, #{cpms}, #{cphhhbh}, #{qxlb}, #{yflbm}, #{flbm}, #{ylqxzcrbarmc}, #{tyshxydm}, #{ylqxzcrbarywmc}, #{zczbhhzbapzbh}, 
+	        #{cplb}, #{cgzmraqxgxx}, #{sfbjwycxsy}, #{zdcfsycs}, #{sfwwjbz}, #{syqsfxyjxmj}, #{mjfs}, #{qtxxdwzlj}, #{ybbm}, #{tsrq}, #{scbssfbhph}, 
+	        #{scbssfbhxlh}, #{scbssfbhscrq}, #{scbssfbhsxrq}, #{tscchcztj}, #{tsccsm}, #{versionNumber}, #{versionTime}, #{versionStauts}
+	    )
+	</select>
+	
+    
+	<select id="selectUDIDeviceRecordList" parameterType="map" resultType="UDIDeviceRecord">
+		SELECT
+			id, zxxsdycpbs, cpbsbmtxmc, zxxsdyzsydydsl, sydycpbs, cpbsfbrq, sfybtzjbs, btcpbsyzxxsdycpbssfyz, btcpbs, cpmctymc,
+	        spmc, ggxh, sfwblztlcp, cpms, cphhhbh, qxlb, yflbm, flbm, ylqxzcrbarmc, tyshxydm, ylqxzcrbarywmc, zczbhhzbapzbh,
+	        cplb, cgzmraqxgxx, sfbjwycxsy, zdcfsycs, sfwwjbz, syqsfxyjxmj, mjfs, qtxxdwzlj, ybbm, tsrq, scbssfbhph,
+	        scbssfbhxlh, scbssfbhscrq, scbssfbhsxrq, tscchcztj, tsccsm, versionNumber, versionTime, versionStauts
+		FROM udi_device_record
+		WHERE 1 = 1
+		ORDER BY ylqxzcrbarmc, cpmctymc, ggxh
+	</select>
+	
+</mapper>

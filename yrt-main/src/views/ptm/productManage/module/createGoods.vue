@@ -1,0 +1,496 @@
+<template>
+    <div class="modal-list">
+        <a-form>
+            <a-form-item v-bind="formItemLayout" label="厂商" class="must-issue" has-feedback>
+                <a-input
+                    type="text"
+                    readonly="readonly"
+                    :disabled="disType"
+                    v-model="orgName"
+                    @click="openChooseTb()"
+                    placeholder=""
+                />
+                <!--<a-select-->
+                <!--@change="changeVendor"-->
+                <!--v-model="formData.vendor_inner_sn"-->
+                <!--&gt;-->
+                <!--<a-select-option v-for="(item, index) of vendorList" :value="item.id" :key="index">-->
+                <!--{{item.name}}-->
+                <!--</a-select-option>-->
+                <!--</a-select>-->
+            </a-form-item>
+            <div style="margin-left: 70px; margin-bottom: 5px">
+                <a-radio-group v-model="formData.type" @change="changeRadio">
+                    <a-radio :value="0">医疗器械</a-radio>
+                    <a-radio :value="1">非医疗器械</a-radio>
+                </a-radio-group>
+            </div>
+            <a-form-item
+                label="名称"
+                :label-col="formItemLayout.labelCol"
+                class="must-issue"
+                :wrapper-col="formItemLayout.wrapperCol"
+            >
+                <a-input v-model="formData.name" />
+            </a-form-item>
+            <a-row>
+                <a-col :span="12">
+                    <a-form-item v-bind="formItemLayout_half" label="产品分类">
+                        <a-cascader
+                            v-model="formData.code68_sn"
+                            :options="op68List"
+                            changeOnSelect
+                            :loadData="load68data"
+                            placeholder=""
+                            :displayRender="displayRender"
+                        />
+                    </a-form-item>
+                </a-col>
+                <a-col :span="12">
+                    <div style="margin-left: 40px; margin-bottom: 5px; padding-top: 4px">
+                        <a-radio-group v-model="formData.code68_type" @change="change68Type">
+                            <a-radio :disabled="isNoMedic" :value="1">Ⅰ类</a-radio>
+                            <a-radio :disabled="isNoMedic" :value="2">Ⅱ类</a-radio>
+                            <a-radio :disabled="isNoMedic" :value="3">Ⅲ类</a-radio>
+                        </a-radio-group>
+                    </div>
+                </a-col>
+            </a-row>
+            <a-row>
+                <a-col :span="12">
+                    <a-form-item v-bind="formItemLayout_half" label="类型">
+                        <a-cascader
+                            v-model="formData.type_inner_sn"
+                            :options="categoryList"
+                            :loadData="loadCategory"
+                            placeholder=""
+                            :displayRender="displayRender"
+                        />
+                    </a-form-item>
+                </a-col>
+                <a-col :span="12">
+                    <a-form-item v-bind="formItemLayout_half_2" label="存储条件">
+                        <a-select
+                            style="padding-top: 6px"
+                            v-decorator="[
+                                'select',
+                                { rules: [{ required: true, message: 'Please select your country!' }] }
+                            ]"
+                            v-model="formData.storage_condition"
+                        >
+                            <a-select-option v-for="item of storageCon" :value="item.value" :key="item.value">
+                                {{ item.name }}
+                            </a-select-option>
+                        </a-select>
+                    </a-form-item>
+                </a-col>
+            </a-row>
+            <a-row>
+                <a-col :span="12">
+                    <a-form-item v-bind="formItemLayout_half" label="医保类型">
+                        <a-select
+                            style="padding-top: 4px"
+                            v-decorator="[
+                                'select',
+                                { rules: [{ required: true, message: 'Please select your country!' }] }
+                            ]"
+                            v-model="formData.health_care_type"
+                        >
+                            <a-select-option v-for="item of healthCare" :value="item.value" :key="item.value">
+                                {{ item.name }}
+                            </a-select-option>
+                        </a-select>
+                    </a-form-item>
+                </a-col>
+                <!-- <a-col :span="12">
+                    <a-form-item
+                        label="医保编号"
+                        v-bind="formItemLayout_half_2"
+                    >
+                        <a-input style="padding-top: 6px" v-model="formData.health_care_sn" />
+                    </a-form-item>
+                </a-col> -->
+            </a-row>
+            <a-form-item label="规格型号" v-bind="formItemLayout">
+                <a-textarea
+                    :disabled="radioType"
+                    v-model="formData.specifications"
+                    placeholder="请输入规格型号，多型号请用 , 分隔"
+                    :autosize="textAreaSet"
+                />
+            </a-form-item>
+            <a-form-item label="备注" v-bind="formItemLayout">
+                <a-textarea v-model="formData.description" :autosize="textAreaSet" />
+            </a-form-item>
+        </a-form>
+        <a-modal
+            :title="chooseOrgMd.title"
+            :visible="chooseOrgMd.alert"
+            :maskClosable="false"
+            :width="600"
+            :centered="true"
+            :footer="null"
+            @cancel="chooseOrgMd.alert = false"
+            class="modal-form-input-scoped global-drag ct_choose_org"
+        >
+            <div v-globalDrag="{ el: 'ct_choose_org' }" class="modal-header-wrap">
+                <h6>
+                    <img src="/images/logo/logo-left.svg" alt="" class="modal-logo-left" />
+                    {{ chooseOrgMd.title }}
+                </h6>
+            </div>
+            <choose-org-tab
+                ref="chooseOrgMd"
+                @chooseOrg="chooseOrgFn"
+                :isCertifie="false"
+                :pageTypeName="1"
+                :partType="'ven'"
+            ></choose-org-tab>
+        </a-modal>
+    </div>
+</template>
+
+<script>
+import {
+    categoryGetParentListAPI,
+    categoryGetNextListAPI,
+    code68ParentListAPI,
+    code68ChildrenListAPI,
+    userUserInfoAPI
+} from '@/service/pageAjax';
+
+import chooseOrgTab from '@/components/chooseOrgTab';
+
+export default {
+    name: 'createGoods',
+    props: ['modalData'],
+    components: {
+        chooseOrgTab
+    },
+    data() {
+        return {
+            isNoMedic: false,
+            nowSystemType: '',
+            nowOid: '',
+            formItemLayout: {
+                labelCol: { span: 2 },
+                wrapperCol: { span: 22 }
+            },
+            formItemLayout_half: {
+                labelCol: { span: 4 },
+                wrapperCol: { span: 20 }
+            },
+            formItemLayout_half_2: {
+                labelCol: { span: 5 },
+                wrapperCol: { span: 19 }
+            },
+            formItemLayout_short: {
+                labelCol: { span: 2 },
+                wrapperCol: { span: 10 }
+            },
+            textAreaSet: {
+                minRows: 4,
+                maxRows: 6
+            },
+            chooseOrgMd: {
+                title: `${this.$route.meta.title} - 新增 - 添加厂商`,
+                alert: false,
+                loading: false
+            },
+            radioType: true,
+            defaultSel: [],
+            formData: {
+                vendor_inner_sn: [], // 厂商ID
+                type_inner_sn: [], // 自定义分类内部编号
+                code68_sn: [], // 医疗器械68分类编号
+                storage_condition: 1, // 存储条件
+                health_care_type: 0, // 医保类型
+                name: '',
+                specifications: '',
+                health_care_sn: '', // 医保编号
+                description: '',
+                type: 0,
+                code68_type: ''
+            },
+            vendorList: [], // 厂商列表
+            categoryList: [], // 自定义类型
+            op68List: [],
+            storageCon: [
+                {
+                    value: 0,
+                    name: '其它'
+                },
+                {
+                    value: 1,
+                    name: '常温'
+                },
+                {
+                    value: 2,
+                    name: '保温'
+                },
+                {
+                    value: 3,
+                    name: '阴凉'
+                },
+                {
+                    value: 4,
+                    name: '冷藏'
+                },
+                {
+                    value: 5,
+                    name: '冷冻'
+                },
+                {
+                    value: 6,
+                    name: '无菌'
+                },
+                {
+                    value: 7,
+                    name: '特储'
+                }
+            ],
+            healthCare: [
+                {
+                    value: 0,
+                    name: 'A型'
+                },
+                {
+                    value: 1,
+                    name: 'B型'
+                },
+                {
+                    value: 2,
+                    name: 'C型'
+                }
+            ],
+            orgName: '',
+            orgSystemType: '',
+            disType: false
+        };
+    },
+    methods: {
+        initPageData() {
+            // 初始化页面
+            this.formData = {
+                vendor_inner_sn: [], // 厂商ID
+                type_inner_sn: [], // 自定义分类内部编号
+                code68_sn: [], // 医疗器械68分类编号
+                storage_condition: 1, // 存储条件
+                health_care_type: 0, // 医保类型
+                name: '',
+                specifications: '',
+                health_care_sn: '', // 医保编号
+                description: '',
+                type: 0,
+                code68_type: ''
+            };
+            this.isNoMedic = false;
+            this.radioType = true;
+            this.orgName = '';
+            this.nowSystemType = this.$cookie.get('userSystemType');
+            this.nowOid = this.$cookie.get('userbelong');
+            this.formData.vendor_inner_sn = '';
+            if (parseInt(this.nowSystemType) === 3) {
+                this.disType = true;
+                this.getNowObj();
+            }
+        },
+        returnPageData() {
+            this.$emit('getData', this.formData);
+        },
+        openChooseTb() {
+            // 打开选择厂商
+            this.chooseOrgMd.alert = true;
+            this.$Utils.globalDragCenterFn('ct_choose_org');
+            if (this.$refs.chooseOrgMd) {
+                this.$refs.chooseOrgMd.pageDataInit();
+            }
+        },
+        async chooseOrgFn(org) {
+            // 获取选中机构信息
+            this.orgName = org.org_name;
+            this.formData.vendor_inner_sn = org.org_id;
+            this.chooseOrgMd.alert = false;
+        },
+        changeRadio(e) {
+            let val = e.target.value;
+            if (val === 0) {
+                this.isNoMedic = false;
+                this.radioType = true;
+                this.formData.specifications = '';
+            } else {
+                this.radioType = false;
+                this.isNoMedic = true;
+                this.formData.code68_type = '';
+            }
+        },
+        change68Type(e) {
+            let val = e.target.value;
+            this.formData.code68_type = val;
+        },
+        changeVendor(val) {
+            this.formData.vendor_inner_sn = val;
+        },
+        async getCategoryListFn() {
+            // 获取自定义类型列表
+            await categoryGetParentListAPI().then((res) => {
+                if (parseFloat(res.code) === 0) {
+                    const rows = res.list;
+                    this.categoryList = rows.map((item) => {
+                        let st;
+                        if (item.is_leaf === 1) {
+                            st = true;
+                        } else if (item.is_leaf === 0) {
+                            st = false;
+                        }
+                        item.label = item.type;
+                        item.value = item.type_inner_sn;
+                        item.isLeaf = st;
+                        return item;
+                    });
+                    this.categoryList.forEach((item) => {
+                        if (item.status === 0) {
+                            item.disabled = true;
+                        }
+                    });
+                } else {
+                    this.$message.error(res.msg);
+                }
+            });
+        },
+        async loadCategory(options) {
+            // 加载自定义类型列表子集
+            const targetOption = options[options.length - 1];
+            targetOption.loading = true;
+            const id = targetOption.value;
+            await categoryGetNextListAPI(id).then((res) => {
+                targetOption.loading = false;
+                if (parseFloat(res.code) === 0) {
+                    const rows = res.list;
+                    rows.forEach((item) => {
+                        if (item.status === 0) {
+                            item.disabled = true;
+                        }
+                    });
+                    if (rows.length > 0) {
+                        targetOption.children = rows.map((item) => {
+                            let st;
+                            if (item.is_leaf === 1) {
+                                st = true;
+                            } else if (item.is_leaf === 0) {
+                                st = false;
+                            }
+                            item.label = item.type;
+                            item.value = item.type_inner_sn;
+                            item.isLeaf = st;
+                            return item;
+                        });
+                    } else {
+                        targetOption.isLeaf = true;
+                    }
+                    targetOption.loading = false;
+                    this.categoryList = [...this.categoryList];
+                } else {
+                    this.$message.error(res.msg);
+                }
+            });
+        },
+        changeCategory(val) {
+            // let index = val.length - 1
+            this.formData.type_inner_sn = val;
+        },
+        async get68ParentListFn() {
+            // 获取68分类
+            await code68ParentListAPI().then((res) => {
+                if (parseFloat(res.code) === 0) {
+                    this.op68List = [];
+                    const rows = res.list;
+                    let newArray = [];
+                    rows.forEach((item) => {
+                        let st;
+                        if (item.is_leaf === 0) {
+                            st = false;
+                        } else if (item.is_leaf === 1) {
+                            st = true;
+                        }
+                        let obj = {
+                            label: '(' + item.code68_sn + ') ' + item.name,
+                            value: item.code68_sn,
+                            isLeaf: st
+                        };
+                        newArray.push(obj);
+                    });
+                    this.op68List = newArray;
+                } else {
+                    this.$message.error(res.msg);
+                }
+            });
+        },
+        async load68data(options) {
+            // 加载68分
+            const targetOption = options[options.length - 1];
+            targetOption.loading = true;
+            const id = targetOption.value;
+            await code68ChildrenListAPI(id).then((res) => {
+                targetOption.loading = false;
+                if (parseFloat(res.code) === 0) {
+                    const rows = res.list;
+                    if (rows.length > 0) {
+                        targetOption.children = rows.map((item) => {
+                            let st;
+                            if (item.is_leaf === 0) {
+                                st = false;
+                            } else if (item.is_leaf === 1) {
+                                st = true;
+                            }
+                            item.label = '(' + item.code68_sn + ') ' + item.name;
+                            item.value = item.code68_sn;
+                            item.isLeaf = st;
+                            return item;
+                        });
+                    } else {
+                        targetOption.isLeaf = true;
+                    }
+                    targetOption.loading = false;
+                    this.op68List = [...this.op68List];
+                } else {
+                    this.$message.error(res.msg);
+                }
+            });
+        },
+        change68(val) {
+            let index = val.length - 1;
+            this.formData.code68_sn = val[index];
+        },
+        displayRender(obj) {
+            let len = obj.labels.length;
+            const label = obj.labels[len - 1];
+            return label;
+        },
+        async getNowObj() {
+            await userUserInfoAPI().then((res) => {
+                if (parseInt(res.Code || res.code) === 0) {
+                    this.orgName = res.data.EmployeeInfo.OrgName;
+                }
+            });
+        }
+    },
+    mounted() {
+        // this.getVendorListFn()
+        this.initPageData();
+        this.getCategoryListFn();
+        this.get68ParentListFn();
+    }
+};
+</script>
+
+<style scoped lang="less">
+.modal-list {
+    .ant-form-item {
+        margin-bottom: 8px;
+    }
+}
+textarea {
+    resize: none;
+}
+</style>

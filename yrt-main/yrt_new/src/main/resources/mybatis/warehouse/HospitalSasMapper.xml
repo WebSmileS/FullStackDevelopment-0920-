@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.HospitalSasMapper">
+
+	<!-- 经销商储位分配单 -->
+	<resultMap type="Sas" id="SasResult">
+		<id      property="org_id" column="org_id"/><!-- 机构ID -->
+		<result  property="warehouse_inner_sn" column="warehouse_inner_sn"/><!-- 仓库内部编号 -->
+		<result  property="warehouse_name" column="warehouse_name"/><!-- 仓库名称 -->
+		<result  property="making_people_inner_sn" column="making_people_inner_sn"/><!-- 制单人内部编号 -->
+		<result  property="making_people_name" column="making_people_name"/><!-- 制单人姓名(冗余) -->
+		<result  property="operator_inner_sn" column="operator_inner_sn"/><!-- 作业人内部编号 -->
+		<result  property="operator_name" column="operator_name"/><!-- 作业人姓名(冗余) -->
+		<result  property="sas_inner_sn" column="sas_inner_sn"/><!-- 储位分配单内部编号 -->
+		<result  property="status" column="status"/><!-- 状态 -->
+		<result  property="sas_sn" column="sas_sn"/><!-- 储位分配单编号 -->
+		<result  property="description" column="description"/><!-- 描述 -->
+		<result property="billsType" column="billsType"/><!-- 单据类型  0-DealerDealer 1-DealerVendor 2-DealerHospital 3-HospitalHospital 4-hospitalDealer 5-hospitalVendor -->
+	</resultMap>
+	
+	<select id="searchSasList" parameterType="map" resultMap="SasResult">
+		SELECT hospital_inner_sn as org_id, warehouse_inner_sn, sas_inner_sn, making_people_inner_sn, operator_inner_sn,
+		    status, create_time, sas_sn, description, warehouse_name, making_people_name, operator_name, grn_inner_sn, 
+		    (case organization_type when 1 then 3 when 2 then 4 else 5 end) as billsType 
+		FROM hospital_sas
+		inner join (
+			select * from (
+				select hospital_inner_sn, warehouse_inner_sn, sas_inner_sn, grn_inner_sn, organization_type
+		        from hospital_product_inventory
+		        left join hospital_sas_product_detail using (hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+		        where 1=1 and grn_inner_sn != 0
+		        union distinct
+		        select hospital_inner_sn, warehouse_inner_sn, sas_inner_sn, grn_inner_sn, organization_type
+		        from hospital_dealer_product_inventory
+		        left join hospital_sas_dealer_product_detail using (hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+		        where 1=1 and grn_inner_sn != 0
+	        ) b 
+	        group by hospital_inner_sn, warehouse_inner_sn, sas_inner_sn, grn_inner_sn, organization_type
+        ) a using (hospital_inner_sn, warehouse_inner_sn, sas_inner_sn)
+		where hospital_inner_sn = #{org_id}
+	        <if test="sas_sn != null and sas_sn !=''">and sas_sn like concat('%', #{sas_sn}, '%')</if>
+	        <if test="warehouse_inner_sn">and warehouse_inner_sn=#{warehouse_inner_sn}</if>
+	        <if test="operator_name and operator_name !=''">and operator_name like concat('%', #{operator_name}, '%')</if>
+	        <if test="begin_date != null">AND date_format(create_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(create_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="status != null">AND status in (${status})</if>
+			<if test="operator_inner_sn != null">AND operator_inner_sn = #{operator_inner_sn}</if>
+	</select>
+	
+	<select id="selectSasInfo" parameterType="map" resultMap="SasResult">
+		SELECT hospital_inner_sn as org_id, warehouse_inner_sn, sas_inner_sn, making_people_inner_sn, operator_inner_sn,
+		    status, create_time, sas_sn, description, warehouse_name, making_people_name, operator_name, grn_inner_sn, 
+		    (case organization_type when 1 then 3 when 2 then 4 else 5 end) as billsType
+		FROM hospital_sas
+		inner join (
+			select * from (
+				select hospital_inner_sn, warehouse_inner_sn, sas_inner_sn, grn_inner_sn, organization_type
+		        from hospital_product_inventory
+		        left join hospital_sas_product_detail using (hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+		        where 1=1 and grn_inner_sn != 0
+		        union distinct
+		        select hospital_inner_sn, warehouse_inner_sn, sas_inner_sn, grn_inner_sn, organization_type
+		        from hospital_dealer_product_inventory
+		        left join hospital_sas_dealer_product_detail using (hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+		        where 1=1 and grn_inner_sn != 0
+	        ) b 
+	        group by hospital_inner_sn, warehouse_inner_sn, sas_inner_sn, grn_inner_sn, organization_type
+        ) a using (hospital_inner_sn, warehouse_inner_sn, sas_inner_sn)
+		where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+	</select>
+	
+	<select id="insertSas" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call h_add_hospital_sas(
+            #{org_id,mode=IN},
+            #{warehouse_inner_sn_i,mode=IN},
+            #{making_people_inner_sn_i,mode=IN},
+            #{operator_inner_sn_i,mode=IN},
+            #{sas_sn_i,mode=IN},
+            #{description_i,mode=IN},
+            #{warehouse_name_i,mode=IN},
+            #{making_people_name_i,mode=IN},
+            #{operator_name_i ,mode=IN},
+            #{data_i,mode=IN},
+            #{sas_inner_sn_o,mode=OUT,jdbcType=NUMERIC},
+            #{result_o,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<update id="updateSas" parameterType="map">
+		update hospital_sas
+		<set>
+			<if test="status != null">status = #{status},</if>
+			<if test="description != null">description = #{description},</if>
+		</set>
+		where 1=1
+			and hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+	</update>
+	
+	<delete id="deleteSas" parameterType="map">
+		delete from hospital_sas 
+		where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+	</delete>
+	
+	<select id="checkSasFinish" parameterType="map" resultType="map">
+		select * from hospital_sas 
+		where exists (
+			select sas_inner_sn from hospital_sas_product_detail 
+			where 1=1
+			and hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+			and status in(0,1)
+			union all
+			select sas_inner_sn from hospital_sas_dealer_product_detail
+			where 1=1
+			and hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+			and status in(0,1)
+		)
+		and hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+	</select>
+	
+	<resultMap type="SasDetail" id="SasDetailResult">
+		<id      property="org_id" column="org_id"/><!-- 机构ID -->
+		<result  property="warehouse_inner_sn" column="warehouse_inner_sn"/><!-- 仓库内部编号 -->
+		<!-- <result  property="warehouse_name" column="warehouse_name"/>仓库名称 -->
+		<result  property="sas_inner_sn" column="sas_inner_sn"/><!-- 储位分配单内部编号 -->
+		<result  property="detail_inner_sn" column="detail_inner_sn"/><!-- 明细内部编号 -->
+		<result  property="inventory_inner_sn" column="inventory_inner_sn"/><!-- 库存内部编号 -->
+		<result  property="product_vendor_inner_sn" column="product_vendor_inner_sn"/><!-- (产品)厂商内部编号 -->
+		<result  property="product_vendor_name" column="product_vendor_name"/><!-- (产品)厂商名称(冗余) -->
+		<result  property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result  property="product_name" column="product_name"/><!-- 产品名称(冗余) -->
+		<result  property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号 -->
+		<result  property="specification" column="specification"/><!-- 型号规格(冗余) -->
+		<result  property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号 -->
+		<result  property="unit_name" column="unit"/><!-- 单位(冗余) -->
+		<result  property="location_inner_sn" column="location_inner_sn"/><!-- 存储位置内部编号 -->
+		<result  property="location" column="location"/><!-- 存储位置(冗余) -->
+		<result  property="status" column="status"/><!-- 状态 -->
+		<result  property="expect_quantity" column="expect_quantity"/><!-- 应放数量 -->
+		<result  property="real_quantity" column="real_quantity"/><!-- 实放数量 -->
+		<result property="sort_number" column="sort_number"/><!-- 排序号 -->
+		<result property="batch_number" column="batch_number"/><!-- 批号 -->
+		<result  property="description" column="description"/><!-- 描述 -->
+		<result property="product_type" column="product_type"/><!-- 产品类型 0:经销商(自建)产品   1:厂商产品 -->
+		<result property="grn_detail_inner_sn" column="grn_detail_inner_sn"/><!-- 入库单明细ID -->
+	</resultMap>
+	
+	<select id="selectSasDetail" parameterType="map" resultMap="SasDetailResult">
+		SELECT * from (
+		    SELECT hospital_inner_sn as org_id, warehouse_inner_sn, sas_inner_sn, detail_inner_sn, inventory_inner_sn,
+			    d.product_vendor_inner_sn, d.product_inner_sn, d.specification_inner_sn, d.unit_inner_sn, location_inner_sn,
+			    d.status, expect_quantity/1000 as expect_quantity, real_quantity/1000 as real_quantity, sort_number, grn_detail_inner_sn,
+			    d.batch_number, description, d.product_vendor_name, d.product_name, d.specification, d.unit, location, 1 as product_type
+			FROM
+			    hospital_sas_product_detail d
+			    left join hospital_product_inventory i using (hospital_inner_sn,warehouse_inner_sn,inventory_inner_sn)
+			where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+	        <if test="detail_inner_sn">and detail_inner_sn=#{detail_inner_sn}</if>
+			<if test="status != null">AND d.status= #{status}</if>
+			union all
+			SELECT hospital_inner_sn as org_id, warehouse_inner_sn, sas_inner_sn, detail_inner_sn, inventory_inner_sn,
+			    d.product_dealer_inner_sn as product_vendor_inner_sn, d.product_inner_sn, d.specification_inner_sn, d.unit_inner_sn, location_inner_sn,
+			    d.status, expect_quantity/1000 as expect_quantity, real_quantity/1000 as real_quantity, sort_number, grn_detail_inner_sn, 
+			    d.batch_number, description, d.product_dealer_name as product_vendor_name, d.product_name, d.specification, d.unit, location, 0 as product_type
+			FROM
+			    hospital_sas_dealer_product_detail d
+			    left join hospital_dealer_product_inventory i using (hospital_inner_sn,warehouse_inner_sn,inventory_inner_sn)
+			where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+	        <if test="detail_inner_sn">and detail_inner_sn=#{detail_inner_sn}</if>
+			<if test="status != null">AND d.status= #{status}</if>
+		) a
+		order by sort_number
+	</select>
+	
+	<select id="insertSasVendorDetail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call h_add_hospital_sas_product_detail(
+            #{org_id,mode=IN},
+            #{warehouse_inner_sn_i,mode=IN},
+            #{sas_inner_sn_i,mode=IN},
+            #{inventory_inner_sn_i,mode=IN},
+            #{product_vendor_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{specification_inner_sn_i,mode=IN},
+            #{unit_inner_sn_i,mode=IN},
+            #{location_inner_sn_i ,mode=IN},
+            #{expect_quantity_i,mode=IN},
+            #{sort_number_i,mode=IN},
+            #{batch_number_i,mode=IN},
+            #{description_i,mode=IN},
+            #{product_vendor_name_i,mode=IN},
+            #{product_name_i,mode=IN},
+            #{specification_i,mode=IN},
+            #{unit_i,mode=IN},
+            #{location_i,mode=IN},
+            #{detail_inner_sn_o,mode=OUT,jdbcType=NUMERIC},
+            #{result_o,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o,mode=OUT,jdbcType=VARCHAR}
+         )
+	</select>
+	
+	<update id="updateSasVendorDetail" parameterType="map">
+		UPDATE hospital_sas_product_detail
+		<set>
+		    <if test="location_inner_sn != null">location_inner_sn = #{location_inner_sn},</if>
+		    <if test="status != null">status = #{status},</if>
+		    <if test="expect_quantity != null">expect_quantity = #{expect_quantity},</if>
+		    <if test="real_quantity != null">real_quantity = #{real_quantity},</if>
+		    <if test="location != null">location = #{location},</if>
+		</set>
+		WHERE 1=1
+		    AND hospital_inner_sn = #{org_id}
+		    and warehouse_inner_sn = #{warehouse_inner_sn}
+			AND sas_inner_sn = #{sas_inner_sn}
+			AND detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<delete id="deleteSasVendorDetail" parameterType="map">
+		delete from hospital_sas_product_detail 
+		where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+		<if test="detail_inner_sn">and detail_inner_sn=#{detail_inner_sn}</if>
+	</delete>
+	
+	<select id="insertSasDealerDetail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call h_add_hospital_sas_dealer_product_detail(
+            #{org_id,mode=IN},
+            #{warehouse_inner_sn_i,mode=IN},
+            #{sas_inner_sn_i,mode=IN},
+            #{inventory_inner_sn_i,mode=IN},
+            #{product_vendor_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{specification_inner_sn_i,mode=IN},
+            #{unit_inner_sn_i,mode=IN},
+            #{location_inner_sn_i ,mode=IN},
+            #{expect_quantity_i,mode=IN},
+            #{sort_number_i,mode=IN},
+            #{batch_number_i,mode=IN},
+            #{description_i,mode=IN},
+            #{product_vendor_name_i,mode=IN},
+            #{product_name_i,mode=IN},
+            #{specification_i,mode=IN},
+            #{unit_i,mode=IN},
+            #{location_i,mode=IN},
+            #{detail_inner_sn_o,mode=OUT,jdbcType=NUMERIC},
+            #{result_o,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o,mode=OUT,jdbcType=VARCHAR}
+         )
+	</select>
+	
+	<update id="updateSasDealerDetail" parameterType="map">
+		UPDATE hospital_sas_dealer_product_detail
+		<set>
+		    <if test="location_inner_sn != null">location_inner_sn = #{location_inner_sn},</if>
+		    <if test="status != null">status = #{status},</if>
+		    <if test="expect_quantity != null">expect_quantity = #{expect_quantity},</if>
+		    <if test="real_quantity != null">real_quantity = #{real_quantity},</if>
+		    <if test="location != null">location = #{location},</if>
+		</set>
+		WHERE 1=1
+		    AND hospital_inner_sn = #{org_id}
+		    and warehouse_inner_sn = #{warehouse_inner_sn}
+			AND sas_inner_sn = #{sas_inner_sn}
+			AND detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<delete id="deleteSasDealerDetail" parameterType="map">
+		delete from hospital_sas_dealer_product_detail 
+		where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+		<if test="detail_inner_sn">and detail_inner_sn=#{detail_inner_sn}</if>
+	</delete>
+	
+	<select id="selectSasId" parameterType="map" resultType="map">
+	    SELECT
+		    hospital_inner_sn as org_id, warehouse_inner_sn, sas_inner_sn, inventory_inner_sn
+		FROM
+		    hospital_sas_product_detail
+		    inner join hospital_product_inventory pi using(hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+	    where 1=1
+	    	and hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn}
+		    and organization_type = #{organization_type} and grn_inner_sn = #{grn_inner_sn}
+		    <if test="grn_detail_inner_sn">and grn_detail_inner_sn=#{grn_detail_inner_sn}</if>
+		union distinct
+		SELECT
+		    hospital_inner_sn as org_id, warehouse_inner_sn, sas_inner_sn, inventory_inner_sn
+		FROM
+		    hospital_sas_dealer_product_detail
+		    inner join hospital_dealer_product_inventory pi using(hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+	    where 1=1
+		    and hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn}
+		    and organization_type = #{organization_type} and grn_inner_sn = #{grn_inner_sn}
+		    <if test="grn_detail_inner_sn">and grn_detail_inner_sn=#{grn_detail_inner_sn}</if>
+	</select>
+	
+	<select id="selectNoHaveSasProduct" parameterType="map" resultType="map">
+	    SELECT
+		    hospital_inner_sn as org_id, warehouse_inner_sn, sas_inner_sn, inventory_inner_sn, grn_detail_inner_sn,
+		    pi.product_vendor_inner_sn, pi.product_vendor_name, pi.product_inner_sn, pi.product_name, pi.specification_inner_sn, pi.specification, 
+		    pi.unit_inner_sn, pi.unit as unit_name, 
+		    pi.quantity/1000-IFNULL(a.quantity/1000,0) as quantity, 1 as product_type, pi.batch_number
+		FROM (
+	        select hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, sas_inner_sn, sum(expect_quantity) as quantity 
+	        from hospital_sas_product_detail
+	        where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn}
+	        group by hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, sas_inner_sn
+	    ) a
+	    right join hospital_product_inventory pi using(hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+		where 1=1
+	    	and hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn}
+		    and organization_type = #{organization_type} and grn_inner_sn = #{grn_inner_sn}
+		    <if test="grn_detail_inner_sn">and pi.grn_detail_inner_sn=#{grn_detail_inner_sn}</if>
+		    <if test="product_vendor_inner_sn">and pi.product_vendor_inner_sn=#{product_vendor_inner_sn}</if>
+		    <if test="product_inner_sn">and pi.product_inner_sn=#{product_inner_sn}</if>
+		    <if test="specification_inner_sn">and pi.specification_inner_sn=#{specification_inner_sn}</if>
+		    <if test="check">and pi.quantity/1000-IFNULL(a.quantity/1000,0) >0</if>
+		union distinct
+		SELECT
+		     hospital_inner_sn as org_id, warehouse_inner_sn, sas_inner_sn, inventory_inner_sn, grn_detail_inner_sn,
+		    pi.product_dealer_inner_sn as product_vendor_inner_sn, pi.product_dealer_name as product_vendor_name, pi.product_inner_sn, pi.product_name, 
+		    pi.specification_inner_sn, pi.specification, pi.unit_inner_sn, pi.unit as unit_name, 
+		    pi.quantity/1000-IFNULL(a.quantity/1000,0) as quantity, 0 as product_type, pi.batch_number
+		FROM (
+	        select hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, sas_inner_sn, sum(expect_quantity) as quantity 
+	        from hospital_sas_dealer_product_detail
+	        where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn}
+	        group by hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, sas_inner_sn
+	    ) a
+	    right join hospital_dealer_product_inventory pi using(hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+	    where 1=1
+		    and hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn}
+		    and organization_type = #{organization_type} and grn_inner_sn = #{grn_inner_sn}
+		    <if test="grn_detail_inner_sn">and pi.grn_detail_inner_sn=#{grn_detail_inner_sn}</if>
+		    <if test="product_vendor_inner_sn">and pi.product_dealer_inner_sn=#{product_vendor_inner_sn}</if>
+		    <if test="product_inner_sn">and pi.product_inner_sn=#{product_inner_sn}</if>
+		    <if test="specification_inner_sn">and pi.specification_inner_sn=#{specification_inner_sn}</if>
+		    <if test="check">and pi.quantity/1000-IFNULL(a.quantity/1000,0) >0</if>
+	</select>
+	
+	<select id="selectPendingProductList" parameterType="map" resultType="map">
+	    SELECT sas_sn, hospital_inner_sn, warehouse_inner_sn, sas_inner_sn, detail_inner_sn, inventory_inner_sn, product_vendor_inner_sn, product_inner_sn,
+			specification_inner_sn, unit_inner_sn, expect_quantity, real_quantity, batch_number, product_vendor_name, product_name, specification, unit, 
+			location_inner_sn, location, product_type, warehouse_model_sn
+		FROM hospital_sas
+		INNER JOIN (
+	        SELECT d.hospital_inner_sn, d.warehouse_inner_sn, sas_inner_sn, detail_inner_sn, inventory_inner_sn, product_vendor_inner_sn, product_inner_sn,
+		        specification_inner_sn, unit_inner_sn, expect_quantity/1000 as expect_quantity, real_quantity/1000 as real_quantity, batch_number, product_vendor_name, 
+		        product_name, specification, unit, location_inner_sn, location, 1 as product_type, warehouse_model_sn
+	        FROM  hospital_sas_product_detail  d
+	        INNER JOIN hospital_warehouse_model m ON m.hospital_inner_sn=d.hospital_inner_sn and m.warehouse_model_inner_sn=d.location_inner_sn
+	        where 
+	        	d.hospital_inner_sn = #{org_id} and d.warehouse_inner_sn = #{warehouse_inner_sn} and d.status in(0,1) and expect_quantity-real_quantity>0
+	        union all
+	        SELECT d.hospital_inner_sn, d.warehouse_inner_sn, sas_inner_sn, detail_inner_sn, inventory_inner_sn, product_dealer_inner_sn as product_vendor_inner_sn, product_inner_sn,
+		        specification_inner_sn, unit_inner_sn, expect_quantity/1000 as expect_quantity, real_quantity/1000 as real_quantity, batch_number, product_dealer_name as product_vendor_name, 
+		        product_name, specification, unit, location_inner_sn, location, 0 as product_type, warehouse_model_sn
+	        FROM hospital_sas_dealer_product_detail  d
+	        INNER JOIN hospital_warehouse_model m ON m.hospital_inner_sn=d.hospital_inner_sn and m.hospital_inner_sn=d.location_inner_sn
+	        where 
+	        d.hospital_inner_sn = #{org_id} and d.warehouse_inner_sn = #{warehouse_inner_sn} and d.status in(0,1) and expect_quantity-real_quantity>0
+		) d using(hospital_inner_sn,warehouse_inner_sn,sas_inner_sn)
+		where 
+	        hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and status in (0,1)
+	        <if test="location_inner_sn">and location_inner_sn=#{location_inner_sn}</if>
+	        <if test="inventory_inner_sn">and inventory_inner_sn=#{inventory_inner_sn}</if>
+	        <if test="operator_inner_sn">and operator_inner_sn=#{operator_inner_sn}</if>
+	        <if test="product_vendor_inner_sn">and product_vendor_inner_sn=#{product_vendor_inner_sn}</if>
+	        <if test="product_inner_sn">and product_inner_sn=#{product_inner_sn}</if>
+	        <if test="specification_inner_sn">and specification_inner_sn=#{specification_inner_sn}</if>
+	        <if test="unit_inner_sn">and unit_inner_sn=#{unit_inner_sn}</if>
+	</select>
+	
+	<select id="selectPendingStorageList" parameterType="map" resultType="map">
+	    SELECT DISTINCT product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn, batch_number, 
+        	product_vendor_name,  product_name, specification, unit AS unit_name,warehouse_inner_sn, inventory_inner_sn, 1 as product_type
+		FROM hospital_product_inner_barcode
+		INNER JOIN hospital_product_inventory_hospital_product_inner_barcode USING(hospital_inner_sn, barcode_sn)
+		WHERE hospital_inner_sn = #{org_id} AND barcode_sn = #{barcode_sn}
+		UNION ALL
+		SELECT DISTINCT product_dealer_inner_sn AS product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn, batch_number, 
+	        product_dealer_name AS product_vendor_name,  product_name, specification, unit AS unit_name,warehouse_inner_sn, inventory_inner_sn, 0 as product_type
+		FROM hospital_dealer_product_inner_barcode
+		INNER JOIN h_d_p_i_h_d_p_i_b USING(hospital_inner_sn, barcode_sn)
+		WHERE hospital_inner_sn = #{org_id} AND barcode_sn = #{barcode_sn}
+	</select>
+	
+	<select id="checkProductInfoByBarcode" parameterType="map" resultType="map">
+	    SELECT DISTINCT product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn,  
+        	product_vendor_name,  product_name, specification, unit AS unit_name, barcode_type
+		FROM hospital_product_inner_barcode
+		INNER JOIN hospital_product_inventory_hospital_product_inner_barcode USING(hospital_inner_sn, barcode_sn)
+		WHERE hospital_inner_sn = #{org_id} AND barcode_sn = #{barcode_sn}
+		UNION ALL
+		SELECT DISTINCT product_dealer_inner_sn AS product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn,  
+	        product_dealer_name AS product_vendor_name,  product_name, specification, unit AS unit_name, barcode_type
+		FROM hospital_dealer_product_inner_barcode
+		INNER JOIN h_d_p_i_h_d_p_i_b USING(hospital_inner_sn, barcode_sn)
+		WHERE hospital_inner_sn = #{org_id} AND barcode_sn = #{barcode_sn}
+	</select>
+	
+	<!-- <select id="selectFinishLoadProductList" parameterType="map" resultType="map">
+	    SELECT barcode_sn, hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn, quantity
+		FROM (
+	        SELECT barcode_sn, hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn, quantity
+	        FROM h_p_i_b_h_p_i_h_w_m
+	        INNER JOIN hospital_product_inventory_hospital_warehouse_model USING(hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn)
+	        UNION ALL
+	        SELECT barcode_sn, hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn, quantity
+	        FROM h_d_p_i_b_h_d_p_i_h_w_m
+	        INNER JOIN hospital_dealer_product_inventory_hospital_warehouse_model USING(hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn,warehouse_model_inner_sn)
+		) A
+		WHERE hospital_inner_sn = #{org_id} AND barcode_sn=#{barcode_sn}
+	</select> -->
+	
+	<!-- 条码、库存、仓库模型对应表 -->
+	<select id="selectBarCodeInventoryWarehouseRef" parameterType="map" resultType="map">
+	    SELECT barcode_sn, hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn
+		FROM (
+	        SELECT barcode_sn, hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn
+	        FROM h_p_i_b_h_p_i_h_w_m
+	        UNION ALL
+	        SELECT barcode_sn, hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn
+	        FROM h_d_p_i_b_h_d_p_i_h_w_m
+		) A
+		WHERE hospital_inner_sn = #{org_id} AND barcode_sn=#{barcode_sn}
+		<if test="warehouse_inner_sn">and warehouse_inner_sn=#{warehouse_inner_sn}</if>
+		<if test="inventory_inner_sn">and inventory_inner_sn=#{inventory_inner_sn}</if>
+		<if test="location_inner_sn">and warehouse_model_inner_sn=#{location_inner_sn}</if>
+	</select>
+	
+	<insert id="insertVendorBarCodeInventoryWarehouseRef" parameterType="map">
+		INSERT INTO h_p_i_b_h_p_i_h_w_m (
+	        barcode_sn, hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn 
+        )
+	    VALUES ( 
+	    	#{barcode_sn}, #{org_id}, #{warehouse_inner_sn}, #{inventory_inner_sn}, #{location_inner_sn}
+	    )
+	</insert>
+	<insert id="insertDealerBarCodeInventoryWarehouseRef" parameterType="map">
+		INSERT INTO h_d_p_i_b_h_d_p_i_h_w_m (
+	        barcode_sn, hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn 
+        )
+	    VALUES ( 
+	    	#{barcode_sn}, #{org_id}, #{warehouse_inner_sn}, #{inventory_inner_sn}, #{location_inner_sn}
+	    )
+	</insert>
+	
+	<!-- 储位与库存数量对应表 -->
+	<select id="selectBarCodeInventoryQuantityRef" parameterType="map" resultType="map">
+	    SELECT hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn, quantity, location_description
+		FROM (
+	        SELECT hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn, quantity/1000 as quantity, location_description
+	        FROM hospital_product_inventory_hospital_warehouse_model
+	        UNION ALL
+	        SELECT hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn, quantity/1000 as quantity, location_description
+	        FROM hospital_dealer_product_inventory_hospital_warehouse_model
+		) A
+		WHERE hospital_inner_sn = #{org_id}
+		<if test="warehouse_inner_sn">and warehouse_inner_sn=#{warehouse_inner_sn}</if>
+		<if test="inventory_inner_sn">and inventory_inner_sn=#{inventory_inner_sn}</if>
+		<if test="location_inner_sn">and warehouse_model_inner_sn=#{location_inner_sn}</if>
+	</select>
+	
+	<insert id="insertVendorBarCodeInventoryQuantityRef" parameterType="map">
+		INSERT INTO hospital_product_inventory_hospital_warehouse_model (
+	        hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn, quantity, location_description
+        )
+	    VALUES ( 
+	    	#{org_id}, #{warehouse_inner_sn}, #{inventory_inner_sn}, #{location_inner_sn}, #{quantity}, #{location_description}
+	    )
+	</insert>
+	<update id="updateVendorBarCodeInventoryQuantityRef" parameterType="map">
+		UPDATE
+		    hospital_product_inventory_hospital_warehouse_model
+		SET
+			quantity = #{quantity}
+		WHERE 1=1
+			AND hospital_inner_sn = #{org_id}
+			AND warehouse_inner_sn = #{warehouse_inner_sn}
+			AND inventory_inner_sn = #{inventory_inner_sn}
+			AND warehouse_model_inner_sn = #{location_inner_sn}
+	</update>
+	<insert id="insertDealerBarCodeInventoryQuantityRef" parameterType="map">
+		INSERT INTO hospital_dealer_product_inventory_hospital_warehouse_model (
+	        hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, warehouse_model_inner_sn, quantity, location_description
+        )
+	    VALUES ( 
+	    	#{org_id}, #{warehouse_inner_sn}, #{inventory_inner_sn}, #{location_inner_sn}, #{quantity}, #{location_description}
+	    )
+	</insert>
+	<update id="updateDealerBarCodeInventoryQuantityRef" parameterType="map">
+		UPDATE
+		    hospital_dealer_product_inventory_hospital_warehouse_model
+		SET
+			quantity = #{quantity}
+		WHERE  1=1
+			AND hospital_inner_sn = #{org_id}
+			AND warehouse_inner_sn = #{warehouse_inner_sn}
+			AND inventory_inner_sn = #{inventory_inner_sn}
+			AND warehouse_model_inner_sn = #{location_inner_sn}
+	</update>
+	
+	<!-- 获取所有调单明细数量汇总 -->
+	<select id="selectVoucherDetailQuantity" parameterType="map" resultType="VoucherDetailQuantity">
+		select hospital_inner_sn as voucher_inner_sn, warehouse_inner_sn, inventory_inner_sn as voucher_details_inner_sn, 
+	        product_name, specification, srcQuantity, totalQuantity, srcQuantity-totalQuantity as fixQuantity
+		from(
+	        select hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, product_name, specification, quantity AS srcQuantity
+	        from hospital_product_inventory
+		) a
+		inner join (
+	        select hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, IFNULL(sum(expect_quantity),0) as totalQuantity 
+	        from hospital_sas_product_detail
+	        where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+	        group by hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn
+		) b using(hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+		UNION ALL 
+		select hospital_inner_sn as voucher_inner_sn, warehouse_inner_sn, inventory_inner_sn as voucher_details_inner_sn, 
+	        product_name, specification, srcQuantity, totalQuantity, srcQuantity-totalQuantity as fixQuantity
+		from(
+	        select hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, product_name, specification, quantity AS srcQuantity
+	        from hospital_dealer_product_inventory
+		) a
+		inner join (
+	        select hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn, IFNULL(sum(expect_quantity),0) as totalQuantity 
+	        from hospital_sas_dealer_product_detail
+	        where hospital_inner_sn = #{org_id} and warehouse_inner_sn = #{warehouse_inner_sn} and sas_inner_sn = #{sas_inner_sn}
+	        group by hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn
+		) b using(hospital_inner_sn, warehouse_inner_sn, inventory_inner_sn)
+	</select>
+</mapper>

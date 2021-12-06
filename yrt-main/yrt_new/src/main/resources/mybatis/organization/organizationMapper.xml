@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.organization.mapper.OrganizationMapper">
+
+	<resultMap type="NotAuditOrganization" id="noAuditOrgResult">
+		<id     property="not_audit_organization_inner_sn" column="not_audit_organization_inner_sn"/>
+		<result property="administrative_division_sn" column="administrative_division_sn"/>
+		<result property="system_type" column="system_type"/>
+		<result property="audit_status" column="audit_status"/>
+		<result property="register_time" column="register_time"/>
+		<result property="name" column="name"/>
+		<result property="alias" column="alias"/>
+		<result property="address" column="address"/>
+		<result property="registrant" column="registrant"/>
+		<result property="registrant_phone" column="registrant_phone"/>
+		<result property="registrant_email" column="registrant_email"/>
+		<result property="description" column="description"/>
+		<result property="social_credit_code" column="social_credit_code"/>
+	</resultMap>
+	
+	<sql id="selectNoAuditOrg">
+        select not_audit_organization_inner_sn,  administrative_division_sn, system_type, audit_status, register_time,
+        	name, alias, address, registrant, registrant_phone, registrant_email, description, social_credit_code
+		from not_audit_organization
+    </sql>
+	
+	<select id="selectNoAuditOrgInfo" parameterType="Long" resultMap="noAuditOrgResult">
+		<include refid="selectNoAuditOrg"/>
+		where audit_status !=1 and not_audit_organization_inner_sn = #{id}
+	</select>
+	
+	<select id="selectAllNoAuditOrgList" parameterType="NotAuditOrganization" resultType="map">
+		<include refid="selectNoAuditOrg"/>
+		where audit_status !=1
+		<if test="system_type != null">and system_type = #{system_type}</if>
+		<if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
+		<if test="name1 != null and name1 != ''">and name = #{name1}</if>
+		<if test="social_credit_code != null and social_credit_code != ''">and social_credit_code like concat('%', #{social_credit_code}, '%')</if>
+		<if test="registrant != null and registrant != ''">and registrant like concat('%', #{registrant}, '%')</if>
+	</select>
+	
+	<insert id="insertNoAuditOrg" parameterType="NotAuditOrganization">
+		insert into not_audit_organization(administrative_division_sn, system_type, audit_status, register_time,
+			name, alias, address, registrant, registrant_phone, registrant_email, description, social_credit_code)
+        values (
+        	#{administrative_division_sn}, 
+        	#{system_type}, 
+        	#{audit_status},
+        	sysdate(),
+        	#{name},
+        	#{alias},
+        	#{address},
+        	#{registrant},
+        	#{registrant_phone},
+        	#{registrant_email},
+        	#{description},
+        	#{social_credit_code}
+       	)
+	</insert>
+	
+	<update id="updateNoAuditOrg" parameterType="NotAuditOrganization">
+        update not_audit_organization
+        <set>
+ 			<if test="administrative_division_sn != null and administrative_division_sn != ''">administrative_division_sn = #{administrative_division_sn},</if>
+ 			<if test="name != null and name != ''">name = #{name},</if>
+ 			<if test="alias != null">alias = #{alias},</if>
+ 			<if test="address != null">address = #{address},</if>
+ 			<if test="registrant != null">registrant = #{registrant},</if>
+ 			<if test="registrant_phone != null">registrant_phone = #{registrant_phone},</if>
+ 			<if test="registrant_email != null">registrant_email = #{registrant_email},</if>
+ 			<if test="description != null">description = #{description},</if>
+ 			<if test="social_credit_code != null">social_credit_code = #{social_credit_code},</if>
+ 		</set>
+ 		where audit_status !=1 and not_audit_organization_inner_sn = #{not_audit_organization_inner_sn}
+    </update>
+    
+    <update id="updateStatus"  parameterType="NotAuditOrganization">
+    	update not_audit_organization set audit_status = #{audit_status}
+    	where audit_status !=1 and not_audit_organization_inner_sn = #{not_audit_organization_inner_sn}
+    </update>
+    
+    <delete id="deleteNoAuditOrg" parameterType="Long">
+ 		delete FROM not_audit_organization where not_audit_organization_inner_sn = #{id}
+ 	</delete>
+ 	
+ 	<resultMap type="OrgEmployee" id="EmployeeResult">
+		<id      property="id" column="vendor_inner_sn"/><!-- 厂商内部编号 -->
+		<result  property="org_name" column="vendor_name"/><!-- 机构名称 -->
+		<result  property="employee_inner_sn" column="employee_inner_sn"/><!-- 员工内部编号 -->
+		<result property="parent_employee_inner_sn" column="parent_employee_inner_sn"/><!-- 上级员工内部编号 -->
+		<result property="parent_employee_name" column="parent_employee_name"/><!-- 上级员工名称 -->
+		<result property="sex" column="sex"/><!-- 性别  -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<result  property="personal_certificate_type" column="personal_certificate_type"/><!-- 个人证件类别 -->
+		<result  property="degree" column="degree"/><!-- 学历 -->
+		<result  property="marriage_status" column="marriage_status"/><!-- 婚姻状况 -->
+		<!-- <result  property="is_delete" column="is_delete"/> --><!-- 已删除 -->
+		<result  property="birthday" column="birthday"/><!-- 生日 -->
+		<result  property="entry_date" column="entry_date"/><!-- 入职日期 -->
+		<result  property="departure_date" column="departure_date"/><!-- 离职日期 -->
+		<result  property="name" column="name"/><!-- 姓名* -->
+		<result  property="employee_sn" column="employee_sn"/><!-- 员工编号 -->
+		<result  property="nation" column="nation"/><!-- 民族 -->
+		<result  property="position" column="position"/><!-- 职位 -->
+		<result  property="personal_certificate_sn" column="personal_certificate_sn"/><!-- 个人证件号 -->
+		<result  property="phone" column="phone"/><!-- 电话 -->
+		<result  property="email" column="email"/><!-- 电子邮件 -->
+		<result  property="qq" column="qq"/><!-- QQ -->
+		<result  property="description" column="description"/><!-- 描述 -->
+		<result  property="photo_url" column="photo_url"/><!-- 照片URL -->
+		<result  property="user_inner_sn" column="user_inner_sn"/><!-- 上帝内部编号 -->
+		<result  property="login_account_status" column="login_account_status"/><!-- 登录账号状态 -->
+		<result  property="department_inner_sn" column="department_inner_sn"/><!-- 员工部门id列表（逗号分隔） -->
+		<result  property="department_name" column="department_name"/><!-- 员工部门名称列表（逗号分隔） -->
+	</resultMap>
+	
+ 	<select id="selectOrgEmployeeInfoByUserId" parameterType="Long" resultMap="EmployeeResult">
+		select e.employee_inner_sn, e.parent_employee_inner_sn, e.sex, e.status, e.personal_certificate_type, e.degree, 
+			e.marriage_status, e.birthday, e.entry_date, e.departure_date, e.name, e.employee_sn, e.nation, e.position, 
+			e.personal_certificate_sn, e.phone, e.email, e.qq, e.description, e.photo_url, e.user_inner_sn, e.login_account_status
+		from platform_employee e
+		where 1=1
+			and e.user_inner_sn = #{id}
+	</select>
+</mapper> 

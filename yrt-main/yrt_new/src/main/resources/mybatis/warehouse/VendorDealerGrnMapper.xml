@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.VendorDealerGrnMapper">
+
+	<!-- 入库单 -->
+	<resultMap type="Grn" id="GrnResult">
+		<id      property="org_id" column="org_id"/><!-- 经销商内部编号 -->
+		<result  property="org_name" column="org_name"/><!-- 经销商名称 -->
+		<result  property="grn_inner_sn" column="grn_inner_sn"/><!-- 入库单内部编号 -->
+		<result  property="organization_inner_sn" column="organization_inner_sn"/><!-- 相关机构内部编号 -->
+		<result  property="organization_name" column="organization_name"/><!-- 相关机构名称(冗余) -->
+		<result  property="auditor_inner_sn" column="auditor_inner_sn"/><!-- 审核人内部编号 -->
+		<result  property="auditor_name" column="auditor_name"/><!-- 审核人名称(冗余) -->
+		<result  property="warehouse_inner_sn" column="warehouse_inner_sn"/><!-- 仓库模型内部编号 -->
+		<result  property="warehouse_name" column="warehouse_name"/><!-- 仓库名称(冗余) -->
+		<result  property="handler_inner_sn" column="handler_inner_sn"/><!-- 经手人内部编号 -->
+		<result  property="handler_name" column="handler_name"/><!-- 经手人姓名(冗余) -->
+		<result  property="making_people_inner_sn" column="making_people_inner_sn"/><!-- 制单人内部编号 -->
+		<result  property="making_people_name" column="making_people_name"/><!-- 制单人姓名(冗余) -->
+		<result  property="warehouse_operator_inner_sn" column="warehouse_operator_inner_sn"/><!-- 仓库人员内部编号 -->
+		<result  property="warehouse_operator_name" column="warehouse_operator_name"/><!-- 仓库人员姓名(冗余) -->
+		<result  property="type_inner_sn" column="type_inner_sn"/><!-- 类别内部编号 -->
+		<result  property="type_name" column="type_name"/><!-- 入库单类别名称(冗余) -->
+		<result  property="department_inner_sn" column="department_inner_sn"/><!-- 开单部门内部编号 -->
+		<result  property="department_name" column="department_name"/><!-- 开单部门名称(冗余) -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<result property="in_time" column="in_time"/><!-- 入库时间 -->
+		<result property="grn_sn" column="grn_sn"/><!-- 入库单编号 -->
+		<result property="description" column="description"/><!-- 描述  -->
+		<result property="billsType" column="billsType"/><!-- 单据类型  0-DealerDealer 1-DealerVendor 2-DealerHospital 3-HospitalHospital 4-hospitalDealer 5-hospitalVendor -->
+		<result property="organization_type" column="organization_type"/><!-- 相关机构类别  -->
+		<result property="buyer_name" column="buyer_name"/><!-- 采购员  -->
+	</resultMap>
+	
+	<select id="selectGrnInfo" parameterType="map" useCache="false" flushCache="true" resultMap="GrnResult">
+		select w.vendor_inner_sn as org_id, h.name as org_name, w.grn_inner_sn, w.organization_inner_sn, w.organization_name,
+			w.auditor_inner_sn, w.auditor_name,w.warehouse_inner_sn, w.warehouse_name, w.handler_inner_sn, w.buyer_name,
+			w.handler_name, w.making_people_inner_sn, w.making_people_name, w.warehouse_operator_inner_sn, w.warehouse_operator_name, 
+			w.type_inner_sn, w.type_name, w.department_inner_sn, w.department_name, w.status, w.in_time, w.grn_sn, w.description, 
+			6 as billsType, 2 as organization_type, w.create_time
+		from vendor_dealer_grn w
+		left join vendor h using(vendor_inner_sn)
+		where 1=1
+			and w.vendor_inner_sn = #{org_id} and w.grn_inner_sn = #{grn_inner_sn}
+	</select>
+	
+	<select id="selectGrnRefVoucherType" parameterType="map" resultType="Integer">
+		select vendor_inner_sn, grn_inner_sn, voucher_type_c
+        from vendor_dealer_grn_product_detail
+        where vendor_inner_sn = #{org_id} and grn_inner_sn = #{grn_inner_sn}
+        union distinct
+        select vendor_inner_sn, grn_inner_sn, voucher_type_c
+        from vendor_dealer_grn_dealer_product_detail
+        where vendor_inner_sn = #{org_id} and grn_inner_sn = #{grn_inner_sn}
+	</select>
+	
+	<select id="selectGrnInfo4External" parameterType="map" resultType="Grn4External">
+		select w.grn_inner_sn, w.organization_inner_sn, w.organization_name, w.auditor_name, w.warehouse_inner_sn, w.warehouse_name, 
+			w.handler_name, w.making_people_name, w.warehouse_operator_name, w.type_inner_sn, w.type_name, w.in_time, w.grn_sn, w.description, 
+			6 as billsType
+		from vendor_dealer_grn w
+		where 1=1
+			and w.vendor_inner_sn = #{org_id} and w.grn_inner_sn = #{grn_inner_sn}
+	</select>
+	
+	<select id="searchGrnList" parameterType="map" resultMap="GrnResult">
+		select distinct w.vendor_inner_sn as org_id, h.name as org_name, w.grn_inner_sn, w.organization_inner_sn, w.organization_name,
+			w.auditor_inner_sn, w.auditor_name,w.warehouse_inner_sn, w.warehouse_name, w.handler_inner_sn, w.buyer_name,
+			w.handler_name, w.making_people_inner_sn, w.making_people_name, w.warehouse_operator_inner_sn, w.warehouse_operator_name, 
+			w.type_inner_sn, w.type_name, w.department_inner_sn, w.department_name, w.status, w.in_time, w.grn_sn, w.description, 
+			6 as billsType, 2 as organization_type, w.create_time
+		from vendor_dealer_grn w
+		left join vendor h using(vendor_inner_sn)
+		INNER JOIN (
+		SELECT vendor_inner_sn,grn_inner_sn
+		FROM vendor_dealer_grn_product_detail
+		where 1=1
+		<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+		UNION ALL
+		SELECT vendor_inner_sn,grn_inner_sn
+		FROM vendor_dealer_grn_dealer_product_detail
+		where 1=1
+		<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+		)d USING(vendor_inner_sn, grn_inner_sn)
+		where 1=1
+			and w.vendor_inner_sn = #{org_id}
+			<if test="grn_sn != null">and w.grn_sn like concat('%', #{grn_sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and w.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and w.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(w.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(w.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="status != null">AND w.status in (${status})</if>
+			<if test="type_inner_sn != null">AND w.type_inner_sn = (${type_inner_sn})</if>
+		<if test="organization_name != null and organization_name != ''">AND w.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="key != null and key != ''">
+				AND (w.grn_sn like concat('%', #{key}, '%') or w.organization_name like concat('%', #{key}, '%')
+					or w.making_people_name like concat('%', #{key}, '%') or w.warehouse_operator_name like concat('%', #{key}, '%')
+				<!--or d.`product_name` like concat('%', #{key}, '%')-->
+				)
+			</if>
+		<if test="warehouseIds.size()>0">
+			AND w.`warehouse_inner_sn` IN
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>
+		</if>
+		union all
+		select distinct w.vendor_inner_sn as org_id, h.name as org_name, w.grn_inner_sn, w.organization_inner_sn, w.organization_name,
+			w.auditor_inner_sn, w.auditor_name,w.warehouse_inner_sn, w.warehouse_name, w.handler_inner_sn, w.buyer_name,
+			w.handler_name, w.making_people_inner_sn, w.making_people_name, w.warehouse_operator_inner_sn, w.warehouse_operator_name, 
+			w.type_inner_sn, w.type_name, w.department_inner_sn, w.department_name, w.status, w.in_time, w.grn_sn, w.description, 
+			7 as billsType, 1 as organization_type, w.create_time
+		from vendor_hospital_grn w
+		left join vendor h using(vendor_inner_sn)
+		INNER JOIN (
+		SELECT vendor_inner_sn,grn_inner_sn
+		FROM vendor_hospital_grn_product_detail
+		where 1=1
+		<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+		UNION ALL
+		SELECT vendor_inner_sn,grn_inner_sn
+		FROM vendor_hospital_grn_dealer_product_detail
+		where 1=1
+		<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+		)d USING(vendor_inner_sn, grn_inner_sn)
+		where 1=1
+			and w.vendor_inner_sn = #{org_id}
+			<if test="grn_sn != null">and w.grn_sn like concat('%', #{grn_sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and w.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and w.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(w.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(w.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="status != null">AND w.status in (${status})</if>
+			<if test="type_inner_sn != null">AND w.type_inner_sn = (${type_inner_sn})</if>
+		<if test="organization_name != null and organization_name != ''">AND w.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="key != null and key != ''">
+				AND (w.grn_sn like concat('%', #{key}, '%') or w.organization_name like concat('%', #{key}, '%')
+					or w.making_people_name like concat('%', #{key}, '%') or w.warehouse_operator_name like concat('%', #{key}, '%')
+				<!--or d.`product_name` like concat('%', #{key}, '%')-->
+				)
+			</if>
+		<if test="warehouseIds.size()>0">
+			AND w.`warehouse_inner_sn` IN
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>
+		</if>
+		union all
+		select distinct w.vendor_inner_sn as org_id, h.name as org_name, w.grn_inner_sn, w.organization_inner_sn, w.organization_name,
+			w.auditor_inner_sn, w.auditor_name,w.warehouse_inner_sn, w.warehouse_name, w.handler_inner_sn, w.buyer_name,
+			w.handler_name, w.making_people_inner_sn, w.making_people_name, w.warehouse_operator_inner_sn, w.warehouse_operator_name, 
+			w.type_inner_sn, w.type_name, w.department_inner_sn, w.department_name, w.status, w.in_time, w.grn_sn, w.description, 
+			8 as billsType, 3 as organization_type, w.create_time
+		from vendor_vendor_grn w
+		left join vendor h using(vendor_inner_sn)
+		INNER JOIN (
+		SELECT vendor_inner_sn,grn_inner_sn
+		FROM vendor_vendor_grn_product_detail
+		where 1=1
+		<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+		UNION ALL
+		SELECT vendor_inner_sn,grn_inner_sn
+		FROM vendor_vendor_grn_dealer_product_detail
+		where 1=1
+		<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+		)d USING(vendor_inner_sn, grn_inner_sn)
+		where 1=1
+			and w.vendor_inner_sn = #{org_id}
+			<if test="grn_sn != null">and w.grn_sn like concat('%', #{grn_sn}, '%')</if>
+			<if test="warehouse_model_inner_sn != null">and w.warehouse_inner_sn = #{warehouse_model_inner_sn}</if>
+			<if test="handler_name != null">and w.handler_name like concat('%', #{handler_name}, '%')</if>
+			<if test="begin_date != null">AND date_format(w.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(w.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="status != null">AND w.status in (${status})</if>
+			<if test="type_inner_sn != null">AND w.type_inner_sn = (${type_inner_sn})</if>
+		<if test="organization_name != null and organization_name != ''">AND w.organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="key != null and key != ''">
+				AND (w.grn_sn like concat('%', #{key}, '%') or w.organization_name like concat('%', #{key}, '%')
+					or w.making_people_name like concat('%', #{key}, '%') or w.warehouse_operator_name like concat('%', #{key}, '%')
+				<!--or d.`product_name` like concat('%', #{key}, '%')-->
+				)
+			</if>
+		<if test="warehouseIds.size()>0">
+			AND w.`warehouse_inner_sn` IN
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>
+		</if>
+	</select>
+	
+	<select id="insertGrn" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call v_add_vendor_dealer_grn(
+            #{org_id_i ,mode=IN},
+            #{organization_inner_sn_i ,mode=IN},
+            #{warehouse_inner_sn_i ,mode=IN},
+            #{handler_inner_sn_i ,mode=IN},
+            #{making_people_inner_sn_i ,mode=IN},
+            #{auditor_inner_sn_i ,mode=IN},
+            #{warehouse_operator_inner_sn_i ,mode=IN},
+            #{type_inner_sn_i ,mode=IN},
+            #{department_inner_sn_i ,mode=IN},
+            #{status_i ,mode=IN},
+            #{in_time_i ,mode=IN},
+            #{grn_sn_i ,mode=IN},
+            #{description_i ,mode=IN},
+            #{organization_name_i ,mode=IN},
+            #{warehouse_name_i ,mode=IN},
+            #{handler_name_i ,mode=IN},
+            #{making_people_name_i ,mode=IN},
+            #{auditor_name_i ,mode=IN},
+            #{warehouse_operator_name_i ,mode=IN},
+            #{type_name_i ,mode=IN},
+            #{department_name_i ,mode=IN},
+            #{buyer_name_i ,mode=IN},
+            #{grn_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<update id="updateGrn" parameterType="map">
+		update vendor_dealer_grn
+		<set>
+			<if test="organization_inner_sn != null">organization_inner_sn = #{organization_inner_sn},</if>
+			<if test="organization_name != null">organization_name = #{organization_name},</if>
+			<if test="warehouse_type_inner_sn != null">warehouse_type_inner_sn = #{warehouse_type_inner_sn},</if>
+			<if test="warehouse_inner_sn != null">warehouse_inner_sn = #{warehouse_inner_sn},</if>
+			<if test="warehouse_name != null">warehouse_name = #{warehouse_name},</if>
+			<if test="handler_inner_sn !=null">handler_inner_sn = #{handler_inner_sn},</if>
+			<if test="handler_name != null">handler_name = #{handler_name},</if>
+			<if test="making_people_inner_sn != null">making_people_inner_sn = #{making_people_inner_sn},</if>
+			<if test="making_people_name != null">making_people_name = #{making_people_name},</if>
+			<if test="auditor_inner_sn != null">auditor_inner_sn = #{auditor_inner_sn},</if>
+			<if test="auditor_name != null">auditor_name = #{auditor_name},</if>
+			<if test="warehouse_operator_inner_sn != null">warehouse_operator_inner_sn = #{warehouse_operator_inner_sn},</if>
+			<if test="warehouse_operator_inner_sn == null and warehouse_operator_inner_sn_null == 1">warehouse_operator_inner_sn = null,</if>
+			<if test="warehouse_operator_name != null">warehouse_operator_name = #{warehouse_operator_name},</if>
+			<if test="type_inner_sn != null">type_inner_sn = #{type_inner_sn},</if>
+			<if test="type_name != null">type_name = #{type_name},</if>
+			<if test="department_inner_sn != null">department_inner_sn = #{department_inner_sn},</if>
+			<if test="department_inner_sn == null and department_inner_sn_null == 1">department_inner_sn = null,</if>
+			<if test="department_name != null">department_name = #{department_name},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="grn_sn != null">grn_sn = #{grn_sn},</if>
+			<if test="in_time != null">in_time = #{in_time},</if>
+			<if test="description != null">description = #{description},</if>
+			<if test="buyer_name != null">buyer_name = #{buyer_name},</if>
+		</set>
+		where 1=1
+			and vendor_inner_sn = #{org_id} and grn_inner_sn = #{grn_inner_sn} 
+	</update>
+	
+	<delete id="deleteGrn" parameterType="map">
+		delete from vendor_dealer_grn 
+		where vendor_inner_sn = #{org_id} and grn_inner_sn = #{grn_inner_sn}
+	</delete>
+	
+	<!-- 入库 -->
+	<select id="putInStorage" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call v_in_storage(
+            #{org_id_i ,mode=IN},
+            #{grn_inner_sn_i ,mode=IN},
+            #{warehouse_inner_sn_i ,mode=IN},
+            #{warehouse_name_i ,mode=IN},
+            #{organization_type_i ,mode=IN},
+            #{begin_inventory_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{end_inventory_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<!-- 入库单产品明细 -->
+	<resultMap type="GrnDetail" id="GrnDetailResult">
+		<id      property="org_id" column="org_id"/><!-- 经销商内部编号 -->
+		<result  property="grn_inner_sn" column="grn_inner_sn"/><!-- 入库单内部编号 -->
+		<result  property="detail_inner_sn" column="detail_inner_sn"/><!-- 经销商名称 -->
+		<result  property="vendor_inner_sn" column="vendor_inner_sn"/><!-- (产品)厂商内部编号 -->
+		<result  property="vendor_name" column="vendor_name"/><!-- (产品)厂商名称(冗余) -->
+		<result  property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result  property="product_name" column="product_name"/><!-- 产品名称(冗余) -->
+		<result  property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号 -->
+		<result  property="specification" column="specification"/><!-- 型号规格(冗余) -->
+		<result  property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号 -->
+		<result  property="unit_name" column="unit_name"/><!-- 单位(冗余) -->
+		<result  property="mdrf_inner_sn" column="mdrf_inner_sn"/><!-- 登记表内部编号 -->
+		<result  property="mdrf_sn" column="mdrf_sn"/><!-- 医疗器械注册证号(冗余) -->
+		<result  property="unit_price" column="unit_price"/><!-- 单价 -->
+		<result  property="quantity" column="quantity"/><!-- 数量 -->
+		<result  property="rate" column="rate"/><!-- 税率 -->
+		<result  property="produce_date" column="produce_date"/><!-- 生产日期 -->
+		<result  property="overdue_date" column="overdue_date"/><!-- 失效日期 -->
+		<result property="type" column="type"/><!-- 类别  -->
+		<result property="sort_number" column="sort_number"/><!-- 排序号 -->
+		<result property="batch_number" column="batch_number"/><!-- 批号 -->
+		<result property="voucher_type_c" column="voucher_type_c"/><!-- 调单单据类型 -->
+		<result property="voucher_inner_sn_c" column="voucher_inner_sn_c"/><!-- 调单单据内部编号 -->
+		<result property="voucher_detail_inner_sn_c" column="voucher_detail_inner_sn_c"/><!-- 调单单据明细内部编号 -->
+		<result property="product_type" column="product_type"/><!-- 产品类型 0:经销商(自建)产品   1:厂商产品 -->
+		<result property="health_care_sn" column="health_care_sn"/><!-- 医保编号 -->
+		<result property="inspection_detail_id" column="inspection_detail_id"/><!-- 验货明细ID -->
+	</resultMap>
+	
+	<select id="selectGrnProductDetails" parameterType="map" useCache="false" flushCache="true" resultMap="GrnDetailResult">
+		select vendor_inner_sn as org_id, grn_inner_sn, detail_inner_sn, product_vendor_inner_sn as vendor_inner_sn, product_inner_sn, specification_inner_sn,
+			unit_inner_sn, mdrf_inner_sn, unit_price/10000 as unit_price, quantity/1000 as quantity, produce_date, overdue_date, type, sort_number, batch_number,
+			product_vendor_name as vendor_name, product_name, specification, unit as unit_name, mdrf_sn, 1 as product_type, health_care_sn, rate,
+			voucher_type_c, voucher_inner_sn_c, voucher_detail_inner_sn_c, inspection_detail_id
+		from vendor_dealer_grn_product_detail
+		where 1=1
+			and vendor_inner_sn = #{org_id}
+			<if test="grn_inner_sn != null">and grn_inner_sn = #{grn_inner_sn}</if>
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+			<if test="voucher_detail_inner_sn_c != null">and voucher_detail_inner_sn_c = #{voucher_detail_inner_sn_c}</if>
+	</select>
+	
+	<select id="selectGrnProductDetails4External" parameterType="map" resultType="GrnDetail4External">
+		select detail_inner_sn, product_vendor_inner_sn, product_inner_sn, specification_inner_sn,
+			c_get_product_min_unit(product_vendor_inner_sn, product_inner_sn, specification_inner_sn,unit_inner_sn) as unit, 
+			(unit_price/c_calculate_product_min_unit(product_vendor_inner_sn, product_inner_sn, specification_inner_sn,unit_inner_sn))/10000 as unit_price, 
+			(quantity/c_calculate_product_min_unit(product_vendor_inner_sn, product_inner_sn, specification_inner_sn,unit_inner_sn))/1000 as quantity, 
+			mdrf_inner_sn, produce_date, overdue_date, batch_number, health_care_sn, rate,
+			product_vendor_name, product_name, specification, mdrf_sn, 1 as product_type
+		from vendor_dealer_grn_product_detail
+		where 1=1
+			and vendor_inner_sn = #{org_id} and grn_inner_sn = #{grn_inner_sn}
+	</select>
+	
+	<select id="insertGrnProductDetail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call v_add_vendor_dealer_grn_product_detail(
+            #{org_id_i ,mode=IN},
+            #{grn_inner_sn_i ,mode=IN},
+            #{product_vendor_inner_sn_i ,mode=IN},
+            #{product_inner_sn_i ,mode=IN},
+            #{specification_inner_sn_i ,mode=IN},
+            #{unit_inner_sn_i ,mode=IN},
+            #{mdrf_inner_sn_i ,mode=IN},
+            #{unit_price_i ,mode=IN},
+            #{quantity_i ,mode=IN},
+            #{produce_date_i ,mode=IN},
+            #{overdue_date_i ,mode=IN},
+            #{type_i ,mode=IN},
+            #{sort_number_i ,mode=IN},
+            #{batch_number_i ,mode=IN},
+            #{product_vendor_name_i ,mode=IN},
+            #{product_name_i ,mode=IN},
+            #{specification_i ,mode=IN},
+            #{unit_i ,mode=IN},
+            #{mdrf_sn_i ,mode=IN},
+            #{voucher_type_c_i ,mode=IN}, 
+			#{voucher_inner_sn_c_i ,mode=IN},
+			#{voucher_detail_inner_sn_c_i ,mode=IN},
+			#{health_care_sn_i ,mode=IN},
+			#{rate_i ,mode=IN},
+			#{inspection_detail_id_i ,mode=IN},
+            #{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<update id="updateGrnProductDetail" parameterType="map">
+		UPDATE vendor_dealer_grn_product_detail
+		<set>
+		    <if test="vendor_inner_sn != null">product_vendor_inner_sn = #{vendor_inner_sn},</if>
+		    <if test="product_inner_sn != null">product_inner_sn = #{product_inner_sn},</if>
+		    <if test="specification_inner_sn != null">specification_inner_sn = #{specification_inner_sn},</if>
+		    <if test="unit_inner_sn != null">unit_inner_sn = #{unit_inner_sn},</if>
+		    <if test="mdrf_inner_sn != null">mdrf_inner_sn = #{mdrf_inner_sn},</if>
+		    <if test="unit_price != null">unit_price = #{unit_price},</if>
+		    <if test="quantity != null">quantity = #{quantity},</if>
+		    <if test="rate != null">rate = #{rate},</if>
+		    <if test="produce_date != null">produce_date = #{produce_date},</if>
+		    <if test="produce_date == null">produce_date = null,</if>
+		    <if test="overdue_date != null">overdue_date = #{overdue_date},</if>
+		    <if test="type != null">type = #{type},</if>
+		    <if test="sort_number != null">sort_number = #{sort_number},</if>
+		    <if test="voucher_type_c != null">voucher_type_c = #{voucher_type_c},</if>
+		    <if test="voucher_inner_sn_c != null">voucher_inner_sn_c = #{voucher_inner_sn_c},</if>
+		    <if test="voucher_detail_inner_sn_c != null">voucher_detail_inner_sn_c = #{voucher_detail_inner_sn_c},</if>
+		    <if test="batch_number != null">batch_number = #{batch_number},</if>
+		    <if test="vendor_name != null">product_vendor_name = #{vendor_name},</if>
+		    <if test="product_name != null">product_name = #{product_name},</if>
+		    <if test="specification != null">specification = #{specification},</if>
+		    <if test="unit_name != null">unit = #{unit_name},</if>
+		    <if test="mdrf_sn != null">mdrf_sn = #{mdrf_sn},</if>
+		    <if test="health_care_sn != null">health_care_sn = #{health_care_sn},</if>
+		</set>
+		WHERE 1=1
+		    AND vendor_inner_sn = #{org_id}
+			AND grn_inner_sn = #{grn_inner_sn}
+			AND detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<delete id="deleteGrnProductDetail" parameterType="map">
+		delete from vendor_dealer_grn_product_detail 
+		where vendor_inner_sn = #{org_id} and grn_inner_sn = #{grn_inner_sn}
+		<if test="detail_inner_sn != null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</delete>
+	
+	<!-- 获取仓库人员 -->
+	<select id="selectWarehouseEmployeeList" parameterType="map" resultType="map">
+		select distinct m.employee_inner_sn, e.name as employee_name
+		from vendor_employee_vendor_warehouse_model m
+		INNER join vendor_employee e using(vendor_inner_sn,employee_inner_sn)
+		where 1=1
+			AND e.status in (0,1)
+			AND e.is_delete = 0
+			and m.vendor_inner_sn = #{org_id}
+			<if test="warehouse_model_inner_sn != null">and m.warehouse_model_inner_sn in (${warehouse_model_inner_sn}) </if>
+	</select>
+	
+	<!-- 查询入库单产品明细列表 -->
+	<select id="selectGrnProductList4Return" parameterType="map" resultType="map">
+		SELECT id, vendor_inner_sn as org_id, warehouse_inner_sn, in_time, grn_sn as sn, warehouse_name, product_vendor_inner_sn, product_inner_sn, 
+	        specification_inner_sn, unit_inner_sn, mdrf_inner_sn, unit_price/10000 as unit_price, quantity/1000 as quantity, produce_date, overdue_date, 
+	        batch_number, product_vendor_name, product_name, specification, unit, mdrf_sn, health_care_sn, rate, product_type,
+			9 as voucher_type_c, g.grn_inner_sn as voucher_inner_sn_c, d.detail_inner_sn as voucher_detail_inner_sn_c
+		FROM vendor_dealer_grn g
+		JOIN (
+	        SELECT concat(grn_inner_sn,'-',detail_inner_sn) as id, vendor_inner_sn, grn_inner_sn, product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn, mdrf_inner_sn,
+                unit_price, quantity, produce_date, overdue_date, batch_number, product_vendor_name, product_name, specification, unit, mdrf_sn,
+                health_care_sn, rate, 1 as product_type,detail_inner_sn
+	        FROM vendor_dealer_grn_product_detail
+	        WHERE 1 = 1
+				<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name = #{product_vendor_name}</if>
+	        	<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+	        	<if test="specification != null and specification !=''">and specification like concat('%', #{specification}, '%')</if>
+	        UNION ALL
+	        SELECT concat(grn_inner_sn,'-',detail_inner_sn) as id, vendor_inner_sn, grn_inner_sn, product_dealer_inner_sn as product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn, null as mdrf_inner_sn,
+                unit_price, quantity, produce_date, overdue_date, batch_number, product_dealer_name as product_vendor_name, product_name, specification,unit, '' as mdrf_sn,
+                '' as health_care_sn, rate, 0 as product_type,detail_inner_sn
+	        FROM vendor_dealer_grn_dealer_product_detail
+	        WHERE 1 = 1
+				<if test="product_vendor_name != null and product_vendor_name != ''">and product_dealer_name = #{product_vendor_name}</if>
+	        	<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+	        	<if test="specification != null and specification !=''">and specification like concat('%', #{specification}, '%')</if>
+		) d USING(vendor_inner_sn, grn_inner_sn)
+		WHERE g.status in (2,3) and type_inner_sn = 0 and vendor_inner_sn = #{org_id} and organization_inner_sn = #{organization_inner_sn}
+			<if test="warehouseIds != null and warehouseIds.size > 0">
+				and g.warehouse_inner_sn in 
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+				</foreach>
+			</if>
+			<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+	</select>
+	
+	<select id="selectGrnProductList4Invoice" parameterType="map" resultType="map">
+		<include refid="selectGrnProductList4" />
+	</select>
+
+	<sql id="selectGrnProductList4">
+		SELECT id, vendor_inner_sn as org_id,'VD' as billsType, in_time, grn_sn as sn, product_vendor_inner_sn, product_inner_sn, grn_inner_sn AS voucher_inner_sn_c, detail_inner_sn AS voucher_detail_inner_sn_c, 9 as voucher_type_c,
+		specification_inner_sn, unit_inner_sn, mdrf_inner_sn, unit_price, quantity-invoiced_quantity as quantity, produce_date, overdue_date,
+		batch_number, product_vendor_name, product_name, specification, unit, mdrf_sn, health_care_sn, rate, product_type, g.organization_inner_sn,g.organization_name,g.buyer_name
+		FROM vendor_dealer_grn g
+		JOIN (
+		SELECT concat(grn_inner_sn,'-',detail_inner_sn) as id, vendor_inner_sn, grn_inner_sn, detail_inner_sn,
+		product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn, mdrf_inner_sn,
+		unit_price/10000 as unit_price, quantity/1000 as quantity, produce_date, overdue_date, batch_number, product_vendor_name, product_name, specification, unit, mdrf_sn,
+		IFNULL(invoiced_quantity,0) as invoiced_quantity, health_care_sn, rate, 1 as product_type
+		FROM vendor_dealer_grn_product_detail d
+		LEFT JOIN (
+		SELECT sum(invoiced_quantity) as invoiced_quantity, voucher_inner_sn_c, voucher_detail_inner_sn_c
+		FROM system_invoice_detail d
+		INNER JOIN system_invoice m ON m.id = d.system_invoice_id
+		WHERE m.is_cancel = 0 and system_type = 3 and voucher_type_c = 9 and m.org_id = #{org_id}
+		<if test="organization_inner_sn != null and organization_inner_sn !=''">and organization_inner_sn = #{organization_inner_sn}</if>
+		GROUP BY voucher_inner_sn_c, voucher_detail_inner_sn_c
+		) a on d.grn_inner_sn = a.voucher_inner_sn_c and d.detail_inner_sn = a.voucher_detail_inner_sn_c
+		WHERE 1 = 1
+		<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name = #{product_vendor_name}</if>
+		<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+		<if test="specification != null and specification !=''">and specification like concat('%', #{specification}, '%')</if>
+		) d USING(vendor_inner_sn, grn_inner_sn)
+		WHERE g.status in (2,3) and type_inner_sn = 0 and quantity &gt; invoiced_quantity and vendor_inner_sn = #{org_id}
+		<if test="organization_inner_sn != null and organization_inner_sn !=''">and organization_inner_sn = #{organization_inner_sn}</if>
+		<if test="warehouseIds != null and warehouseIds.size > 0">
+			and g.warehouse_inner_sn in
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>
+		</if>
+		<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+		<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+		<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+		UNION ALL
+		SELECT id, vendor_inner_sn as org_id,'VD' as billsType, in_time, grn_sn as sn, product_vendor_inner_sn, product_inner_sn, grn_inner_sn AS voucher_inner_sn_c, detail_inner_sn AS voucher_detail_inner_sn_c, 9 as voucher_type_c,
+		specification_inner_sn, unit_inner_sn, mdrf_inner_sn, unit_price, quantity-invoiced_quantity as quantity, produce_date, overdue_date,
+		batch_number, product_vendor_name, product_name, specification, unit, mdrf_sn, health_care_sn, rate, product_type, g.organization_inner_sn,g.organization_name,g.buyer_name
+		FROM vendor_dealer_grn g
+		JOIN (
+		SELECT concat(grn_inner_sn,'-',detail_inner_sn) as id, vendor_inner_sn, grn_inner_sn, detail_inner_sn,
+		product_vendor_inner_sn, product_inner_sn, specification_inner_sn, unit_inner_sn, mdrf_inner_sn,
+		unit_price/10000 as unit_price, quantity/1000 as quantity, produce_date, overdue_date, batch_number, product_vendor_name, product_name, specification, unit, mdrf_sn,
+		IFNULL(invoiced_quantity,0) as invoiced_quantity, health_care_sn, rate, 1 as product_type
+		FROM vendor_dealer_grn_product_detail d
+		LEFT JOIN (
+		SELECT sum(invoiced_quantity) as invoiced_quantity, voucher_inner_sn_c, voucher_detail_inner_sn_c
+		FROM system_invoice_detail d
+		INNER JOIN system_invoice m ON m.id = d.system_invoice_id
+		WHERE m.is_cancel = 0 and system_type = 3 and voucher_type_c = 9 and m.org_id = #{org_id}
+		<if test="organization_inner_sn != null and organization_inner_sn !=''">and organization_inner_sn = #{organization_inner_sn}</if>
+		GROUP BY voucher_inner_sn_c, voucher_detail_inner_sn_c
+		) a on d.grn_inner_sn = a.voucher_inner_sn_c and d.detail_inner_sn = a.voucher_detail_inner_sn_c
+		WHERE 1 = 1
+		<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name = #{product_vendor_name}</if>
+		<if test="product_name != null and product_name !=''">and product_name like concat('%', #{product_name}, '%')</if>
+		<if test="specification != null and specification !=''">and specification like concat('%', #{specification}, '%')</if>
+		) d USING(vendor_inner_sn, grn_inner_sn)
+		WHERE g.status in (2,3) and type_inner_sn = 1 and quantity &lt; invoiced_quantity and vendor_inner_sn = #{org_id}
+		<if test="organization_inner_sn != null and organization_inner_sn !=''">and organization_inner_sn = #{organization_inner_sn}</if>
+		<if test="warehouseIds != null and warehouseIds.size > 0">
+			and g.warehouse_inner_sn in
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>
+		</if>
+		<if test="sn != null">and g.grn_sn like concat('%', #{sn}, '%')</if>
+		<if test="begin_date != null">AND date_format(g.in_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+		<if test="end_date != null">AND date_format(g.in_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+	</sql>
+	
+	<select id="isExistGrnRecord" parameterType="map" resultType="Boolean">
+		SELECT
+		    CASE WHEN count(*) > 0 THEN 1 ELSE 0 END AS isExist
+		FROM vendor_dealer_grn_product_detail d
+		INNER JOIN vendor_dealer_grn r using(vendor_inner_sn, grn_inner_sn)
+		WHERE 1 = 1 and status not in (4,5)
+			<if test="org_id != null">and vendor_inner_sn = #{org_id}</if>
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn}</if>
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+			<if test="inspection_detail_id != null">and inspection_detail_id = #{inspection_detail_id}</if>
+	</select>
+	
+	<select id="selectControlUsablePurchasingRecordList" parameterType="map" resultType="PurchasingRecordProduct">
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 6 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, vendor_inner_sn as org_id
+	                FROM vendor_dealer_grn_product_detail d
+	                INNER JOIN vendor_dealer_grn r using(vendor_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, vendor_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+	</select>
+	
+	<select id="sumGrnDetailByInspection" parameterType="map" resultType="BigDecimal">
+		SELECT
+		    sum(quantity)/1000 as sumQuantity
+		FROM vendor_dealer_grn_product_detail d
+	    INNER JOIN vendor_dealer_grn r using(vendor_inner_sn,grn_inner_sn)
+        WHERE d.voucher_type_c = 13
+			and inspection_detail_id = #{inspection_detail_id}
+		GROUP BY inspection_detail_id
+	</select>
+	
+	<update id="updatePurchaseGrnDetailInspectionDetailId" parameterType="map">
+		update vendor_dealer_grn_product_detail
+		<set>
+			<if test="inspection_detail_id != null">inspection_detail_id = #{inspection_detail_id},</if>
+		</set>
+		where 1 = 1 and vendor_inner_sn = #{org_id} and grn_inner_sn = #{grn_id} and detail_inner_sn = #{grn_detail_id}
+	</update>
+</mapper>

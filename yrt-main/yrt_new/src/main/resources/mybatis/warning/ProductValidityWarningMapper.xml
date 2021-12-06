@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warning.mapper.ProductValidityWarningMapper">
+
+	<select id="selectProductValidityWarningList" parameterType="map" resultType="ProductValidityWarning">
+		select id, created_org_id, created_system_type, vendor_inner_sn, vendor_name, product_inner_sn,
+    		product_name, specification_inner_sn, specification, batch_number, expiration_date
+		from product_validity_warning
+		where created_org_id = #{org_id} and created_system_type = #{created_system_type}
+	</select>
+	
+	<insert id="insertProductValidityWarning" parameterType="map">
+		insert into product_validity_warning (
+	        id,
+	        created_org_id,
+	        created_system_type,
+	        vendor_inner_sn,
+	        vendor_name,
+	        product_inner_sn,
+	        product_name,
+	        specification_inner_sn,
+	        specification,
+	        batch_number,
+	        expiration_date
+	    ) VALUES (
+	        #{id},
+	        #{created_org_id},
+	        #{created_system_type},
+	        #{vendor_inner_sn},
+	        #{vendor_name},
+	        #{product_inner_sn},
+	        #{product_name},
+	        #{specification_inner_sn},
+	        #{specification},
+	        #{batch_number},
+	        #{expiration_date}
+        )
+	</insert>
+	
+	<delete id="trueDeleteProductValidityWarning" parameterType="map">
+		DELETE FROM product_validity_warning
+		WHERE 1 = 1
+		<if test = "created_org_id != null">and created_org_id = #{created_org_id}</if>
+		<if test = "created_system_type != null">and created_system_type = #{created_system_type}</if>
+		<if test = "id != null">and id = #{id}</if>
+	</delete>
+	
+	<select id="checkHospitalExpireInventoryProductValidity" parameterType="map" resultType="ProductValidityWarning">
+		SELECT
+	        product_vendor_inner_sn as vendor_inner_sn, product_vendor_name as vendor_name, product_inner_sn,
+		    product_name, specification_inner_sn, specification, batch_number, overdue_date as expiration_date
+		FROM
+		    hospital_product_min_unit_inventory
+		WHERE quantity > 0 and hospital_inner_sn = #{org_id} and overdue_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+		union all
+		SELECT
+	        product_dealer_inner_sn as vendor_inner_sn, product_dealer_name as vendor_name, product_inner_sn,
+		    product_name, specification_inner_sn, specification, batch_number, overdue_date as expiration_date
+		FROM
+		    hospital_dealer_product_min_unit_inventory
+		WHERE quantity > 0 and hospital_inner_sn = #{org_id} and overdue_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+	</select>
+	
+	<select id="checkDealerExpireInventoryProductValidity" parameterType="map" resultType="ProductValidityWarning">
+		SELECT
+			product_vendor_inner_sn as vendor_inner_sn, product_vendor_name as vendor_name, product_inner_sn,
+		    product_name, specification_inner_sn, specification, batch_number, overdue_date as expiration_date
+		FROM
+		    dealer_product_min_unit_inventory
+		WHERE quantity > 0 and dealer_inner_sn = #{org_id} and overdue_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+		union all
+		SELECT
+			product_dealer_inner_sn as vendor_inner_sn, product_dealer_name as vendor_name, product_inner_sn,
+		    product_name, specification_inner_sn, specification, batch_number, overdue_date as expiration_date
+		FROM
+		    dealer_dealer_product_min_unit_inventory
+		WHERE quantity > 0 and dealer_inner_sn = #{org_id} and overdue_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+	</select>
+	
+	<select id="checkVendorExpireInventoryProductValidity" parameterType="map" resultType="ProductValidityWarning">
+		SELECT
+			product_vendor_inner_sn as vendor_inner_sn, product_vendor_name as vendor_name, product_inner_sn,
+		    product_name, specification_inner_sn, specification, batch_number, overdue_date as expiration_date
+		FROM
+		    vendor_product_min_unit_inventory
+		WHERE quantity > 0 and vendor_inner_sn = #{org_id} and overdue_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+	</select>
+	
+</mapper>

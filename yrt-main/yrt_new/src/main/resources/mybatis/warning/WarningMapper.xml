@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warning.mapper.WarningMapper">
+
+	<select id="selectAllAuthOrg" parameterType="map" resultType="AuthOrganization">
+		select dealer_inner_sn as orgId, name as orgName, social_credit_code, phone, email, 2 as systemType
+		from dealer
+		where certification_status = 2 and is_delete = 0 and status = 1
+		union all
+		select hospital_inner_sn as orgId, name as orgName, social_credit_code, phone, email, 1 as systemType
+		from hospital
+		where certification_status = 2 and is_delete = 0 and status = 1
+		union all
+		select vendor_inner_sn as orgId, name as orgName, social_credit_code, phone, email, 3 as systemType
+		from vendor
+		where certification_status = 2 and is_delete = 0 and status = 1
+	</select>
+	
+	<select id="selectHospitalValidContractProduct" parameterType="map" resultType="ValidContractProduct">
+		SELECT DISTINCT * FROM(
+			SELECT product_vendor_inner_sn as vendor_inner_sn, product_inner_sn
+			FROM hospital_vendor_contract_product p
+			LEFT JOIN hospital_vendor_contract c using(hospital_inner_sn, vendor_inner_sn, contract_inner_sn)
+			WHERE c.status in (4,5,7) AND hospital_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT product_vendor_inner_sn as vendor_inner_sn, product_inner_sn
+			FROM hospital_dealer_contract_product p
+			LEFT JOIN hospital_dealer_contract c using(hospital_inner_sn, dealer_inner_sn, contract_inner_sn)
+			WHERE c.status in (4,5,7) AND hospital_inner_sn = #{org_id}
+		) A
+	</select>
+	
+	<select id="selectDealerValidContractProduct" parameterType="map" resultType="ValidContractProduct">
+		SELECT DISTINCT * FROM(
+			SELECT product_vendor_inner_sn as vendor_inner_sn, product_inner_sn
+			FROM dealer_dealer_contract_product p
+			LEFT JOIN dealer_dealer_contract c using(dealer_a_inner_sn, dealer_b_inner_sn, contract_inner_sn)
+			WHERE c.status in (4,5,7) AND dealer_a_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT product_vendor_inner_sn as vendor_inner_sn, product_inner_sn
+			FROM dealer_dealer_contract_product p
+			LEFT JOIN dealer_dealer_contract c using(dealer_a_inner_sn, dealer_b_inner_sn, contract_inner_sn)
+			WHERE c.status in (4,5,7) AND dealer_b_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT product_vendor_inner_sn as vendor_inner_sn, product_inner_sn
+			FROM dealer_vendor_contract_product p
+			LEFT JOIN dealer_vendor_contract c using(dealer_inner_sn, vendor_inner_sn, contract_inner_sn)
+			WHERE c.status in (4,5,7) AND dealer_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT product_vendor_inner_sn as vendor_inner_sn, product_inner_sn
+			FROM hospital_dealer_contract_product p
+			LEFT JOIN hospital_dealer_contract c using(hospital_inner_sn, dealer_inner_sn, contract_inner_sn)
+			WHERE c.status in (4,5,7) AND dealer_inner_sn = #{org_id}
+		) A
+	</select>
+	
+	<select id="selectVendorValidContractProduct" parameterType="map" resultType="ValidContractProduct">
+		SELECT DISTINCT * FROM(
+			SELECT product_vendor_inner_sn as vendor_inner_sn, product_inner_sn
+			FROM dealer_vendor_contract_product p
+			LEFT JOIN dealer_vendor_contract c using(dealer_inner_sn, vendor_inner_sn, contract_inner_sn)
+			WHERE c.status in (4,5,7) AND vendor_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT product_vendor_inner_sn as vendor_inner_sn, product_inner_sn
+			FROM hospital_vendor_contract_product p
+			LEFT JOIN hospital_vendor_contract c using(hospital_inner_sn, vendor_inner_sn, contract_inner_sn)
+			WHERE c.status in (4,5,7) AND vendor_inner_sn = #{org_id}
+		) A
+	</select>
+	
+	<!-- 搜索满足指定医院预警设置的有效合同内合作机构资证列表 -->
+	<select id="selectHospitalValidContractOrg" parameterType="map" resultType="ValidContractOrg">
+		SELECT DISTINCT * FROM(
+			SELECT vendor_inner_sn AS orgId, d.name as orgName, 3 as systemType
+			FROM hospital_vendor_contract c
+			JOIN vendor d using(vendor_inner_sn)
+			WHERE c.status in (4,5,7) AND hospital_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT dealer_inner_sn AS orgId, d.name as orgName, 2 as systemType
+			FROM hospital_dealer_contract c
+			JOIN dealer d USING(dealer_inner_sn)
+			WHERE c.status in (4,5,7) AND hospital_inner_sn = #{org_id}
+		) A
+	</select>
+	
+	<!-- 搜索满足指定经销商预警设置的有效合同内合作机构资证列表 -->
+	<select id="selectDealerValidContractOrg" parameterType="map" resultType="ValidContractOrg">
+		SELECT DISTINCT * FROM(
+			SELECT dealer_b_inner_sn AS orgId, d.name as orgName, 2 as systemType
+			FROM dealer_dealer_contract c
+			JOIN dealer d on d.dealer_inner_sn=c.dealer_b_inner_sn
+			WHERE c.status in (4,5,7) AND dealer_a_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT dealer_a_inner_sn AS orgId, d.name as orgName, 2 as systemType
+			FROM dealer_dealer_contract c
+			JOIN dealer d on d.dealer_inner_sn=c.dealer_a_inner_sn
+			WHERE c.status in (4,5,7) AND dealer_b_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT vendor_inner_sn AS orgId, d.name as orgName, 3 as systemType
+			FROM dealer_vendor_contract c
+			JOIN vendor d using(vendor_inner_sn)
+			WHERE c.status in (4,5,7) AND dealer_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT hospital_inner_sn AS orgId, d.name as orgName, 1 as systemType
+			FROM hospital_dealer_contract c
+			JOIN hospital d using(hospital_inner_sn)
+			WHERE c.status in (4,5,7) AND dealer_inner_sn = #{org_id}
+		) A
+	</select>
+	
+	<!-- 搜索满足指定厂商预警设置的有效合同内合作机构资证列表 -->
+	<select id="selectVendorValidContractOrg" parameterType="map" resultType="ValidContractOrg">
+		SELECT DISTINCT * FROM(
+			SELECT dealer_inner_sn AS orgId, d.name as orgName, 2 as systemType
+			FROM  dealer_vendor_contract c
+			JOIN dealer d USING(dealer_inner_sn)
+			WHERE c.status in (4,5,7) AND vendor_inner_sn = #{org_id}
+			UNION DISTINCT
+			SELECT hospital_inner_sn AS orgId, d.name as orgName, 1 as systemType
+			FROM hospital_vendor_contract c
+			JOIN hospital d using(hospital_inner_sn)
+			WHERE c.status in (4,5,7) AND vendor_inner_sn = #{org_id}
+		) A
+	</select>
+</mapper>

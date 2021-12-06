@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.premium.mapper.ProductPremiumPercentMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.premium.domain.ProductPremiumPercent">
+    <!--@mbg.generated-->
+    <!--@Table product_premium_percent-->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="product_id" jdbcType="BIGINT" property="productId" />
+    <result column="product_name" jdbcType="VARCHAR" property="productName" />
+    <result column="specification_name" jdbcType="VARCHAR" property="specificationName" />
+    <result column="specification_id" jdbcType="BIGINT" property="specificationId" />
+    <result column="product_vendor_id" jdbcType="BIGINT" property="productVendorId" />
+    <result column="product_vendor_name" jdbcType="VARCHAR" property="productVendorName" />
+    <result column="batch_number" jdbcType="VARCHAR" property="batchNumber" />
+    <result column="price" jdbcType="DECIMAL" property="price" />
+    <result column="org_id" jdbcType="BIGINT" property="orgId" />
+    <result column="update_user_id" jdbcType="BIGINT" property="updateUserId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, product_id, product_name, specification_name, specification_id, product_vendor_id, 
+    product_vendor_name, batch_number, price, org_id, update_user_id
+  </sql>
+</mapper>

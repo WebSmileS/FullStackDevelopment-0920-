@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.product.mapper.DealerProductUnitMapper">
+
+	<resultMap type="DealerProductUnit" id="DealerProductUnitResult">
+		<id      property="dealer_inner_sn" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result  property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result  property="product_name" column="product_name"/><!-- 产品名称 -->
+		<result  property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号 -->
+		<result  property="specification" column="specification"/><!-- 型号规格 -->
+		<result property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号 -->
+		<result property="parent_unit_inner_sn" column="parent_unit_inner_sn"/><!-- 上级(小)单位内部编号  -->
+		<result property="name" column="name"/><!-- 名称*  -->
+		<result property="measure" column="measure"/><!-- 最小计量/倍数  -->
+		<result property="is_common_use" column="is_common_use"/><!-- 是否常用  -->
+	</resultMap>
+	
+	<sql id="selectDealerProductUnit">
+		select pu.dealer_inner_sn, d.name as dealer_name, pu.product_inner_sn, p.name as product_name, pu.specification_inner_sn, pu.unit_inner_sn,
+			pu.parent_unit_inner_sn, pu.name, pu.measure, ps.specification, pu.is_common_use
+		from dealer_product_unit pu 
+		left join dealer d on d.dealer_inner_sn = pu.dealer_inner_sn
+		left join dealer_product p on p.dealer_inner_sn = pu.dealer_inner_sn and pu.product_inner_sn = p.product_inner_sn
+		left join dealer_product_specification ps on pu.dealer_inner_sn = ps.dealer_inner_sn and pu.product_inner_sn = ps.product_inner_sn and ps.specification_inner_sn = pu.specification_inner_sn
+	</sql>
+	
+	<select id="selectDealerProductUnitInfo" parameterType="DealerProductUnit" resultMap="DealerProductUnitResult">
+		<include refid="selectDealerProductUnit"/>
+		where 1=1 
+			and pu.product_inner_sn = #{product_inner_sn} and pu.dealer_inner_sn = #{dealer_inner_sn} 
+			and pu.specification_inner_sn = #{specification_inner_sn} and pu.unit_inner_sn = #{unit_inner_sn}
+	</select>
+	
+	<select id="selectDealerProductUnitList" parameterType="DealerProductUnit" resultMap="DealerProductUnitResult">
+		<include refid="selectDealerProductUnit"/>
+		where 1=1 and pu.parent_unit_inner_sn is null
+			and pu.product_inner_sn = #{product_inner_sn} and pu.dealer_inner_sn = #{dealer_inner_sn} 
+			and pu.specification_inner_sn = #{specification_inner_sn}
+	</select>
+	
+	<select id="selectDealerProductUnitListByPid" parameterType="DealerProductUnit" resultMap="DealerProductUnitResult">
+		<include refid="selectDealerProductUnit"/>
+		where 1=1
+			and pu.product_inner_sn = #{product_inner_sn} and pu.dealer_inner_sn = #{dealer_inner_sn} 
+			and pu.specification_inner_sn = #{specification_inner_sn} and parent_unit_inner_sn = #{parent_unit_inner_sn}
+	</select>
+	
+	<select id="p_add_dealer_product_unit" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+         call d_add_dealer_product_unit(
+            #{dealer_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{specification_inner_sn_i,mode=IN},
+            #{parent_unit_inner_sn_i,mode=IN},
+            #{name_i,mode=IN},
+            #{measure_i,mode=IN},
+            #{is_common_use_i,mode=IN},
+            #{unit_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<update id="updateDealerProductUnit" parameterType="DealerProductUnit">
+		update dealer_product_unit
+		<set>
+			<if test="name != null and name != ''">name = #{name},</if>
+			<if test="measure != null and measure != ''">measure = #{measure},</if>
+			<if test="is_common_use != null">is_common_use = #{is_common_use},</if>
+		</set>
+		where 1 = 1
+			and dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn} and unit_inner_sn = #{unit_inner_sn}
+	</update>
+	
+	<update id="cleanCommonUse" parameterType="DealerProductUnit">
+		update dealer_product_unit set is_common_use = 0
+		where 1 = 1
+			and dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn}
+	</update>
+	
+	<update id="deleteProductUnit" parameterType="DealerProductUnit">
+		update dealer_product_unit set is_delete = 1
+		where 1 = 1
+			and dealer_inner_sn = #{dealer_inner_sn} and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn} and unit_inner_sn = #{unit_inner_sn}
+	</update>
+	
+	<!-- 换算产品最小单位 -->
+	<select id="calculate_product_min_unit" parameterType="map" resultType="BigDecimal">
+		select c_calculate_dealer_product_min_unit(#{vendor_inner_sn_i},#{product_inner_sn_i},#{specification_inner_sn_i},#{unit_inner_sn_i})
+	</select>
+	
+	<select id="c_get_dealer_product_min_unit_inner_sn" parameterType="map" resultType="long">
+		select c_get_dealer_product_min_unit_inner_sn(#{vendor_inner_sn_i},#{product_inner_sn_i},#{specification_inner_sn_i},#{unit_inner_sn_i})
+	</select>
+	
+	<select id="c_get_dealer_product_min_unit" parameterType="map" resultType="string">
+		select c_get_dealer_product_min_unit(#{vendor_inner_sn_i},#{product_inner_sn_i},#{specification_inner_sn_i},#{unit_inner_sn_i})
+	</select>
+</mapper>

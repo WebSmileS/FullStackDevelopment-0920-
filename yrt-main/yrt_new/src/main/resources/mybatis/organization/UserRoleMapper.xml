@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.organization.mapper.UserRoleMapper">
+
+	<resultMap type="UserRole" id="UserRoleResult">
+		<id     property="role_inner_sn" column="role_inner_sn"/> <!-- 角色内部编号 -->
+	 	<result property="user_inner_sn" column="user_inner_sn"/><!-- 用户内部编号 -->
+	</resultMap>
+		
+	
+	<insert id = "insertUserRole" parameterType="map" >
+		insert into user_role	(	role_inner_sn,
+										user_inner_sn
+									)
+ 			values(
+ 			#{role_inner_sn},
+ 			#{user_inner_sn}
+ 			)
+	</insert>
+
+	<update id="updateUserRole" parameterType="map">
+        update user_role
+        <set>
+        	<if test="role_inner_sn != null">role_inner_sn = #{role_inner_sn},</if>
+ 			<if test="user_inner_sn != null">user_inner_sn = #{user_inner_sn}</if>
+ 		</set>
+ 		where 1=1 
+			<if test="user_inner_sn != null">and user_inner_sn = #{user_inner_sn}</if>
+    </update> 	
+	
+	<delete id ="deleteUserRole" parameterType="map">
+		delete from user_role
+		where user_inner_sn = #{user_inner_sn}
+	</delete>
+	
+	<select id="selectUserRoleList" parameterType="map" resultMap="UserRoleResult">
+		select role_inner_sn as role_inner_sn, 
+			   user_inner_sn as user_inner_sn
+		from user_role
+		where 1=1 
+			<if test="role_inner_sn != null">and role_inner_sn = #{role_inner_sn}</if>
+			<if test="user_inner_sn != null">and user_inner_sn = #{user_inner_sn}</if>
+	</select>
+	
+	<select id="selectUserRoleById" parameterType="Long" resultMap="UserRoleResult">
+		select role_inner_sn as role_inner_sn, 
+			   user_inner_sn as user_inner_sn
+		from user_role
+		where 1=1 
+			and user_inner_sn = #{id}
+	</select>
+</mapper>

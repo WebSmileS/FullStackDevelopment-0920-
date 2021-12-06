@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.ArrivalRecordMapper">
+
+	<select id="selectArrivalRecordList" parameterType="map" resultType="ArrivalRecord">
+		SELECT
+		    id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, deliverymen_name,
+		    warehouse_inner_sn, warehouse_name, arrival_status, is_cancel, description, cancel_reason,
+		    created_by, created_time, arrival_by, arrival_time, confirm_by, confirm_time, cancel_by, cancel_time
+		FROM arrival_record
+		WHERE org_id = #{org_id} AND system_type = #{system_type}
+			<if test="history == 1">and (is_cancel = 1 or arrival_status in (${arrival_status}))</if>
+			<if test="history == 0">and is_cancel = 0 and arrival_status = #{arrival_status}</if>
+			<if test="bills_type != null">and bills_type = #{bills_type}</if>
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn}</if>
+			<if test="deliverymen_name != null and deliverymen_name != ''">and deliverymen_name like concat('%', #{deliverymen_name}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(arrival_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(arrival_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+	</select>
+	
+	<select id="selectArrivalRecordInfo" parameterType="Long" resultType="ArrivalRecord">
+		SELECT
+		    id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, deliverymen_name,
+		    warehouse_inner_sn, warehouse_name, arrival_status, is_cancel, description, cancel_reason,
+		    created_by, created_time, arrival_by, arrival_time, confirm_by, confirm_time, cancel_by, cancel_time
+		FROM arrival_record
+		WHERE id = #{id}
+	</select>
+	
+	<select id="selectArrivalRecordDetailList" parameterType="map" resultType="ArrivalRecordDetail">
+		SELECT
+		    id, arrival_record_id, product_vendor_inner_sn, product_vendor_name, product_inner_sn, product_name,
+		    specification_inner_sn, specification, unit_inner_sn, unit, batch_number, order_quantity, arrival_quantity,
+		    finish_quantity, product_type, voucher_type_c, voucher_inner_sn_c
+		FROM arrival_record_detail
+		WHERE 1 = 1
+			<if test="arrival_record_id != null">and arrival_record_id = #{arrival_record_id}</if>
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+	</select>
+	
+	<insert id="insertArrivalRecord" parameterType="ArrivalRecord">
+		INSERT INTO arrival_record (
+        	id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, deliverymen_name,
+		    warehouse_inner_sn, warehouse_name, arrival_status, description,
+		    created_by, created_time, arrival_by, arrival_time
+	    ) VALUES (
+	        #{id}, #{org_id}, #{system_type}, #{bills_type}, #{sn}, #{organization_inner_sn}, #{organization_name}, #{deliverymen_name},
+	        #{warehouse_inner_sn}, #{warehouse_name}, #{arrival_status}, #{description},
+	        #{created_by}, #{created_time}, #{arrival_by}, #{arrival_time}
+	    )
+	</insert>
+	
+	<update id="updateArrivalRecord" parameterType="map">
+		update arrival_record
+		<set>
+			<if test="organization_inner_sn != null">organization_inner_sn = #{organization_inner_sn},</if>
+			<if test="organization_name != null">organization_name = #{organization_name},</if>
+			<if test="bills_type != null">bills_type = #{bills_type},</if>
+			<if test="warehouse_inner_sn != null">warehouse_inner_sn = #{warehouse_inner_sn},</if>
+			<if test="warehouse_name != null">warehouse_name = #{warehouse_name},</if>
+			<if test="deliverymen_name != null">deliverymen_name = #{deliverymen_name},</if>
+			<if test="description != null">description = #{description},</if>
+			<if test="cancel_reason != null">cancel_reason = #{cancel_reason},</if>
+			<if test="is_cancel != null">is_cancel = #{is_cancel},</if>
+			<if test="arrival_status != null">arrival_status = #{arrival_status},</if>
+			<if test="arrival_by != null and arrival_by != ''">arrival_by = #{arrival_by},</if>
+			<if test="arrival_time != null">arrival_time = #{arrival_time},</if>
+			<if test="confirm_by != null and confirm_by != ''">confirm_by = #{confirm_by},</if>
+			<if test="confirm_time != null">confirm_time = #{confirm_time},</if>
+			<if test="cancel_by != null and cancel_by != ''">cancel_by = #{cancel_by},</if>
+			<if test="cancel_time != null">cancel_time = #{cancel_time},</if>
+		</set>
+		where 1 = 1
+			<if test="id != null">and id = #{id}</if>
+	</update>
+	
+	<delete id="deleteArrivalRecord" parameterType="map">
+		delete from arrival_record 
+		where id = #{id}
+	</delete>
+	
+	<insert id="insertArrivalRecordDetail" parameterType="ArrivalRecordDetail">
+		INSERT INTO arrival_record_detail (
+        	id, arrival_record_id, product_vendor_inner_sn, product_vendor_name, product_inner_sn, product_name,
+		    specification_inner_sn, specification, unit_inner_sn, unit, batch_number, order_quantity, arrival_quantity,
+		    product_type, voucher_type_c, voucher_inner_sn_c, finish_quantity
+	    ) VALUES (
+	        #{id}, #{arrival_record_id}, #{product_vendor_inner_sn}, #{product_vendor_name}, #{product_inner_sn}, #{product_name}, 
+	        #{specification_inner_sn}, #{specification}, #{unit_inner_sn}, #{unit}, #{batch_number}, #{order_quantity}, #{arrival_quantity},
+	        #{product_type}, #{voucher_type_c}, #{voucher_inner_sn_c}, 0
+	    )
+	</insert>
+	
+	<update id="updateArrivalRecordDetail" parameterType="map">
+		update arrival_record_detail
+		<set>
+			<if test="finish_quantity != null">finish_quantity = #{finish_quantity},</if>
+		</set>
+		where 1 = 1
+			<if test="id != null">and id = #{id}</if>
+	</update>
+	
+	<delete id="deleteArrivalRecordDetail" parameterType="map">
+		delete from arrival_record_detail 
+		where 1 = 1
+			<if test="arrival_record_id != null">and arrival_record_id = #{arrival_record_id}</if>
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+	</delete>
+
+	<select id="selectExistArrivalRecord" parameterType="map" resultType="CheckPurchasingRecord">
+		SELECT 1                     AS isExist,
+			   order_quantity,
+			   SUM(arrival_quantity-finish_quantity) AS arrival_quantity,
+			   0                     as qualified_quantity,
+			   0                     as unqualified_quantity,
+			   batch_number,
+			   voucher_inner_sn_c,
+			   warehouse_inner_sn,
+			   warehouse_name,
+			   d.id                  as arrival_detail_id
+		FROM arrival_record_detail d
+					 INNER JOIN arrival_record r
+				ON r.id = d.arrival_record_id
+		WHERE 1 = 1
+		  and r.is_cancel = 0
+		  and r.arrival_status in (1, 2)
+		  <if test="batch_number != null">and d.batch_number = #{batch_number}</if>
+		  <if test="voucher_inner_sn_c != null">and d.voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+		  <if test="voucher_type_c != null">and d.voucher_type_c = #{voucher_type_c}</if>
+		GROUP BY voucher_inner_sn_c, d.id, warehouse_inner_sn, warehouse_name
+	</select>
+
+<!--	<select id="selectExistArrivalRecord" parameterType="map" resultType="CheckPurchasingRecord">-->
+<!--		SELECT-->
+<!--		    CASE WHEN (d.id) > 0 THEN 1 ELSE 0 END AS isExist,-->
+<!--		    CASE WHEN IFNULL(p.quantity,0) = 0 THEN 0 ELSE d.order_quantity END as order_quantity,-->
+<!--		    CASE WHEN IFNULL(p.arrival_quantity,0) = 0 THEN 0 ELSE d.arrival_quantity END as arrival_quantity,-->
+<!--		    0 as qualified_quantity,-->
+<!--		    0 as unqualified_quantity,-->
+<!--		    d.batch_number,-->
+<!--		    d.voucher_inner_sn_c,-->
+<!--		    d.warehouse_inner_sn, d.warehouse_name, arrival_detail_id-->
+<!--		FROM (-->
+<!--	        SELECT count(d.id) as id, d.id as arrival_detail_id, order_quantity, SUM(arrival_quantity) AS arrival_quantity,-->
+<!--	                batch_number, voucher_inner_sn_c, warehouse_inner_sn, warehouse_name-->
+<!--	        FROM arrival_record_detail d-->
+<!--	        INNER JOIN arrival_record r on r.id = d.arrival_record_id-->
+<!--	        WHERE 1 = 1 and r.is_cancel = 0 and r.arrival_status in (1,2)-->
+<!--                <if test="batch_number != null">and d.batch_number = #{batch_number}</if>-->
+<!--                <if test="voucher_inner_sn_c != null">and d.voucher_inner_sn_c = #{voucher_inner_sn_c}</if>-->
+<!--                <if test="voucher_type_c != null">and d.voucher_type_c = #{voucher_type_c}</if>-->
+<!--            GROUP BY voucher_inner_sn_c, d.id, warehouse_inner_sn, warehouse_name-->
+<!--		) d-->
+<!--		LEFT JOIN purchasing_record p on p.id = d.voucher_inner_sn_c-->
+<!--	</select>-->
+	
+	<select id="isExistArrivalRecord" parameterType="map" resultType="Boolean">
+		SELECT
+		    CASE WHEN (d.id) > 0 THEN 1 ELSE 0 END AS isExist
+		FROM (
+	        SELECT count(d.id) as id, voucher_inner_sn_c
+	        FROM arrival_record_detail d
+	        INNER JOIN arrival_record r on r.id = d.arrival_record_id
+	        WHERE 1 = 1 and r.is_cancel = 0 and r.arrival_status in (0,1,2)
+                <if test="voucher_inner_sn_c != null">and d.voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+                <if test="voucher_type_c != null">and d.voucher_type_c = #{voucher_type_c}</if>
+	        GROUP BY voucher_inner_sn_c
+		) d
+		LEFT JOIN purchasing_record p on p.id = d.voucher_inner_sn_c
+	</select>
+	
+	<select id="selectControlUsablePurchasingRecordList" parameterType="map" resultType="PurchasingRecordProduct">
+		select id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, mdrf_inner_sn, mdrf_sn,
+		    produce_date, overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, batch_number, (quantity - ifnull(a.arrival_quantity,0)) as order_quantity,
+		    product_type, created_by, created_time, 1 as product_type
+		from purchasing_record p
+		left join (
+			select sum(arrival_quantity) as arrival_quantity, voucher_inner_sn_c
+			from arrival_record_detail d
+			INNER JOIN arrival_record r on r.id = d.arrival_record_id
+			WHERE r.is_cancel = 0 and r.arrival_status in (0,1,2) and d.voucher_type_c = 13
+			group by voucher_inner_sn_c
+		) a on p.id = a.voucher_inner_sn_c
+		WHERE record_status = 2 and org_id = #{org_id} AND system_type = #{system_type} 
+			and (a.voucher_inner_sn_c is null or ifnull(a.arrival_quantity,0) &lt; quantity)
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn} and bills_type = #{bills_type} </if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+	</select>
+</mapper>

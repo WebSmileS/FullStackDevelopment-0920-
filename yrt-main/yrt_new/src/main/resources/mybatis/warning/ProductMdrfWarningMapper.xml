@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warning.mapper.ProductMdrfWarningMapper">
+	
+	<select id="selectProductMdrfWarningList" parameterType="map" resultType="ProductMdrfWarning">
+		select id, created_org_id, created_system_type, vendor_inner_sn, vendor_name, product_inner_sn,
+    		product_name, mdrf_inner_sn, register_sn, expiration_date, issue_organization
+		from product_mdrf_warning
+		where created_org_id = #{org_id} and created_system_type = #{created_system_type}
+	</select>
+	
+	<insert id="insertProductMdrfWarning" parameterType="map">
+		insert into product_mdrf_warning (
+	        id,
+	        created_org_id,
+	        created_system_type,
+	        vendor_inner_sn,
+	        vendor_name,
+	        product_inner_sn,
+	        product_name,
+	        mdrf_inner_sn,
+	        register_sn,
+	        expiration_date,
+	        issue_organization
+	    ) VALUES (
+	        #{id},
+	        #{created_org_id},
+	        #{created_system_type},
+	        #{vendor_inner_sn},
+	        #{vendor_name},
+	        #{product_inner_sn},
+	        #{product_name},
+	        #{mdrf_inner_sn},
+	        #{register_sn},
+	        #{expiration_date},
+	        #{issue_organization}
+        )
+	</insert>
+	
+	<delete id="trueDeleteProductMdrfWarning" parameterType="map">
+		DELETE FROM product_mdrf_warning
+		WHERE 1 = 1
+		<if test = "created_org_id != null">and created_org_id = #{created_org_id}</if>
+		<if test = "created_system_type != null">and created_system_type = #{created_system_type}</if>
+		<if test = "id != null">and id = #{id}</if>
+	</delete>
+	
+	<select id="checkExpireProductMdrf" parameterType="map" resultType="ProductMdrfWarning">
+		SELECT null as id, 0 as created_org_id, 0 as created_system_type, vendor_inner_sn, v.name as vendor_name,
+		    product_inner_sn, p.name as product_name, mdrf_inner_sn, register_sn, end_date as expiration_date, issue_organization
+		FROM product_mdrf m
+		JOIN (
+	        SELECT m1.vendor_inner_sn, m1.product_inner_sn, MAX(m1.mdrf_inner_sn) as mdrf_inner_sn
+	        FROM product_mdrf m1
+	        JOIN (
+	                SELECT 
+	                   vendor_inner_sn, product_inner_sn,  MAX(end_date) as end_date
+	                FROM product_mdrf
+	                GROUP BY vendor_inner_sn, product_inner_sn
+	        ) m0 using(vendor_inner_sn, product_inner_sn,end_date)
+	        group by vendor_inner_sn, product_inner_sn
+		) m2 using(vendor_inner_sn,product_inner_sn,mdrf_inner_sn)
+		JOIN vendor v using(vendor_inner_sn)
+		JOIN product p using(vendor_inner_sn, product_inner_sn)
+		WHERE p.is_delete = 0 and p.status = 1 and v.is_delete = 0  and v.status = 1
+		and m.end_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+		<if test = "vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test = "product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+	</select>
+</mapper>

@@ -1,0 +1,10 @@
+/.classpath
+/.project
+/.factorypath
+/.settings
+/target
+/logs
+/.idea
+*.iml
+/src/main/resources/application-local.yml
+/src/test/resources/application-local.yml

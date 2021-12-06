@@ -1,0 +1,198 @@
+.preview-box {
+    text-align: center;
+    text-align: center;
+    display: block;
+    max-height: 78vh;
+    overflow-y: auto;
+    img {
+        width: 100%;
+        border: 1px solid #e7e7e7;
+    }
+}
+.ant-tabs-bar {
+    margin: 0 0 0 0
+}
+
+.close {
+    position: absolute;
+    right: 36px;
+    transform: scale(0.9) translateY(-50%);
+    top: 47%;
+    z-index: 2;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #b9b9b9;
+    font-size: 6px;
+    color: #fff;
+    text-align: center;
+    line-height: 15px;
+    display: none;
+    cursor: pointer;
+}
+&:hover .close {
+    display: block;
+}
+
+.product-page{
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    .todo-part {
+        background: #fff;
+        padding: 16px 16px;
+        text-align: left;
+        border-radius: 4px;
+    }
+    .table-part {
+        background: #fff;
+        margin-top: 4px;
+        overflow: hidden;
+        .table_box {
+            margin-top: -16px;
+            background: #fff;
+        }
+    }
+    .bottom-part.more {
+        bottom: 0px;
+        border-bottom: 1px solid #e8e8e8;
+    }
+    .bottom-part {
+        margin-top: 4px;
+        height: 256px;
+        overflow: hidden;
+        position: absolute;
+        bottom: 0px;
+        width: calc(100%);
+        background: #fff;
+        display: flex;
+        .spec-box {
+            background: #fff;
+            display: flex;
+            width: 40%;
+            vertical-align: top;
+            margin-top: 4px;
+            height: 246px;
+            border: 1px solid #e8e8e8;
+            margin-left: 4px;
+            position: relative;
+            &.more {
+                .ant-table-wrapper {
+                    position: absolute;
+                    top: 0;
+                }
+            }
+            .todo_box {
+                position: absolute;
+                top: 0;
+                width: 100%;
+                padding: 15px 10px;
+                text-align: left;
+                border-bottom: 1px solid #e8e8e8;
+            }
+            .ant-table-wrapper {
+                position: absolute;
+                top: 55px;
+            }
+        }
+    }
+    .info-part {
+        .ant-tabs-nav-scroll {
+            padding-left: 10px;
+        }
+    }
+    .form-box {
+        .head-box {
+            padding-top: 10px;
+            padding-left: 10px;
+        }
+    }
+}
+.ant-tabs-bar {
+    margin-bottom: 0 !important;
+}
+.refresh-btn {
+    margin-right: 16px;
+}
+
+.tab-table-wrap {
+    margin-top: 4px;
+    //height: 256px;
+    overflow: hidden;
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    width: calc(100%);
+    &.minimal {
+        position: relative;
+        display: flex;
+        flex: 1;
+        vertical-align: top;
+        margin-left: 4px;
+        margin-right: 4px;
+        height: 246px;
+        .ant-tabs {
+            width: 100%;
+            border-bottom: 1px solid #e7e7e7;
+        }
+    }
+    .no-data-box {
+        padding-top: 40px;
+    }
+    .ant-tabs-nav-scroll {
+        display: flex;
+        .ant-tabs-nav {
+            padding-left: 20px;
+        }
+    }
+    .ant-tabs-bar {
+        margin-bottom: 0;
+    }
+    .ant-tabs-card-content {
+        border: 1px solid #e8e8e8;
+        border-top: none;
+        background: #fff;
+        padding: 8px;
+    }
+    .info-count {
+        height: 210px;
+        background: #fff;
+        margin-top: -16px;
+        position: relative;
+        padding-top: 10px;
+        border-bottom: 1px solid #e8e8e8;
+        //&.more {
+        //    height: 190px;
+        //}
+    }
+    .add-box {
+        padding-left: 20px;
+        padding-top: 10px;
+        position: absolute;
+        .btn-nom {
+            display: block;
+            margin-bottom: 12px;
+            width: 100px;
+        }
+    }
+    .pic-list {
+        position: absolute;
+        left: 140px;
+        width: calc(100% - 148px);
+        top: 8px;
+        bottom: 8px;
+        //padding-left: 20px;
+        //padding-top: 10px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        //padding-bottom: 10px;
+        .img-list {
+            display: inline-block;
+            vertical-align: top;
+            width: 80%;
+        }
+    }
+}

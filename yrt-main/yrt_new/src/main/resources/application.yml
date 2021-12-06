@@ -1,0 +1,108 @@
+# 项目相关配置
+yrt:
+  # 名称
+  name: YRT
+  # 版本
+  version: 1.0.0
+  # 版权年份
+  copyrightYear: 2019
+  # 文件路径
+  profile: yrt
+  # 获取ip地址开关
+  addressEnabled: true
+  #推送消息地址
+  pushAddress: http://172.17.0.1/v1/notify
+
+logging:
+  config: classpath:log4j2.xml
+  level:
+    org:
+      springframework:
+        web: INFO
+      mybiats: INFO
+    com.yrt: INFO
+    root: warn
+
+# MyBatis
+mybatis:
+  # 搜索指定包别名
+  #  typeAliasesPackage: com.yrt.project
+  # 加载全局的配置文件
+  configLocation: classpath:mybatis/mybatis-config.xml
+  # 配置mapper的扫描，找到所有的mapper.xml映射文件
+  mapper-locations: classpath:mybatis/**/*Mapper.xml
+
+# PageHelper分页插件
+pagehelper:
+  helperDialect: mysql
+  reasonable: true
+  #自动帮用户分析是否要进行分页
+  #  supportMethodsArguments: false
+  params: count=countSql
+
+
+server:
+  port: 80
+  servlet:
+    context-path: /
+  tomcat:
+    max-connections: 20000
+    max-threads: 1000
+    uri-encoding: UTF-8
+
+spring:
+  messages:
+    basename: i18n/messages
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+  profiles: 
+    active: dev
+
+  # 文件上传
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
+  # 服务模块
+  devtools:
+    restart:
+      # 热部署开关
+      enabled: true
+
+knife4j:
+  enable: true
+  markdowns: classpath:markdown/*
+
+#http配置服务
+http:
+  #最大连接数
+  maxTotal: 100
+  #并发数
+  defaultMaxPerRoute: 20
+  #创建连接的最长时间
+  connectTimeout: 1000
+  #从连接池中获取到连接的最长时间
+  connectionRequestTimeout: 500
+  #数据传输的最长时间
+  socketTimeout: 10000
+  #提交请求前测试连接是否可用
+  staleConnectionCheckEnabled: true
+
+# 防止XSS攻击
+xss:
+  # 过滤开关
+  enabled: false
+  # 排除链接（多个用逗号分隔）
+  excludes: /v1/common/*
+  # 匹配链接
+  urlPatterns: /v1/admin/*,/v1/platform/*,/v1/business/*,/v1/external/*
+  # 是否支持富文本编辑器
+  isIncludeRichText: false
+mybatis-plus:
+  mapper-locations: classpath:/mybatis/**/*Mapper.xml
+  typeAliasesPackage: com.yrt.**.domain.**
+  configuration:
+    map-underscore-to-camel-case: false
+    cache-enabled: false
+    default-enum-type-handler: com.yrt.common.utils.mybatis.CustomizeEnumOrdinalTypeHandler

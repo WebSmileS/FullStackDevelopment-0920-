@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+        <link rel="icon" href="<%= BASE_URL %>favicon.ico" />
+        <!-- <link rel="stylesheet" href="https://at.alicdn.com/t/font_1143208_9bvdpco4b3.css" /> -->
+        <!-- <link rel="stylesheet" href="https://at.alicdn.com/t/font_1143208_bmy01zymb.css" /> -->
+        <link rel="stylesheet" href="https://at.alicdn.com/t/font_2544838_ci8f2eph6v.css" />
+        <!-- <link rel="stylesheet" href="https://unpkg.com/vue-easytable@1.7.2/umd/css/index.css" /> -->
+        <!-- <link rel="stylesheet" href="https://unpkg.com/vxe-table@2.6.15/lib/index.css" /> -->
+        <title>医润通</title>
+        <style>
+            .loader-wrap {
+                position: absolute;
+                left: 0;
+                top: 0;
+                right: 0;
+                bottom: 0;
+            }
+
+            .loader {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            .loader .css-square {
+                width: 21px;
+                height: 5px;
+                background: #1890ff;
+                box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.2);
+            }
+
+            .loader .square1 {
+                -webkit-animation: dominos 1s 0.125s ease infinite;
+                animation: dominos 1s 0.125s ease infinite;
+            }
+
+            .loader .square2 {
+                -webkit-animation: dominos 1s 0.3s ease infinite;
+                animation: dominos 1s 0.3s ease infinite;
+            }
+
+            .loader .square3 {
+                -webkit-animation: dominos 1s 0.425s ease infinite;
+                animation: dominos 1s 0.425s ease infinite;
+            }
+
+            .loader .square4 {
+                -webkit-animation: dominos 1s 0.54s ease infinite;
+                animation: dominos 1s 0.54s ease infinite;
+            }
+
+            .loader .square5 {
+                -webkit-animation: dominos 1s 0.665s ease infinite;
+                animation: dominos 1s 0.665s ease infinite;
+            }
+
+            .loader .square6 {
+                -webkit-animation: dominos 1s 0.79s ease infinite;
+                animation: dominos 1s 0.79s ease infinite;
+            }
+
+            @-webkit-keyframes dominos {
+                50% {
+                    opacity: 0.7;
+                }
+
+                75% {
+                    -webkit-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                }
+
+                80% {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes dominos {
+                50% {
+                    opacity: 0.7;
+                }
+
+                75% {
+                    -webkit-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                }
+
+                80% {
+                    opacity: 1;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <noscript>
+            <strong>We're sorry but yrt doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+        </noscript>
+        <div id="app">
+            <div class="loader-wrap">
+                <div class="loader">
+                    <div class="css-square square1"></div>
+                    <div class="css-square square2"></div>
+                    <div class="css-square square3"></div>
+                    <div class="css-square square4"></div>
+                    <div class="css-square square5"></div>
+                    <div class="css-square square6"></div>
+                </div>
+            </div>
+        </div>
+        <!-- built files will be auto injected -->
+        <!-- CDN -->
+        <% if (process.env.NODE_ENV === "production") { %>
+        <script src="https://cdn.bootcss.com/vue/2.6.12/vue.runtime.min.js"></script>
+        <script src="https://cdn.bootcss.com/vue-router/3.2.0/vue-router.min.js"></script>
+        <script src="https://cdn.bootcss.com/vuex/3.2.0/vuex.min.js"></script>
+        <script src="https://cdn.bootcss.com/axios/0.18.1/axios.min.js"></script>
+        <script src="https://cdn.bootcss.com/jsbarcode/3.11.0/JsBarcode.all.js"></script>
+        <script src="https://cdn.bootcss.com/big.js/6.1.1/big.min.js"></script>
+        <% } %>
+        <!-- <script src="https://unpkg.com/xe-utils@2.2.8/dist/xe-utils.min.js"></script>
+    <script src="https://unpkg.com/vxe-table@2.6.15/lib/index.min.js"></script> -->
+    </body>
+</html>

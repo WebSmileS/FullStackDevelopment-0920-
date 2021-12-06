@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.order.mapper.PurchasingRecordMapper">
+
+	<select id="selectPurchasingRecordList" parameterType="map" resultType="PurchasingRecord">
+		SELECT
+		    id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, mdrf_inner_sn, mdrf_sn,
+		    produce_date, overdue_date, unit_price, quantity, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, batch_number, arrival_quantity, qualified_quantity, unqualified_quantity,
+		    grn_quantity, record_status, product_type, voucher_type_c, voucher_inner_sn_c, voucher_detail_inner_sn_c,
+		    created_by, created_time, update_by, update_time
+		FROM purchasing_record
+		WHERE org_id = #{org_id} AND system_type = #{system_type}
+			<if test="bills_type != null">and bills_type = #{bills_type}</if>
+			<if test="organization_name != null and organization_name != ''">and organization_name like concat('%', #{organization_name}, '%')</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="buyer_name != null and buyer_name != ''">and buyer_name like concat('%', #{buyer_name}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">and warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="status == 1">and record_status in (0,1,2)</if>
+			<if test="status == 2">and record_status in (3,5,6)</if>
+		ORDER BY purchasing_date DESC
+	</select>
+	
+	<select id="selectPurchasingRecordInfo" parameterType="map" resultType="PurchasingRecord">
+		SELECT
+		    id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, mdrf_inner_sn, mdrf_sn,
+		    produce_date, overdue_date, unit_price, quantity, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, batch_number, arrival_quantity, qualified_quantity, unqualified_quantity,
+		    grn_quantity, record_status, product_type, voucher_type_c, voucher_inner_sn_c, voucher_detail_inner_sn_c,
+		    created_by, created_time, update_by, update_time
+		FROM purchasing_record
+		WHERE id = #{id}
+	</select>
+	
+	<select id="existPurchasingRecord" parameterType="map" resultType="boolean">
+		SELECT
+		    count(*) as count
+		FROM purchasing_record
+		WHERE org_id = #{org_id} and organization_inner_sn = #{organization_inner_sn} and bills_type = #{bills_type} 
+			and voucher_type_c = #{voucher_type_c} and voucher_inner_sn_c = #{voucher_inner_sn_c} 
+			<if test="voucher_detail_inner_sn_c != null">and voucher_detail_inner_sn_c = #{voucher_detail_inner_sn_c}</if>
+	</select>
+	
+	<select id="selectPurchasingRecordListByVoucher" parameterType="map" resultType="PurchasingRecord">
+		SELECT
+		    id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, mdrf_inner_sn, mdrf_sn,
+		    produce_date, overdue_date, unit_price, quantity, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, batch_number, arrival_quantity, qualified_quantity, unqualified_quantity,
+		    grn_quantity, record_status, product_type, voucher_type_c, voucher_inner_sn_c, voucher_detail_inner_sn_c,
+		    created_by, created_time, update_by, update_time
+		FROM purchasing_record
+		WHERE org_id = #{org_id} and bills_type = #{bills_type} and organization_inner_sn = #{organization_inner_sn}
+			and voucher_type_c = #{voucher_type_c}
+			and voucher_inner_sn_c = #{voucher_inner_sn_c}
+			<if test="voucher_detail_inner_sn_c != null">and voucher_detail_inner_sn_c = #{voucher_detail_inner_sn_c}</if>
+	</select>
+	
+	<insert id="insertPurchasingRecord" parameterType="PurchasingRecord">
+		INSERT INTO purchasing_record (
+        	id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, mdrf_inner_sn, mdrf_sn,
+		    produce_date, overdue_date, unit_price, quantity, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, batch_number, record_status, product_type, voucher_type_c, voucher_inner_sn_c, voucher_detail_inner_sn_c,
+		    created_by, created_time
+	    ) VALUES (
+	        #{id}, #{org_id}, #{system_type}, #{bills_type}, #{sn}, #{organization_inner_sn}, #{organization_name}, #{product_vendor_inner_sn}, #{product_vendor_name},
+	        #{product_inner_sn}, #{product_name}, #{specification_inner_sn}, #{specification}, #{unit_inner_sn}, #{unit}, #{mdrf_inner_sn}, #{mdrf_sn},
+	        #{produce_date}, #{overdue_date}, #{unit_price}, #{quantity}, #{rate}, #{purchasing_date}, #{health_care_sn}, #{buyer_inner_sn}, #{buyer_name},
+	        #{warehouse_inner_sn}, #{warehouse_name}, #{batch_number}, #{record_status}, #{product_type}, #{voucher_type_c}, #{voucher_inner_sn_c}, #{voucher_detail_inner_sn_c},
+	        #{created_by}, #{created_time}
+	    )
+	</insert>
+	
+	<update id="updatePurchasingRecord" parameterType="map">
+		update purchasing_record
+		<set>
+			<if test="arrival_quantity != null">arrival_quantity = arrival_quantity + #{arrival_quantity},</if>
+			<if test="qualified_quantity != null">qualified_quantity = qualified_quantity + #{qualified_quantity},</if>
+			<if test="unqualified_quantity != null">unqualified_quantity = unqualified_quantity + #{unqualified_quantity},</if>
+			<if test="grn_quantity != null">grn_quantity = #{grn_quantity},</if>
+			<if test="record_status != null">record_status = #{record_status},</if>
+			<if test="mdrf_inner_sn != null">mdrf_inner_sn = #{mdrf_inner_sn},</if>
+			<if test="mdrf_sn != null and mdrf_sn != ''">mdrf_sn = #{mdrf_sn},</if>
+			<if test="produce_date != null">produce_date = #{produce_date},</if>
+			<if test="overdue_date != null">overdue_date = #{overdue_date},</if>
+			<if test="health_care_sn != null and health_care_sn != ''">health_care_sn = #{health_care_sn},</if>
+			<if test="update_by != null and update_by != ''">update_by = #{update_by},</if>
+			<if test="update_time != null">update_time = #{update_time},</if>
+		</set>
+		where 1 = 1
+			<if test="id != null">and id = #{id}</if>
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+			<if test="voucher_detail_inner_sn_c != null">and voucher_detail_inner_sn_c = #{voucher_detail_inner_sn_c}</if>
+	</update>
+	
+	<delete id="deletePurchasingRecord" parameterType="map">
+		delete from purchasing_record 
+		where 1 = 1
+			<if test="id != null">and id = #{id}</if>
+			<if test="org_id != null">and org_id = #{org_id}</if>
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn}</if>
+			<if test="bills_type != null">and bills_type = #{bills_type}</if>
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+			<if test="voucher_detail_inner_sn_c != null">and voucher_detail_inner_sn_c = #{voucher_detail_inner_sn_c}</if>
+	</delete>
+	
+	<select id="selectNotControlUsablePurchasingRecordList" parameterType="map" resultType="PurchasingRecordProduct">
+		SELECT
+		    id, org_id, system_type, bills_type, sn, organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, mdrf_inner_sn, mdrf_sn,
+		    produce_date, overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, 
+		    <if test="voucherType == 14"> batch_number, (quantity - IFNULL(arrival_quantity,0)) as order_quantity,</if>
+		    <if test="voucherType == 12"> 
+		    	IFNULL(a.batch_number,p.batch_number) AS batch_number, 
+		    	(quantity - qualified_quantity - unqualified_quantity) as order_quantity,
+		    </if>
+		    <if test="voucherType == 5"> 
+		    	IFNULL(a.batch_number,p.batch_number) AS batch_number, 
+		    	(quantity - grn_quantity) as order_quantity,
+		    </if>
+		    product_type, created_by, created_time, 1 as product_type
+		FROM purchasing_record p
+		<if test="voucherType == 12">
+			LEFT JOIN (
+				SELECT voucher_inner_sn_c, batch_number
+				FROM arrival_record_detail d
+				INNER JOIN arrival_record r on r.id = d.arrival_record_id
+				WHERE r.is_cancel = 0 and r.arrival_status in (1,2) and d.voucher_type_c = 13
+				GROUP BY voucher_inner_sn_c, batch_number
+			) a on p.id = a.voucher_inner_sn_c
+		</if>
+		<if test="voucherType == 5">
+			LEFT JOIN (
+                SELECT voucher_inner_sn_c, batch_number
+                FROM inspection_record_detail d
+                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+                GROUP BY voucher_inner_sn_c, batch_number
+            ) a on p.id = a.voucher_inner_sn_c
+		</if>
+		WHERE record_status = 2 and org_id = #{org_id} AND system_type = #{system_type}
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn} and bills_type = #{bills_type}</if>
+			<if test="voucherType == 14"> and arrival_quantity &lt; quantity </if>
+		    <if test="voucherType == 12"> and ((qualified_quantity + unqualified_quantity) &lt; quantity or (qualified_quantity + unqualified_quantity) &lt; p.arrival_quantity)</if>
+		    <if test="voucherType == 5"> and (grn_quantity &lt; quantity or grn_quantity &lt; qualified_quantity)</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+	</select>
+	
+	<select id="selectControlUsablePurchasingRecordList" parameterType="map" resultType="PurchasingRecordProduct">
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 0 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, dealer_inner_sn as org_id
+	                FROM dealer_dealer_grn_product_detail d
+	                INNER JOIN dealer_dealer_grn r using(dealer_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, dealer_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+		UNION
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 2 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, dealer_inner_sn as org_id
+	                FROM dealer_hospital_grn_product_detail d
+	                INNER JOIN dealer_hospital_grn r using(dealer_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, dealer_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+		UNION
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 1 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, dealer_inner_sn as org_id
+	                FROM dealer_vendor_grn_product_detail d
+	                INNER JOIN dealer_vendor_grn r using(dealer_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, dealer_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+		UNION
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 4 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, hospital_inner_sn as org_id
+	                FROM hospital_dealer_grn_product_detail d
+	                INNER JOIN hospital_dealer_grn r using(hospital_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, hospital_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+		UNION
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 3 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, hospital_inner_sn as org_id
+	                FROM hospital_hospital_grn_product_detail d
+	                INNER JOIN hospital_hospital_grn r using(hospital_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, hospital_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+		UNION
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 5 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, hospital_inner_sn as org_id
+	                FROM hospital_vendor_grn_product_detail d
+	                INNER JOIN hospital_vendor_grn r using(hospital_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, hospital_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+		UNION
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 6 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, vendor_inner_sn as org_id
+	                FROM vendor_dealer_grn_product_detail d
+	                INNER JOIN vendor_dealer_grn r using(vendor_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, vendor_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+		UNION
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 7 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, vendor_inner_sn as org_id
+	                FROM vendor_hospital_grn_product_detail d
+	                INNER JOIN vendor_hospital_grn r using(vendor_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, vendor_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+		UNION
+		select id, p.org_id, system_type, p.bills_type, sn, p.organization_inner_sn, organization_name, product_vendor_inner_sn, product_vendor_name,
+		    product_inner_sn, product_name, specification_inner_sn, specification, unit_inner_sn, unit, a.mdrf_inner_sn, a.mdrf_sn,
+		    a.produce_date, a.overdue_date, unit_price, rate, purchasing_date, health_care_sn, buyer_inner_sn, buyer_name,
+		    warehouse_inner_sn, warehouse_name, a.batch_number, (a.qualified_quantity - ifnull(a.finish_quantity,0)) AS order_quantity,
+		    product_type, created_by, created_time, inspection_detail_id
+		from purchasing_record p
+		INNER JOIN (
+		        SELECT finish_quantity, voucher_inner_sn_c, a.inspection_detail_id, qualified_quantity, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id, 8 as bills_type
+		        FROM(
+	                SELECT d.id as inspection_detail_id, qualified_quantity, finish_quantity, voucher_inner_sn_c, batch_number, mdrf_inner_sn, mdrf_sn, produce_date, overdue_date, organization_inner_sn, org_id
+	                FROM inspection_record_detail d
+	                INNER JOIN inspection_record r on r.id = d.inspection_record_id
+	                WHERE r.is_cancel = 0 and r.inspection_status in (1,2) and d.voucher_type_c = 13
+		        ) a
+		        LEFT JOIN (
+	                SELECT d.inspection_detail_id, organization_inner_sn, vendor_inner_sn as org_id
+	                FROM vendor_vendor_grn_product_detail d
+	                INNER JOIN vendor_vendor_grn r using(vendor_inner_sn,grn_inner_sn)
+	                WHERE d.voucher_type_c = 13
+	                GROUP BY d.inspection_detail_id, organization_inner_sn, vendor_inner_sn
+		        ) i using(inspection_detail_id, organization_inner_sn, org_id)
+		        WHERE (i.inspection_detail_id is null or finish_quantity &lt; qualified_quantity)
+		 ) a  on p.id = a.voucher_inner_sn_c and a.org_id = p.org_id and a.organization_inner_sn = p.organization_inner_sn and a.bills_type = p.bills_type
+		WHERE record_status = 2 and p.org_id = #{org_id} AND system_type = #{system_type} 
+			<if test="organization_inner_sn != null">and p.organization_inner_sn = #{organization_inner_sn} and p.bills_type = #{bills_type}</if>
+			<if test="product_vendor_name != null and product_vendor_name != ''">and product_vendor_name like concat('%', #{product_vendor_name}, '%')</if>
+			<if test="product_name != null and product_name != ''">and product_name like concat('%', #{product_name}, '%')</if>
+			<if test="specification != null and specification != ''">and specification like concat('%', #{specification}, '%')</if>
+			<if test="sn != null and sn != ''">and sn like concat('%', #{sn}, '%')</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+			<if test="warehouse_inner_sn != null">AND warehouse_inner_sn = #{warehouse_inner_sn}</if>
+			<if test="product_vendor_inner_sn != null">AND product_vendor_inner_sn = #{product_vendor_inner_sn}</if>
+			<if test="product_inner_sn != null">AND product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="warehouseIds.size()>0">
+				AND warehouse_inner_sn IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+			</if>
+	</select>
+</mapper>

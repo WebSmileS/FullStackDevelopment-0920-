@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.surgery.plan.mapper.OrthopaedicOperationPlanKitInstanceMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanKitInstance">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="ois_ins_id" jdbcType="BIGINT" property="ois_ins_id" />
+    <result column="plan_id" jdbcType="BIGINT" property="plan_id" />
+    <result column="cust_kit_id" jdbcType="BIGINT" property="cust_kit_id" />
+    <result column="platform_kit_inner_sn" jdbcType="BIGINT" property="platform_kit_inner_sn" />
+    <result column="type_inner_sn" jdbcType="TINYINT" property="type_inner_sn" />
+    <result column="brand_inner_sn" jdbcType="SMALLINT" property="brand_inner_sn" />
+    <result column="kit_sn" jdbcType="VARCHAR" property="kit_sn" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="keywords" jdbcType="VARCHAR" property="keywords" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    id, ois_ins_id, plan_id, cust_kit_id, platform_kit_inner_sn, type_inner_sn, brand_inner_sn, 
+    kit_sn, name, description, keywords
+  </sql>
+  <select id="selectByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanKitInstanceExample" resultMap="BaseResultMap">
+    WITH kit AS(select 
+        a.*,
+        t.name as type_name,
+        b.name as brand_name 
+      from orthopaedic_operation_plan_kit_instance a
+      left join orthopaedic_operation_top_type t on t.type_inner_sn = a.type_inner_sn
+      left join orthopaedic_ois_brand b on b.brand_inner_sn = a.brand_inner_sn
+    )
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />, type_name, brand_name
+    from kit
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from orthopaedic_operation_plan_kit_instance
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from orthopaedic_operation_plan_kit_instance
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanKitInstanceExample">
+    delete from orthopaedic_operation_plan_kit_instance
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanKitInstance">
+    insert into orthopaedic_operation_plan_kit_instance (id, ois_ins_id, plan_id, 
+      cust_kit_id, platform_kit_inner_sn, type_inner_sn, 
+      brand_inner_sn, kit_sn, name, 
+      description, keywords)
+    values (#{id,jdbcType=BIGINT}, #{ois_ins_id,jdbcType=BIGINT}, #{plan_id,jdbcType=BIGINT}, 
+      #{cust_kit_id,jdbcType=BIGINT}, #{platform_kit_inner_sn,jdbcType=BIGINT}, #{type_inner_sn,jdbcType=TINYINT}, 
+      #{brand_inner_sn,jdbcType=SMALLINT}, #{kit_sn,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, 
+      #{description,jdbcType=VARCHAR}, #{keywords,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanKitInstance">
+    insert into orthopaedic_operation_plan_kit_instance
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="ois_ins_id != null">
+        ois_ins_id,
+      </if>
+      <if test="plan_id != null">
+        plan_id,
+      </if>
+      <if test="cust_kit_id != null">
+        cust_kit_id,
+      </if>
+      <if test="platform_kit_inner_sn != null">
+        platform_kit_inner_sn,
+      </if>
+      <if test="type_inner_sn != null">
+        type_inner_sn,
+      </if>
+      <if test="brand_inner_sn != null">
+        brand_inner_sn,
+      </if>
+      <if test="kit_sn != null">
+        kit_sn,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="description != null">
+        description,
+      </if>
+      <if test="keywords != null">
+        keywords,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="ois_ins_id != null">
+        #{ois_ins_id,jdbcType=BIGINT},
+      </if>
+      <if test="plan_id != null">
+        #{plan_id,jdbcType=BIGINT},
+      </if>
+      <if test="cust_kit_id != null">
+        #{cust_kit_id,jdbcType=BIGINT},
+      </if>
+      <if test="platform_kit_inner_sn != null">
+        #{platform_kit_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="type_inner_sn != null">
+        #{type_inner_sn,jdbcType=TINYINT},
+      </if>
+      <if test="brand_inner_sn != null">
+        #{brand_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="kit_sn != null">
+        #{kit_sn,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="keywords != null">
+        #{keywords,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanKitInstanceExample" resultType="java.lang.Long">
+    select count(*) from orthopaedic_operation_plan_kit_instance
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update orthopaedic_operation_plan_kit_instance
+    <set>
+      <if test="record.id != null">
+        id = #{record.id,jdbcType=BIGINT},
+      </if>
+      <if test="record.ois_ins_id != null">
+        ois_ins_id = #{record.ois_ins_id,jdbcType=BIGINT},
+      </if>
+      <if test="record.plan_id != null">
+        plan_id = #{record.plan_id,jdbcType=BIGINT},
+      </if>
+      <if test="record.cust_kit_id != null">
+        cust_kit_id = #{record.cust_kit_id,jdbcType=BIGINT},
+      </if>
+      <if test="record.platform_kit_inner_sn != null">
+        platform_kit_inner_sn = #{record.platform_kit_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.type_inner_sn != null">
+        type_inner_sn = #{record.type_inner_sn,jdbcType=TINYINT},
+      </if>
+      <if test="record.brand_inner_sn != null">
+        brand_inner_sn = #{record.brand_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="record.kit_sn != null">
+        kit_sn = #{record.kit_sn,jdbcType=VARCHAR},
+      </if>
+      <if test="record.name != null">
+        name = #{record.name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.description != null">
+        description = #{record.description,jdbcType=VARCHAR},
+      </if>
+      <if test="record.keywords != null">
+        keywords = #{record.keywords,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update orthopaedic_operation_plan_kit_instance
+    set id = #{record.id,jdbcType=BIGINT},
+      ois_ins_id = #{record.ois_ins_id,jdbcType=BIGINT},
+      plan_id = #{record.plan_id,jdbcType=BIGINT},
+      cust_kit_id = #{record.cust_kit_id,jdbcType=BIGINT},
+      platform_kit_inner_sn = #{record.platform_kit_inner_sn,jdbcType=BIGINT},
+      type_inner_sn = #{record.type_inner_sn,jdbcType=TINYINT},
+      brand_inner_sn = #{record.brand_inner_sn,jdbcType=SMALLINT},
+      kit_sn = #{record.kit_sn,jdbcType=VARCHAR},
+      name = #{record.name,jdbcType=VARCHAR},
+      description = #{record.description,jdbcType=VARCHAR},
+      keywords = #{record.keywords,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanKitInstance">
+    update orthopaedic_operation_plan_kit_instance
+    <set>
+      <if test="ois_ins_id != null">
+        ois_ins_id = #{ois_ins_id,jdbcType=BIGINT},
+      </if>
+      <if test="plan_id != null">
+        plan_id = #{plan_id,jdbcType=BIGINT},
+      </if>
+      <if test="cust_kit_id != null">
+        cust_kit_id = #{cust_kit_id,jdbcType=BIGINT},
+      </if>
+      <if test="platform_kit_inner_sn != null">
+        platform_kit_inner_sn = #{platform_kit_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="type_inner_sn != null">
+        type_inner_sn = #{type_inner_sn,jdbcType=TINYINT},
+      </if>
+      <if test="brand_inner_sn != null">
+        brand_inner_sn = #{brand_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="kit_sn != null">
+        kit_sn = #{kit_sn,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="keywords != null">
+        keywords = #{keywords,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanKitInstance">
+    update orthopaedic_operation_plan_kit_instance
+    set ois_ins_id = #{ois_ins_id,jdbcType=BIGINT},
+      plan_id = #{plan_id,jdbcType=BIGINT},
+      cust_kit_id = #{cust_kit_id,jdbcType=BIGINT},
+      platform_kit_inner_sn = #{platform_kit_inner_sn,jdbcType=BIGINT},
+      type_inner_sn = #{type_inner_sn,jdbcType=TINYINT},
+      brand_inner_sn = #{brand_inner_sn,jdbcType=SMALLINT},
+      kit_sn = #{kit_sn,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      description = #{description,jdbcType=VARCHAR},
+      keywords = #{keywords,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

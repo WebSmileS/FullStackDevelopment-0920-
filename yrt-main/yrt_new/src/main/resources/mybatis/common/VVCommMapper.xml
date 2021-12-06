@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.common.mapper.VVCommMapper">
+
+	<!-- 获取厂商列表(只包含机构ID，机构名称和入库单类型字段) -->
+	<select id="selectAllOrg4DropDownList" parameterType="map" resultType="map">
+		SELECT
+			vendor_inner_sn as org_id, name, social_credit_code, 'VV' as billsType,
+			case when certification_status = 2 then '已认证' else '未认证' end as status
+		FROM vendor
+		WHERE 1=1
+			<if test="id != null">AND vendor_inner_sn = #{id}</if>
+	        AND status=1
+	        AND is_delete = 0
+	        <if test="name != null">and name like concat('%', #{name}, '%')</if>
+	</select>
+	
+	<select id="selectRelatedOrg4DropDownList" parameterType="map" resultType="map">
+		SELECT
+			vendor_inner_sn as org_id, name, social_credit_code, 'VV' as billsType,
+			case when certification_status = 2 then '已认证' else '未认证' end as status
+		FROM vendor
+		WHERE 1=1
+			AND vendor_inner_sn = #{id}
+	        AND status=1
+	        AND is_delete = 0
+	        <if test="name != null">and name like concat('%', #{name}, '%')</if>
+	</select>
+	
+	<!-- 获取厂商产品列表(平台所有发布产品) -->
+	<select id="selectVendorProductList" parameterType="map" resultType="ResponseProductInfo">
+		select 
+			concat(ps.vendor_inner_sn, '-',  ps.product_inner_sn, '-', ps.specification_inner_sn, '-1') as id,
+			ps.vendor_inner_sn, v.name as vendor_name, ps.product_inner_sn, p.name as product_name, ps.specification_inner_sn, ps.specification, 
+			1 as product_type, p.newest_register_sn as mdrf_sn, ps.specification_vendor_sn, ps.common_use_unit_inner_sn, ps.common_use_unit,
+			u.unit_inner_sn as min_unit_inner_sn, u.name as min_unit
+		from product_specification ps
+		join product p using(vendor_inner_sn, product_inner_sn)
+		join vendor v using(vendor_inner_sn)
+		join product_unit u on ps.vendor_inner_sn=u.vendor_inner_sn and ps.product_inner_sn=u.product_inner_sn 
+			and ps.specification_inner_sn = u.specification_inner_sn and u.parent_unit_inner_sn is null and u.is_delete = 0
+		where 1=1
+			and p.release_status = 1  and p.status = 1 and p.is_delete = 0 and v.is_delete = 0
+	        and ps.status = 1
+	        and ps.is_delete = 0 and length (trim(ps.common_use_unit))>0
+       		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+			<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+			<if test="product_name != null and product_name != ''">and (p.name like concat('%', #{product_name}, '%') OR p.pinyin like concat('%', #{product_name}, '%'))</if>
+			<if test="vendor_inner_sn != null">and p.vendor_inner_sn = #{vendor_inner_sn}</if>
+			<if test="specification_vendor_sn != null and specification_vendor_sn != ''">and ps.specification_vendor_sn like concat('%', #{specification_vendor_sn}, '%')</if>
+            <if test="specification != null and specification != ''">and ps.specification like concat('%', #{specification}, '%')</if>
+            <if test="product_inner_sn != null">AND ps.product_inner_sn = #{product_inner_sn}</if>
+			<if test="specification_inner_sn != null">AND ps.specification_inner_sn = #{specification_inner_sn}</if>
+	</select>
+	
+	<!-- 获取仓库人员 -->
+	<select id="selectWarehouseEmployeeList" parameterType="map" resultType="map">
+		select distinct m.employee_inner_sn, e.name as employee_name
+		from vendor_employee_vendor_warehouse_model m
+		INNER join vendor_employee e using(vendor_inner_sn,employee_inner_sn)
+		where 1=1
+			AND e.status in (0,1)
+			AND e.is_delete = 0
+			and m.vendor_inner_sn = #{org_id}
+			<if test="type != null">and m.type = #{type} </if>
+			<if test="warehouse_model_inner_sn != null">and m.warehouse_model_inner_sn in (${warehouse_model_inner_sn}) </if>
+	</select>
+</mapper>

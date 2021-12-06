@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.invoice.mapper.AdvancePaymentMapper">
+
+	<select id="selectAdvancePaymentList" parameterType="map" resultType="AdvancePayment">
+		SELECT
+		    id, org_id, system_type, organization_inner_sn, organization_name, handler_inner_sn, handler_name,
+		    department_inner_sn, department_name, bills_type, payment_sn, payment_date, payment_price, written_off_price, description,
+		    cancel_reason, payment_method, payment_status, is_cancel, created_by, created_time, confirm_by, confirm_time,
+		    cancel_by, cancel_time
+		FROM advance_payment
+		WHERE 1 = 1
+			and org_id = #{org_id} AND system_type = #{system_type}
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn}</if>
+			<if test="payment_sn != null and payment_sn != ''">and payment_sn like concat('%', #{payment_sn}, '%')</if>
+			<if test="bills_type != null">and bills_type = #{bills_type}</if>
+			<if test="payment_status != null">and payment_status in (${payment_status})</if>
+			<if test="is_cancel != null">and is_cancel = #{is_cancel}</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+	</select>
+	
+	<select id="selectAdvancePaymentInfo" parameterType="map" resultType="AdvancePayment">
+		SELECT
+		    id, org_id, system_type, organization_inner_sn, organization_name, handler_inner_sn, handler_name,
+		    department_inner_sn, department_name, bills_type, payment_sn, payment_date, payment_price, written_off_price, description,
+		    cancel_reason, payment_method, payment_status, is_cancel, created_by, created_time, confirm_by, confirm_time,
+		    cancel_by, cancel_time
+		FROM advance_payment
+		WHERE 1 = 1 and id = #{id}
+	</select>
+	
+	<insert id="insertAdvancePayment" parameterType="map">
+		INSERT INTO advance_payment (
+        	id, org_id, system_type, organization_inner_sn, organization_name, handler_inner_sn, handler_name,
+		    department_inner_sn, department_name, bills_type, payment_sn, payment_date, payment_price, description,
+		    cancel_reason, payment_method, payment_status, is_cancel, created_by, created_time, confirm_by, confirm_time,
+		    cancel_by, cancel_time
+	    ) VALUES (
+	        #{id}, #{org_id}, #{system_type}, #{organization_inner_sn}, #{organization_name}, #{handler_inner_sn}, #{handler_name}, 
+	        #{department_inner_sn}, #{department_name}, #{bills_type}, #{payment_sn}, #{payment_date}, #{payment_price},#{description},
+	        #{cancel_reason}, #{payment_method}, #{payment_status}, 0, #{created_by}, now(), #{confirm_by}, #{confirm_time}, 
+	        #{cancel_by}, #{cancel_time}
+	    )
+	</insert>
+	
+	<update id="updateAdvancePayment" parameterType="map">
+		update advance_payment
+		<set>
+			<if test="organization_inner_sn != null">organization_inner_sn = #{organization_inner_sn},</if>
+			<if test="organization_name != null and organization_name != ''">organization_name = #{organization_name},</if>
+			<if test="handler_inner_sn != null">handler_inner_sn = #{handler_inner_sn},</if>
+			<if test="handler_inner_sn == -1">handler_inner_sn = null,</if>
+			<if test="handler_name != null">handler_name = #{handler_name},</if>
+			<if test="department_inner_sn != null">department_inner_sn = #{department_inner_sn},</if>
+			<if test="department_inner_sn == -1">department_inner_sn = null,</if>
+			<if test="department_name != null">department_name = #{department_name},</if>
+			<if test="bills_type != null">bills_type = #{bills_type},</if>
+			<if test="payment_date != null">payment_date = #{payment_date},</if>
+			<if test="payment_price != null">payment_price = #{payment_price},</if>
+			<if test="written_off_price != null">written_off_price = #{written_off_price},</if>
+			<if test="description != null and description != ''">description = #{description},</if>
+			<if test="cancel_reason != null and cancel_reason != ''">cancel_reason = #{cancel_reason},</if>
+			<if test="payment_method != null">payment_method = #{payment_method},</if>
+			<if test="payment_status != null">payment_status = #{payment_status},</if>
+			<if test="is_cancel != null">is_cancel = #{is_cancel},</if>
+			<if test="confirm_by != null and confirm_by != ''">confirm_by = #{confirm_by},</if>
+			<if test="confirm_time != null">confirm_time = #{confirm_time},</if>
+			<if test="cancel_by != null and cancel_by != ''">cancel_by = #{cancel_by},</if>
+			<if test="cancel_time != null">cancel_time = #{cancel_time},</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="deleteAdvancePayment" parameterType="map">
+		delete from advance_payment 
+		where id = #{id}
+	</delete>
+	
+	<select id="selectPaymentAttachmentList" parameterType="map" resultType="PaymentAttachment">
+		SELECT
+		    id, payment_id, url, file_name, created_by, created_time
+		FROM payment_attachment
+		WHERE payment_id = #{payment_id}
+	</select>
+	
+	<insert id="insertPaymentAttachment" parameterType="map">
+		INSERT INTO payment_attachment (
+        	id, payment_id, url, file_name, created_by, created_time
+	    ) VALUES (
+	        #{id}, #{payment_id}, #{url}, #{file_name}, #{created_by}, #{created_time}
+	    )
+	</insert>
+	
+	<delete id="deletePaymentAttachment" parameterType="map">
+		delete from payment_attachment 
+		where 1 = 1
+		<if test="id != null">and id = #{id}</if>
+		<if test="payment_id != null">and payment_id = #{payment_id}</if>
+	</delete>
+</mapper> 

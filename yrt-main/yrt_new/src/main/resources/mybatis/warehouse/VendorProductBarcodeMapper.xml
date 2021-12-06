@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.VendorProductBarcodeMapper">
+
+	<!-- 入库单 -->
+	<resultMap type="ProductBarcode" id="ProductBarcodeResult">
+		<id      property="code" column="barcode_sn"/><!-- 条码编号 -->
+		<result  property="orgId" column="org_id"/><!-- 经销商内部编号 -->
+		<result  property="orgType" column="orgType"/><!-- 经销商内部编号 -->
+		<result  property="product_vendor_inner_sn" column="product_vendor_inner_sn"/><!-- (产品)厂商内部编号 -->
+		<result  property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result  property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号 -->
+		<result  property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号 -->
+		<result  property="mdrf_inner_sn" column="mdrf_inner_sn"/><!-- 登记表内部编号 -->
+		<result  property="organization_type" column="organization_type"/><!-- 相关机构类别  -->
+		<result  property="organization_inner_sn" column="organization_inner_sn"/><!-- 相关机构内部编号 -->
+		<result  property="grn_inner_sn" column="grn_inner_sn"/><!-- 入库单内部编号 -->
+		<result  property="grn_detail_inner_sn" column="grn_detail_inner_sn"/><!-- 入库单明细内部编号 -->
+		<result  property="pp_inner_sn" column="pp_inner_sn"/><!-- 验货单内部编号 -->
+		<result  property="pp_detail_inner_sn" column="pp_detail_inner_sn"/><!-- 验货单明细内部编号 -->
+		<result  property="barcode_type" column="barcode_type"/><!-- 条码类别  -->
+		<result  property="product_number" column="product_number"/><!-- 产品数 -->
+		<result  property="confirm_product_number" column="confirm_product_number"/><!-- 已确认产品数 -->
+		<result  property="surplus_product_number" column="surplus_product_number"/><!-- 剩余产品数 -->
+		<result  property="produce_date" column="produce_date"/><!-- 生产日期 -->
+		<result  property="overdue_date" column="overdue_date"/><!-- 失效日期 -->
+		<result  property="create_time" column="create_time"/><!-- 生成时间 -->
+		<result  property="batch_number" column="batch_number"/><!-- 批号 -->
+		<result  property="product_vendor_name" column="product_vendor_name"/><!-- (产品)厂商名称(冗余) -->
+		<result  property="product_name" column="product_name"/><!-- 产品名称(冗余) -->
+		<result  property="specification" column="specification"/><!-- 型号规格(冗余) -->
+		<result  property="unit_name" column="unit_name"/><!-- 单位(冗余) -->
+		<result  property="mdrf_sn" column="mdrf_sn"/><!-- 医疗器械注册证号(冗余) -->
+		<result property="organization_name" column="organization_name"/><!-- 相关机构名称(冗余) -->
+		<result property="billsType" column="billsType"/><!-- 单据类型  0-DealerDealer 1-DealerVendor 2-DealerHospital 3-HospitalHospital 4-hospitalDealer 5-hospitalVendor -->
+	</resultMap>
+	
+	<select id="selectBarcode4Grn" parameterType="map" resultMap="ProductBarcodeResult">
+		SELECT 
+	        barcode_sn, vendor_inner_sn as org_id, product_vendor_inner_sn, product_inner_sn, (case organization_type when 2 then 6 else 7 end) as billsType,
+	        specification_inner_sn, unit_inner_sn, mdrf_inner_sn, pp_inner_sn, pp_detail_inner_sn, confirm_product_number,
+	         (case sign((product_number - confirm_product_number)/1000) when -1 then 0 when -1 then 0 else (product_number - confirm_product_number)/1000 end) as surplus_product_number,
+	        organization_type, organization_inner_sn, b.grn_inner_sn, b.grn_detail_inner_sn, 
+	        barcode_type, product_number, produce_date, overdue_date, create_time, batch_number, product_vendor_name, 
+	        product_name, specification, unit as unit_name, mdrf_sn, organization_name, 1 as product_type, '03' as orgType
+		FROM vendor_product_inner_barcode a
+		left join vendor_grn_product_detail_vendor_product_inner_barcode b using(organization_type,vendor_inner_sn,barcode_sn)
+		WHERE vendor_inner_sn = #{org_id}
+			<if test="organization_type != null">and a.organization_type=#{organization_type}</if>
+			<if test="barcode_sn != null">and a.barcode_sn=#{barcode_sn}</if>
+			<if test="grn_inner_sn != null">and b.grn_inner_sn=#{grn_inner_sn}</if>
+			<if test="grn_detail_inner_sn != null">and b.grn_detail_inner_sn=#{grn_detail_inner_sn}</if>
+	</select>
+	
+	<select id="selectBarcode4Pp" parameterType="map" resultMap="ProductBarcodeResult">
+		SELECT 
+	        barcode_sn, vendor_inner_sn as org_id, product_vendor_inner_sn, product_inner_sn, (case organization_type when 2 then 6 else 7 end) as billsType,
+	        specification_inner_sn, unit_inner_sn, mdrf_inner_sn, pp_inner_sn, pp_detail_inner_sn, confirm_product_number,
+	         (case sign((product_number - confirm_product_number)/1000) when -1 then 0 when -1 then 0 else (product_number - confirm_product_number)/1000 end) as surplus_product_number,
+	        organization_type, organization_inner_sn, null as grn_inner_sn, null as grn_detail_inner_sn, 
+	        barcode_type, product_number, produce_date, overdue_date, create_time, batch_number, product_vendor_name, 
+	        product_name, specification, unit as unit_name, mdrf_sn, organization_name, 1 as product_type, '03' as orgType
+		FROM vendor_product_inner_barcode
+		WHERE vendor_inner_sn = #{org_id}
+			<if test="organization_type != null">and organization_type=#{organization_type}</if>
+			<if test="barcode_sn != null">and barcode_sn=#{barcode_sn}</if>
+			<if test="pp_inner_sn != null">and pp_inner_sn = #{pp_inner_sn}</if>
+			<if test="pp_detail_inner_sn != null">and pp_detail_inner_sn = #{pp_detail_inner_sn}</if>
+	</select>
+	
+	<select id="selectOnlyBarcode4Grn" parameterType="map" resultType="string">
+		SELECT barcode_sn
+		FROM vendor_product_inner_barcode a
+		inner join vendor_grn_product_detail_vendor_product_inner_barcode b using(organization_type,vendor_inner_sn,barcode_sn)
+		WHERE vendor_inner_sn = #{org_id}
+			<if test="organization_type != null">and a.organization_type=#{organization_type}</if>
+			<if test="barcode_sn != null">and a.barcode_sn=#{barcode_sn}</if>
+			<if test="grn_inner_sn != null">and b.grn_inner_sn=#{grn_inner_sn}</if>
+			<if test="grn_detail_inner_sn != null">and b.grn_detail_inner_sn=#{grn_detail_inner_sn}</if>
+	</select>
+	
+	<select id="selectBarcodeInfo4Sas" parameterType="map" resultMap="ProductBarcodeResult">
+		SELECT barcode_sn
+		FROM vendor_product_inner_barcode
+		WHERE vendor_inner_sn = #{org_id}
+			<if test="organization_type != null">and organization_type=#{organization_type}</if>
+			<if test="barcode_sn != null">and barcode_sn=#{barcode_sn}</if>
+			<if test="pp_inner_sn != null">and pp_inner_sn = #{pp_inner_sn}</if>
+			<if test="pp_detail_inner_sn != null">and pp_detail_inner_sn = #{pp_detail_inner_sn}</if>
+	</select>
+	
+	<insert id="insertProductBarcode" parameterType="map">
+	   	INSERT
+		INTO vendor_product_inner_barcode (
+	        barcode_sn, vendor_inner_sn, product_vendor_inner_sn, product_inner_sn, specification_inner_sn,
+	        unit_inner_sn, mdrf_inner_sn, organization_type, organization_inner_sn,
+	        barcode_type, product_number, produce_date, overdue_date, create_time, confirm_product_number,
+	        batch_number, product_vendor_name, product_name, specification, unit, mdrf_sn, organization_name,
+	        pp_inner_sn, pp_detail_inner_sn
+	    )
+	    VALUES (
+	        #{barcode_sn},
+	        #{org_id},
+	        #{product_vendor_inner_sn},
+	        #{product_inner_sn},
+	        #{specification_inner_sn},
+	        #{unit_inner_sn},
+	        #{mdrf_inner_sn},
+	        #{organization_type},
+	        #{organization_inner_sn},
+	        #{barcode_type},
+	        #{product_number},
+	        #{produce_date},
+	        #{overdue_date},
+	        #{create_time},
+	        #{confirm_product_number},
+	        #{batch_number},
+	        #{product_vendor_name},
+	        #{product_name},
+	        #{specification},
+	        #{unit},
+	        #{mdrf_sn},
+	        #{organization_name},
+	        #{pp_inner_sn},
+	        #{pp_detail_inner_sn}
+	    );
+	</insert>
+	
+	<insert id="insertProductBarcodeRef" parameterType="map">
+	   	INSERT
+		INTO vendor_grn_product_detail_vendor_product_inner_barcode (
+	        organization_type, vendor_inner_sn, grn_inner_sn, grn_detail_inner_sn, barcode_sn
+	    )
+	    VALUES (
+	        #{organization_type},
+	        #{org_id},
+	        #{grn_inner_sn},
+	        #{grn_detail_inner_sn},
+	        #{barcode_sn}
+	    )
+	</insert>
+	
+	<update id="updateProductBarcode" parameterType="map">
+		update vendor_product_inner_barcode
+		<set>
+			<if test="confirm_product_number !=null">confirm_product_number = #{confirm_product_number},</if>
+		</set>
+		where 1=1
+			and barcode_sn = #{barcode_sn} and vendor_inner_sn = #{org_id} and organization_type = #{organization_type}
+	</update>
+	
+	<update id="cleanProductBarcode" parameterType="map">
+		DELETE FROM vendor_grn_product_detail_vendor_product_inner_barcode
+		where 1=1
+			and organization_type = #{organization_type} and vendor_inner_sn = #{org_id}
+			and grn_inner_sn = #{grn_inner_sn} and grn_detail_inner_sn = #{detail_inner_sn}
+			and barcode_sn = #{barcode_sn}
+	</update>
+	
+</mapper>

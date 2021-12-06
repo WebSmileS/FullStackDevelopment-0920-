@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warning.mapper.CertWarningMapper">
+
+	<select id="selectCertWarningList" parameterType="map" resultType="CertWarning">
+		select id, created_org_id, created_system_type, expiration_date, organization_inner_sn, organization_name,
+    		system_type, certification_name, social_credit_code, phone, email
+		from certification_warning
+		where created_org_id = #{org_id} and created_system_type = #{created_system_type}
+	</select>
+	
+	<insert id="insertCertWarning" parameterType="map">
+		insert into certification_warning (
+	        id,
+	        created_org_id,
+	        created_system_type,
+	        expiration_date,
+	        organization_inner_sn,
+	        organization_name,
+	        system_type,
+	        certification_name,
+	        social_credit_code,
+	        phone,
+	        email
+	    ) VALUES (
+	        #{id},
+	        #{created_org_id},
+	        #{created_system_type},
+	        #{expiration_date},
+	        #{organization_inner_sn},
+	        #{organization_name},
+	        #{system_type},
+	        #{certification_name},
+	        #{social_credit_code},
+	        #{phone},
+	        #{email}
+        )
+	</insert>
+	
+	<delete id="trueDeleteCertWarning" parameterType="map">
+		DELETE FROM certification_warning
+		WHERE 1 = 1
+		<if test = "created_org_id != null">and created_org_id = #{created_org_id}</if>
+		<if test = "created_system_type != null">and created_system_type = #{created_system_type}</if>
+		<if test = "id != null">and id = #{id}</if>
+	</delete>
+	
+	<!-- 经销商营业执照超期预警监测 -->
+	<select id="checkDealerrExpireCertWarning" parameterType="map" resultType="CertWarning">
+		select bl.dealer_inner_sn as organization_inner_sn, d.name as  organization_name, 2 as system_type,
+			bl.end_date as expiration_date, '营业执照' as certification_name, d.social_credit_code, d.phone, d.email
+		from dealer_business_license bl
+		left join dealer d using(dealer_inner_sn)
+		where bl.dealer_inner_sn = #{org_id}
+			and d.certification_status = 2
+			and bl.end_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+		union all
+		select bl.dealer_inner_sn as organization_inner_sn, d.name as  organization_name, 2 as system_type,
+			bl.end_date as expiration_date, '医疗器械经营许可证' as certification_name, d.social_credit_code, d.phone, d.email
+		from dealer_maaiol bl
+		left join dealer d using(dealer_inner_sn)
+		where bl.dealer_inner_sn = #{org_id}
+			and d.certification_status = 2
+	        and bl.end_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+	</select>
+	
+	<!-- 医院营业执照超期预警监测 -->
+	<select id="checkHospitalExpireCertWarning" parameterType="map" resultType="CertWarning">
+		select bl.hospital_inner_sn as organization_inner_sn, d.name as  organization_name, 1 as system_type,
+			bl.end_date as expiration_date, '营业执照' as certification_name, d.social_credit_code, d.phone, d.email
+		from hospital_business_license bl
+		left join hospital d using(hospital_inner_sn)
+		where bl.hospital_inner_sn = #{org_id}
+		        and d.certification_status = 2
+		        and bl.end_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+		union all
+		select bl.hospital_inner_sn as organization_inner_sn, d.name as  organization_name, 1 as system_type,
+			bl.end_date as expiration_date, '医疗机构执业许可证' as certification_name, d.social_credit_code, d.phone, d.email
+		from hospital_plhmi bl
+		left join hospital d using(hospital_inner_sn)
+		where bl.hospital_inner_sn = #{org_id}
+		        and d.certification_status = 2
+		and bl.end_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+	</select>
+	
+	<!-- 厂商营业执照超期预警监测 -->
+	<select id="checkVendorExpireCertWarning" parameterType="map" resultType="CertWarning">
+		select bl.vendor_inner_sn as organization_inner_sn, d.name as  organization_name, 3 as system_type,
+			bl.end_date as expiration_date, '营业执照' as certification_name, d.social_credit_code, d.phone, d.email
+		from vendor_business_license bl
+		left join vendor d using(vendor_inner_sn)
+		where bl.vendor_inner_sn = #{org_id}
+		        and d.certification_status = 2
+		        and bl.end_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+		union all
+		select bl.vendor_inner_sn as organization_inner_sn, d.name as  organization_name, 3 as system_type,
+			bl.end_date as expiration_date, '医疗器械生产许可证' as certification_name, d.social_credit_code, d.phone, d.email
+		from vendor_mdpl bl
+		left join vendor d using(vendor_inner_sn)
+		where bl.vendor_inner_sn = #{org_id}
+		        and d.certification_status = 2
+		and bl.end_date &lt;= date_add(sysdate(), interval #{cew_day} day)
+	</select>
+	
+</mapper>

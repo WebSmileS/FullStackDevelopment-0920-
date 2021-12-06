@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.finance.mapper.ReceiveOrderMapper">
+
+	<select id="selectReceiveOrderList" parameterType="map" resultType="ReceiveOrder">
+		SELECT
+		    id, org_id, system_type, bills_type, organization_inner_sn, organization_name, receive_sn, receive_date,
+		    receive_price, description, cancel_reason, receive_method, receive_status, is_cancel, created_by,
+		    created_time, receive_by, receive_time, entry_by, entry_time, cancel_by, cancel_time
+		FROM receive_order
+		WHERE 1 = 1
+			and org_id = #{org_id} AND system_type = #{system_type}
+			<if test="organization_inner_sn != null">and organization_inner_sn = #{organization_inner_sn}</if>
+			<if test="bills_type != null">and bills_type = #{bills_type}</if>
+			<if test="receive_sn != null and receive_sn != ''">and receive_sn like concat('%', #{receive_sn}, '%')</if>
+			<if test="receive_status != null">and receive_status in (${receive_status})</if>
+			<if test="is_cancel != null">and is_cancel = #{is_cancel}</if>
+			<if test="begin_date != null">AND date_format(created_time,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')</if>
+			<if test="end_date != null">AND date_format(created_time,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+	</select>
+	
+	<select id="selectReceiveOrderDetailList" parameterType="map" resultType="ReceiveOrderDetail">
+		SELECT
+		    id, receive_order_id, sn, invoice_no, invoice_price, written_off_price,
+			voucher_type_c, voucher_inner_sn_c
+		FROM receive_order_detail
+		where 1=1
+			and receive_order_id = #{receive_order_id}
+	</select>
+	
+	<select id="sumUsableReceiveOrderDetail" parameterType="map" resultType="SumOrderResult">
+		SELECT
+		    SUM(written_off_price) as written_off_price, voucher_type_c, voucher_inner_sn_c
+		FROM receive_order_detail d
+		INNER JOIN receive_order m on m.id = d.receive_order_id
+		where 1=1 and is_cancel = 0 and voucher_type_c != 0 and m.org_id = #{org_id}
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+		GROUP BY voucher_type_c, voucher_inner_sn_c
+	</select>
+	
+	<select id="sumUsedReceiveOrderDetail" parameterType="map" resultType="SumOrderResult">
+		SELECT
+		    SUM(written_off_price) as written_off_price, voucher_type_c, voucher_inner_sn_c
+		FROM receive_order_detail d
+		INNER JOIN receive_order m on m.id = d.receive_order_id
+		where 1=1 and is_cancel = 0 and voucher_type_c != 0 and m.org_id = #{org_id}
+			and receive_status in (2,3)
+			<if test="voucher_type_c != null">and voucher_type_c = #{voucher_type_c}</if>
+			<if test="voucher_inner_sn_c != null">and voucher_inner_sn_c = #{voucher_inner_sn_c}</if>
+		GROUP BY voucher_type_c, voucher_inner_sn_c
+	</select>
+	
+	<select id="selectReceiveOrderInfo" parameterType="map" resultType="ReceiveOrder">
+		SELECT
+		    id, org_id, system_type, bills_type, organization_inner_sn, organization_name, receive_sn, receive_date,
+		    receive_price, description, cancel_reason, receive_method, receive_status, is_cancel, created_by,
+		    created_time, receive_by, receive_time, entry_by, entry_time, cancel_by, cancel_time
+		FROM receive_order
+		WHERE 1 = 1 and id = #{id}
+	</select>
+	
+	<insert id="insertReceiveOrder" parameterType="ReceiveOrder">
+		INSERT INTO receive_order (
+        	id, org_id, system_type, bills_type, organization_inner_sn, organization_name, receive_sn, receive_date,
+        	receive_price, description, cancel_reason, receive_method, receive_status, is_cancel, created_by,
+        	created_time, receive_by, receive_time, entry_by, entry_time, cancel_by, cancel_time
+	    ) VALUES (
+	        #{id}, #{org_id}, #{system_type}, #{bills_type}, #{organization_inner_sn}, #{organization_name}, #{receive_sn}, #{receive_date},
+	        #{receive_price}, #{description}, #{cancel_reason}, #{receive_method}, #{receive_status}, 0, #{created_by},
+	        now(), #{receive_by}, #{receive_time}, #{entry_by}, #{entry_time}, #{cancel_by}, #{cancel_time}
+	    )
+	</insert>
+	
+	<update id="updateReceiveOrder" parameterType="map">
+		update receive_order
+		<set>
+			<if test="bills_type != null">bills_type = #{bills_type},</if>
+			<if test="organization_inner_sn != null">organization_inner_sn = #{organization_inner_sn},</if>
+			<if test="organization_name != null and organization_name != ''">organization_name = #{organization_name},</if>
+			<if test="receive_sn != null and receive_sn != ''">receive_sn = #{receive_sn},</if>
+			<if test="receive_date != null">receive_date = #{receive_date},</if>
+			<if test="receive_price != null">receive_price = #{receive_price},</if>
+			<if test="description != null and description != ''">description = #{description},</if>
+			<if test="cancel_reason != null and cancel_reason != ''">cancel_reason = #{cancel_reason},</if>
+			<if test="receive_method != null">receive_method = #{receive_method},</if>
+			<if test="receive_status != null">receive_status = #{receive_status},</if>
+			<if test="is_cancel != null">is_cancel = #{is_cancel},</if>
+			<if test="receive_by != null and receive_by != ''">receive_by = #{receive_by},</if>
+			<if test="receive_time != null">receive_time = #{receive_time},</if>
+			<if test="entry_by != null and entry_by != ''">entry_by = #{entry_by},</if>
+			<if test="entry_time != null">entry_time = #{entry_time},</if>
+			<if test="cancel_by != null and cancel_by != ''">cancel_by = #{cancel_by},</if>
+			<if test="cancel_time != null">cancel_time = #{cancel_time},</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="deleteReceiveOrder" parameterType="map">
+		delete from receive_order 
+		where id = #{id}
+	</delete>
+	
+	<insert id="insertReceiveOrderDetail" parameterType="map">
+		INSERT INTO receive_order_detail (
+	        id, receive_order_id, sn, invoice_no, invoice_price, written_off_price,  
+	        voucher_type_c, voucher_inner_sn_c
+	    ) VALUES (
+	        #{id}, #{receive_order_id}, #{sn}, #{invoice_no}, #{invoice_price}, #{written_off_price},
+	        #{voucher_type_c}, #{voucher_inner_sn_c}
+	    )
+	</insert>
+	
+	<delete id="deleteReceiveOrderDetail" parameterType="map">
+		delete from receive_order_detail 
+		where receive_order_id = #{receive_order_id}
+	</delete>
+</mapper> 

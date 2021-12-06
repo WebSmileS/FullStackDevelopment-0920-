@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.product.mapper.DealerProductTypeMapper">
+
+	<resultMap type="DealerProductType" id="DealerProductTypeResult">
+		<id     property="dealer_inner_sn" column="dealer_inner_sn"/>
+		<result property="type_inner_sn" column="type_inner_sn"/>
+		<result property="parent_type_inner_sn" column="parent_type_inner_sn"/>
+		<result property="type" column="type"/>
+		<result property="status" column="status"/>
+		<result property="description" column="description"/>
+		<result property="is_leaf" column="is_leaf"/><!-- 是否存在子节点 0-有 1-没有 -->
+	</resultMap>
+	
+	<sql id="selectProductType">
+        select dealer_inner_sn, type_inner_sn,  parent_type_inner_sn, status, type, description
+		from dealer_product_type
+    </sql>
+	
+	<select id="selectTopLevelProductType" parameterType="Long" resultMap="DealerProductTypeResult">
+		SELECT dealer_inner_sn, type_inner_sn, parent_type_inner_sn, status, type, description,
+		    CASE WHEN (SELECT COUNT(*) FROM dealer_product_type WHERE dealer_inner_sn = #{id} AND parent_type_inner_sn = dpt.type_inner_sn and is_delete = 0) = 0 THEN 1 ELSE 0 END AS is_leaf    
+		FROM (
+		    SELECT dealer_inner_sn, type_inner_sn, parent_type_inner_sn, status, type, description
+		    FROM dealer_product_type
+		    WHERE is_delete = 0
+		      and dealer_inner_sn = #{id}
+		      and parent_type_inner_sn is null
+		   ) AS dpt
+	</select>
+	
+	<select id="selectProductType" parameterType="DealerProductType" resultMap="DealerProductTypeResult">
+		SELECT dealer_inner_sn, type_inner_sn, parent_type_inner_sn, status, type, description,
+		    CASE WHEN (SELECT COUNT(*) FROM dealer_product_type WHERE dealer_inner_sn = #{dealer_inner_sn} AND parent_type_inner_sn = dpt.type_inner_sn) = 0 THEN 1 ELSE 0 END AS is_leaf    
+		FROM (
+		    SELECT dealer_inner_sn, type_inner_sn, parent_type_inner_sn, status, type, description
+		    FROM dealer_product_type
+		    WHERE is_delete = 0
+		      and dealer_inner_sn = #{dealer_inner_sn}
+		      and type_inner_sn = #{type_inner_sn}
+		   ) AS dpt
+	</select>
+	
+	<select id="selectProductTypeChildrenList" parameterType="DealerProductType" resultMap="DealerProductTypeResult">
+		SELECT dealer_inner_sn, type_inner_sn, parent_type_inner_sn, status, type, description,
+		    CASE WHEN (SELECT COUNT(*) FROM dealer_product_type WHERE dealer_inner_sn = #{dealer_inner_sn} AND parent_type_inner_sn = dpt.type_inner_sn) = 0 THEN 1 ELSE 0 END AS is_leaf    
+		FROM (
+		    SELECT dealer_inner_sn, type_inner_sn, parent_type_inner_sn, status, type, description
+		    FROM dealer_product_type
+		    WHERE is_delete = 0
+		      and dealer_inner_sn = #{dealer_inner_sn}
+		      and parent_type_inner_sn = #{parent_type_inner_sn}
+		   ) AS dpt
+	</select>
+	
+	<select id="d_add_dealer_product_type" parameterType="DealerProductType" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="DealerProductType">
+		call d_add_dealer_product_type(
+            #{dealer_inner_sn_i,mode=IN},
+            #{parent_type_inner_sn_i,mode=IN},
+            #{type_i,mode=IN},
+            #{description_i,mode=IN},
+            #{type_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )  
+	</select>
+	
+	<update id="updateProductType" parameterType="DealerProductType">
+        update dealer_product_type
+        <set>
+ 			<if test="status != null">status = #{status},</if>
+ 			<if test="type != null and type != ''">type = #{type},</if>
+ 			<if test="description != null">description = #{description},</if>
+ 		</set>
+ 		where dealer_inner_sn = #{dealer_inner_sn} and type_inner_sn = #{type_inner_sn}
+    </update>
+    
+    <update id="deleteProductType" parameterType="DealerProductType">
+        update dealer_product_type set is_delete = 1
+ 		where dealer_inner_sn = #{dealer_inner_sn} and type_inner_sn = #{type_inner_sn}
+    </update>
+	
+</mapper>

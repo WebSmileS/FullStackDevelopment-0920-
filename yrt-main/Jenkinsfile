@@ -1,0 +1,65 @@
+import hudson.tasks.test.AbstractTestResultAction
+
+pipeline {
+    agent any
+    tools {nodejs "node"}
+    environment {
+        CI = 'true'
+    }
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    statusComment = "[${env.JOB_NAME}] <${env.BUILD_URL}|#${env.BUILD_NUMBER}> Env Stage completed successfully for ${env.GIT_BRANCH}"
+                    slackSend color: '#7A871E', message: statusComment
+                }
+                sh 'cd /var/lib/jenkins/workspace/yrt/ant'
+                sh 'yarn install --production=false'
+                script {
+                    statusComment = "[${env.JOB_NAME}] <${env.BUILD_URL}|#${env.BUILD_NUMBER}> Build Stage completed successfully for ${env.GIT_BRANCH}"
+                    slackSend color: '#7A871E', message: statusComment
+                }
+                dir('ant') {
+                    sh 'npm run build'
+                    sh 'cp -r dist/* /var/www/html/'
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                statusComment = "[${env.JOB_NAME}] <${env.BUILD_URL}|#${env.BUILD_NUMBER}> finished to deploy succesfully for ${env.GIT_BRANCH} :tada:"
+                slackSend color: '#104210', message: statusComment
+            }
+        }
+        failure {
+            script {
+                statusComment = getTestResultsMessage()
+                slackSend color: '#E55B13', message: statusComment
+            }
+        }
+        aborted {
+            script {
+                statusComment = "[${env.JOB_NAME}] <${env.BUILD_URL}|#${env.BUILD_NUMBER}> for ${env.GIT_BRANCH} was aborted by ${getBuildUser()}"
+                slackSend color: '#F6A21E', message: statusComment
+            }
+        }
+    }
+}
+
+String getTestResultsMessage() {
+    AbstractTestResultAction testResultAction = currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
+    if (testResultAction != null) {
+        def total = testResultAction.totalCount
+        def failed = testResultAction.failCount
+        def skipped = testResultAction.skipCount
+        return "[${env.JOB_NAME}] <${env.BUILD_URL}|#${env.BUILD_NUMBER}> had test failures for ${env.GIT_BRANCH}.\n  Total: ${total}, Failed: ${failed}, Skipped: ${skipped}"
+    } else {
+        return "[${env.JOB_NAME}] <${env.BUILD_URL}|#${env.BUILD_NUMBER}> failed for ${env.GIT_BRANCH}"
+    }
+}
+
+String getBuildUser() {
+    return currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserId()
+}

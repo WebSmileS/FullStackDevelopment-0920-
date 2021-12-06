@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.surgery.mapper.SurgeryPackageMapper">
+
+	<resultMap type="OrthopaedicPath" id="OrthopaedicPathResult">
+		<id     property="op_inner_sn" column="op_inner_sn"/>
+		<result property="parent_op_inner_sn" column="parent_op_inner_sn"/>
+		<result property="name" column="name"/>
+		<result property="is_leaf" column="is_leaf"/>
+	</resultMap>
+	
+	<sql id="selectOrthopaedicPath">	
+		select op_inner_sn,  parent_op_inner_sn, name,  
+        	case when op_inner_sn in (select distinct parent_op_inner_sn from orthopaedic_operation_pathway where is_delete = 0) then 0 else 1 end as is_leaf
+		from orthopaedic_operation_pathway
+	</sql>
+
+	<select id="selectOrthopaedicPathById" parameterType="Long" resultMap="OrthopaedicPathResult">
+		<include refid="selectOrthopaedicPath"/>
+		where is_delete = 0 and op_inner_sn = #{id}
+	</select>
+	
+	<select id="selectOrthopaedicPathChildrenById" parameterType="Long" resultMap="OrthopaedicPathResult">
+		<include refid="selectOrthopaedicPath"/>
+		where is_delete = 0 and parent_op_inner_sn = #{id}
+	</select>
+	
+	<select id="selectTopLevelOrthopaedicPathList" resultMap="OrthopaedicPathResult">
+		<include refid="selectOrthopaedicPath"/>
+		where is_delete = 0 and parent_op_inner_sn is null
+	</select>
+	
+	<insert id="insertOrthopaedicPath" parameterType="map" useGeneratedKeys="true" keyProperty="op_inner_sn" keyColumn="op_inner_sn">
+		insert into orthopaedic_operation_pathway(
+			parent_op_inner_sn, name)
+        values (#{parent_op_inner_sn}, #{name})
+	</insert>
+	
+	<update id = "updateOrthopaedicPath" parameterType = "map">
+		update orthopaedic_operation_pathway
+		<set>
+			<if test="name != null"> name = #{name},</if>
+			<if test="is_delete != null"> is_delete = #{is_delete},</if>
+			<if test="parent_op_inner_sn != null"> parent_op_inner_sn = #{parent_op_inner_sn},</if>
+			<if test="parent_op_inner_sn == null and parent_op_inner_sn_null == 1"> parent_op_inner_sn = null,</if>
+		</set>
+		where op_inner_sn = #{op_inner_sn}
+	</update>
+	
+	<!-- 骨科手术包 -->
+	<resultMap type="OrthopaedicPackage" id="OrthopaedicPackageResult">
+		<id     property="ois_inner_sn" column="ois_inner_sn"/>
+		<result property="type_inner_sn" column="type_inner_sn"/>
+		<result property="brand_inner_sn" column="brand_inner_sn"/>
+		<result property="brand_name" column="brand_name"/>
+		<result property="ois_sn" column="ois_sn"/>
+		<result property="type_name" column="type_name"/>
+		<result property="status" column="status"/>
+		<result property="name" column="name"/>
+		<result property="description" column="description"/>
+		<result property="brand_name" column="brand_name"/>
+	</resultMap>
+	
+	<sql id="selectOrthopaedicPackage">
+		select o.ois_inner_sn, o.type_inner_sn,o.brand_inner_sn,b.name as brand_name, t.name as type_name, o.name, o.status, o.description, 
+          o.ois_sn, keywords
+		from orthopaedic_ois o
+		left join orthopaedic_operation_top_type t using(type_inner_sn)
+		left join orthopaedic_ois_brand b using(brand_inner_sn)
+	</sql>
+	
+	<select id="selectOrthopaedicPackageById" parameterType="Long" resultMap="OrthopaedicPackageResult">
+		<include refid="selectOrthopaedicPackage"/>
+		where o.is_delete = 0 and o.ois_inner_sn = #{id}
+	</select>
+	
+	<select id="searchOrthopaedicPackageList" parameterType="map" resultMap="OrthopaedicPackageResult">
+		<include refid="selectOrthopaedicPackage"/>
+		where o.is_delete = 0
+		<if test="name != null and name != ''"> and o.name like concat('%', #{name}, '%')</if>
+		<if test="type_inner_sn != null"> and o.type_inner_sn = #{type_inner_sn}</if>
+		<if test="brand_inner_sn != null"> and o.brand_inner_sn = #{brand_inner_sn}</if>
+		<if test="ois_sn != null"> and o.ois_sn = #{ois_sn}</if>
+		<if test="pid != null"> 
+			and o.ois_inner_sn not in (select ois_inner_sn from orthopaedic_operation_pathway_orthopaedic_ois where op_inner_sn = #{pid})
+		</if>
+	</select>
+	
+	<select id="selectOrthopaedicPackageByPathId" parameterType="map" resultMap="OrthopaedicPackageResult">
+		select o.ois_inner_sn, o.type_inner_sn, o.brand_inner_sn, o.name, o.status, o.description, o.ois_sn, 
+            b.name as brand_name, t.name as type_name
+		from orthopaedic_ois o
+        left join orthopaedic_operation_top_type t using(type_inner_sn)
+		left join orthopaedic_ois_brand b using(brand_inner_sn)
+		where o.is_delete = 0 and o.ois_inner_sn in (select ois_inner_sn from orthopaedic_operation_pathway_orthopaedic_ois where op_inner_sn = #{id})
+			<if test="type_inner_sn != null">and o.type_inner_sn = #{type_inner_sn}</if>
+			<if test="brand_inner_sn != null">and o.brand_inner_sn = #{brand_inner_sn}</if>
+			<if test="ois_sn != null">and o.ois_sn = #{ois_sn}</if>
+	</select>
+	
+	<resultMap type="OrthopaedicPackageDetail" id="OrthopaedicPackageDetailResult">
+		<id     property="ois_inner_sn" column="ois_inner_sn"/>
+		<result property="detail_inner_sn" column="detail_inner_sn"/>
+		<result property="product_vendor_inner_sn" column="product_vendor_inner_sn"/>
+		<result property="vendor_name" column="vendor_name"/>
+		<result property="product_inner_sn" column="product_inner_sn"/>
+		<result property="product_name" column="product_name"/>
+		<result property="specification_inner_sn" column="specification_inner_sn"/>
+		<result property="specification" column="specification"/>
+		<result property="unit_inner_sn" column="unit_inner_sn"/>
+		<result property="unit_name" column="unit_name"/>
+		<result property="quantity" column="quantity"/>
+		<result property="sort_number" column="sort_number"/>
+	</resultMap>
+	
+	<select id="selectOrthopaedicPackageDetail" parameterType="Long" resultMap="OrthopaedicPackageDetailResult">
+		select d.ois_inner_sn, d.detail_inner_sn, d.product_vendor_inner_sn, d.product_vendor_name,
+			d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, 
+			d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity, d.sort_number,spec.specification_vendor_sn
+		from orthopaedic_ois_product_detail d
+		left join product_specification spec on 
+			spec.vendor_inner_sn = d.product_vendor_inner_sn
+			and spec.product_inner_sn = d.product_inner_sn
+			and spec.specification_inner_sn=d.specification_inner_sn
+		where d.ois_inner_sn = #{ois_inner_sn}
+		order by d.sort_number
+	</select>
+	
+	<insert id="insertOrthopaedicPackage" parameterType="map" useGeneratedKeys="true" keyProperty="ois_inner_sn" keyColumn="ois_inner_sn">
+		insert into orthopaedic_ois(
+			type_inner_sn,brand_inner_sn, name, description,ois_sn, keywords)
+        values (#{type_inner_sn},#{brand_inner_sn}, #{name}, #{description},#{ois_sn}, #{keywords})
+	</insert>
+	
+	<update id="updateOrthopaedicPackage" parameterType="map">
+		update orthopaedic_ois
+		<set>
+			<if test="name != null"> name = #{name},</if>
+			<if test="type_inner_sn != null"> type_inner_sn = #{type_inner_sn},</if>
+			<if test="brand_inner_sn != null"> brand_inner_sn = #{brand_inner_sn},</if>
+			<if test="ois_sn != null"> ois_sn = #{ois_sn},</if>
+			<if test="is_delete != null"> is_delete = #{is_delete},</if>
+			<if test="description != null"> description = #{description},</if>
+            <if test="keywords != null"> keywords = #{keywords},</if>
+		</set>
+		where ois_inner_sn = #{ois_inner_sn}
+	</update>
+	
+	<delete id="deleteOrthopaedicPackage" parameterType="Long">
+		delete from orthopaedic_ois 
+		where ois_inner_sn= #{id}
+	</delete>
+	
+	<insert id="insertOrthopaedicPackageRef" parameterType="map">
+		insert into orthopaedic_operation_pathway_orthopaedic_ois(
+			op_inner_sn, ois_inner_sn)
+        values (#{op_inner_sn}, #{ois_inner_sn})
+	</insert>
+	
+	<delete id="deleteOrthopaedicPackageRef" parameterType="map">
+		delete from 
+			orthopaedic_operation_pathway_orthopaedic_ois
+        where 1=1 <!-- NOT both null -->
+        <if test="op_inner_sn != null">and op_inner_sn = #{op_inner_sn}</if>
+        <if test="ois_inner_sn != null">and ois_inner_sn = #{ois_inner_sn}</if>
+	</delete>
+	
+	<select id="selectOrthopaedicPackageExistsRef" parameterType="map" resultMap="OrthopaedicPackageResult">
+		select * 
+		from orthopaedic_operation_pathway_orthopaedic_ois d
+		where ois_inner_sn = #{ois_inner_sn}
+	</select>
+	
+	<select id="p_add_orthopaedic_ois_product_detail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call p_add_orthopaedic_ois_product_detail(
+			#{ois_inner_sn_i, mode=IN},
+			#{product_vendor_inner_sn_i, mode=IN},
+			#{product_inner_sn_i, mode=IN},
+			#{specification_inner_sn_i, mode=IN},
+			#{unit_inner_sn_i, mode=IN},
+			#{quantity_i, mode=IN},
+			#{sort_number_i, mode=IN},
+			#{product_vendor_name_i, mode=IN},
+			#{product_name_i, mode=IN},
+			#{specification_i, mode=IN},
+			#{unit_i, mode=IN},
+			#{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<delete id="deleteOrthopaedicPackageDetail" parameterType="map">
+		delete from orthopaedic_ois_product_detail 
+		where ois_inner_sn= #{ois_inner_sn}
+			<if test="detail_inner_sn != null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</delete>
+	
+	<!-- 骨科工具包 -->
+	<resultMap type="OrthopaedicKit" id="OrthopaedicKitResult">
+		<id     property="kit_inner_sn" column="kit_inner_sn"/>
+		<result property="type_inner_sn" column="type_inner_sn"/>
+		<result property="type_name" column="type_name"/>
+		<result property="brand_inner_sn" column="brand_inner_sn"/>
+		<result property="brand_name" column="brand_name"/>
+		<result property="kit_sn" column="kit_sn"/>
+		<result property="status" column="status"/>
+		<result property="name" column="name"/>
+		<result property="description" column="description"/>
+		<result property="sort_number" column="sort_number"/>
+	</resultMap>
+	
+	<sql id="selectOrthopaedicKit">
+		select o.kit_inner_sn, o.type_inner_sn,o.brand_inner_sn,b.name as brand_name, t.name as type_name, o.name, o.status, o.description, 
+            o.kit_sn, keywords 
+		from orthopaedic_kit o
+		left join orthopaedic_operation_top_type t using(type_inner_sn)
+		left join orthopaedic_ois_brand b using(brand_inner_sn)
+	</sql>
+	
+	<select id="selectOrthopaedicKitById" parameterType="Long" resultMap="OrthopaedicKitResult">
+		<include refid="selectOrthopaedicKit"/>
+		where o.is_delete = 0 and o.kit_inner_sn = #{id}
+	</select>
+	
+	<select id="searchOrthopaedicKitList" parameterType="map" resultMap="OrthopaedicKitResult">
+		<include refid="selectOrthopaedicKit"/>
+		where o.is_delete = 0
+		<if test="name != null and name != ''"> and o.name like concat('%', #{name}, '%')</if>
+		<if test="type_inner_sn != null"> and o.type_inner_sn = #{type_inner_sn}</if>
+		<if test="brand_inner_sn != null"> and o.brand_inner_sn = #{brand_inner_sn}</if>
+		<if test="kit_sn != null"> and o.kit_sn like concat('%', #{kit_sn}, '%')</if>
+	</select>
+	
+	<insert id="insertOrthopaedicKit" parameterType="map" useGeneratedKeys="true" keyProperty="kit_inner_sn" keyColumn="kit_inner_sn">
+		insert into orthopaedic_kit(
+			type_inner_sn,brand_inner_sn, name, description,kit_sn, keywords)
+        values (#{type_inner_sn},#{brand_inner_sn}, #{name}, #{description},#{kit_sn}, #{keywords})
+	</insert>
+	
+	<update id="updateOrthopaedicKit" parameterType="map">
+		update orthopaedic_kit
+		<set>
+			<if test="name != null"> name = #{name},</if>
+			<if test="type_inner_sn != null"> type_inner_sn = #{type_inner_sn},</if>
+			<if test="brand_inner_sn != null"> brand_inner_sn = #{brand_inner_sn},</if>
+			<if test="kit_sn != null"> kit_sn = #{kit_sn},</if>
+			<if test="status != null"> status = #{status},</if>
+			<if test="is_delete != null"> is_delete = #{is_delete},</if>
+			<if test="description != null"> description = #{description},</if>
+            <if test="keywords != null"> keywords = #{keywords},</if>
+		</set>
+		where kit_inner_sn = #{kit_inner_sn}
+	</update>
+	
+	<delete id="deleteOrthopaedicKit" parameterType="Long">
+		delete from orthopaedic_kit 
+		where kit_inner_sn= #{id}
+	</delete>
+	
+	<resultMap type="OrthopaedicKitDetail" id="OrthopaedicKitDetailResult">
+		<id     property="kit_inner_sn" column="kit_inner_sn"/>
+		<result property="detail_inner_sn" column="detail_inner_sn"/>
+		<result property="product_vendor_inner_sn" column="product_vendor_inner_sn"/>
+		<result property="vendor_name" column="vendor_name"/>
+		<result property="product_inner_sn" column="product_inner_sn"/>
+		<result property="product_name" column="product_name"/>
+		<result property="specification_inner_sn" column="specification_inner_sn"/>
+		<result property="specification" column="specification"/>
+		<result property="unit_inner_sn" column="unit_inner_sn"/>
+		<result property="unit_name" column="unit_name"/>
+		<result property="quantity" column="quantity"/>
+		<result property="specification_vendor_sn" column="specification_vendor_sn"/>
+		<result property="sort_number" column="sort_number"/>
+	</resultMap>
+	
+	<select id="selectOrthopaedicKitDetail" parameterType="Long" resultMap="OrthopaedicKitDetailResult">
+		select d.kit_inner_sn, d.detail_inner_sn, d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, 
+			d.product_name, d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity,
+			spec.specification_vendor_sn, d.sort_number
+		from orthopaedic_kit_product_detail d
+		left join product_specification spec on 
+			spec.vendor_inner_sn = d.product_vendor_inner_sn
+			and spec.product_inner_sn = d.product_inner_sn
+			and spec.specification_inner_sn=d.specification_inner_sn
+		where d.kit_inner_sn = #{kit_inner_sn}
+		order by d.sort_number
+	</select>
+	
+	<select id="p_add_orthopaedic_kit_product_detail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call p_add_orthopaedic_kit_product_detail(
+			#{kit_inner_sn_i, mode=IN},
+			#{product_vendor_inner_sn_i, mode=IN},
+			#{product_inner_sn_i, mode=IN},
+			#{specification_inner_sn_i, mode=IN},
+			#{unit_inner_sn_i, mode=IN},
+			#{quantity_i, mode=IN},
+			#{sort_number_i, mode=IN},
+			#{product_vendor_name_i, mode=IN},
+			#{product_name_i, mode=IN},
+			#{specification_i, mode=IN},
+			#{unit_i, mode=IN},
+			#{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<delete id="deleteOrthopaedicKitDetail" parameterType="map">
+		delete from orthopaedic_kit_product_detail 
+		where kit_inner_sn= #{kit_inner_sn}
+		<if test="detail_inner_sn != null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</delete>
+	
+	<insert id="insertOrthopaedicKitRefPackage" parameterType="map">
+		insert into orthopaedic_ois_orthopaedic_kit(
+			ois_inner_sn, kit_inner_sn, sort_number)
+        values (#{ois_inner_sn}, #{kit_inner_sn}, #{sort_number})
+	</insert>
+	
+	<delete id="deleteOrthopaedicKitRefPackage" parameterType="map">
+		delete from 
+			orthopaedic_ois_orthopaedic_kit
+        where ois_inner_sn = #{ois_inner_sn}
+        <if test="kit_inner_sn != null">and kit_inner_sn = #{kit_inner_sn}</if>
+	</delete>
+	
+	<select id="selectOrthopaedicKitListByPackageId" parameterType="Long" resultMap="OrthopaedicKitResult">
+		select r.kit_inner_sn, r.sort_number, o.type_inner_sn,o.brand_inner_sn,b.name as brand_name, t.name as type_name, o.name, o.status, o.description, o.kit_sn
+		from orthopaedic_ois_orthopaedic_kit r
+		left join orthopaedic_kit o using(kit_inner_sn)
+		left join orthopaedic_operation_top_type t using(type_inner_sn)
+		left join orthopaedic_ois_brand b using(brand_inner_sn)
+		where r.ois_inner_sn = #{id} 
+		order by r.sort_number
+	</select>
+	
+	<select id="selectOrthopaedicKitExistsRef" parameterType="map" resultMap="OrthopaedicKitResult">
+		select * from orthopaedic_ois_orthopaedic_kit
+		 where kit_inner_sn = #{kit_inner_sn}
+	</select>
+	
+	<!-- 获取厂商产品列表(平台所有发布产品) -->
+	<select id="selectVendorProductList" parameterType="map" resultType="map">
+		select ps.vendor_inner_sn, v.name as vendor_name, ps.product_inner_sn, p.name, ps.specification_inner_sn, ps.specification, 
+			1 as product_type, p.newest_register_sn as mdrf_sn, ps.specification_vendor_sn
+		from product_specification ps
+		left join  product p on ps.vendor_inner_sn=p.vendor_inner_sn and ps.product_inner_sn=p.product_inner_sn  
+		left join vendor v on v.vendor_inner_sn=ps.vendor_inner_sn
+		where 1=1
+			and p.release_status = 1  and p.status = 1 and p.is_delete = 0
+	        and ps.status = 1
+	        and ps.is_delete = 0
+       		<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+       		<if test="type_inner_sn == null">and p.type_inner_sn = 1</if>
+			<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+			<if test="name != null and name != ''">and (p.name like concat('%', #{name}, '%') OR p.pinyin like concat('%', #{name}, '%'))</if>
+			<if test="vendor_inner_sn != null and vendor_inner_sn != ''">and ps.vendor_inner_sn = #{vendor_inner_sn}</if>
+	</select>
+	
+	<!-- 品牌 -->
+	<insert id="insertBrand" parameterType="map" useGeneratedKeys="true" keyProperty="brand_inner_sn" keyColumn="brand_inner_sn">
+		insert into orthopaedic_ois_brand(
+			name, status)
+        values (#{name}, #{status})
+	</insert>
+	
+	<update id="deleteBrand" parameterType="Long">
+		update orthopaedic_ois_brand set is_delete = 1			
+        where brand_inner_sn = #{brand_inner_sn}
+	</update>
+	
+	<update id="updateBrand" parameterType="map">
+		update orthopaedic_ois_brand 
+		<set>
+			<if test="status != null"> status = #{status},</if>
+	       	<if test="name != null"> name = #{name},</if>
+            <if test="is_delete != null"> is_delete = #{is_delete},</if>
+	    </set>
+        where brand_inner_sn = #{brand_inner_sn}
+	</update>
+	
+	<select id="selectBrandList" resultType="map">
+		select name as name, status as status, brand_inner_sn as brand_inner_sn
+		from orthopaedic_ois_brand 
+		where 1=1
+	        and is_delete = 0
+	</select>
+    
+    
+	<select id="selectBrandById" parameterType="Long" resultType="com.yrt.project.modular.surgery.domain.Brand">
+		select name as name, status as status, brand_inner_sn as brand_inner_sn
+		from orthopaedic_ois_brand 
+		where 1=1
+	        and is_delete = 0       		
+			and brand_inner_sn = #{brand_inner_sn}
+	</select>
+    
+    <select id="selectBrandByName" parameterType="string" resultType="com.yrt.project.modular.surgery.domain.Brand">
+        select name as name, status as status, brand_inner_sn as brand_inner_sn
+        from orthopaedic_ois_brand 
+        where name=#{name}
+    </select>
+    
+</mapper>

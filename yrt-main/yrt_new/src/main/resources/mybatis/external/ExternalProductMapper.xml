@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.external.mapper.ExternalProductMapper">
+
+	<select id="selectContractVendorProductList" parameterType="map" resultType="ExternalProductInfo">
+		select distinct dv.product_vendor_inner_sn as vendor_inner_sn, dv.product_vendor_name as vendor_name, dv.product_inner_sn, dv.product_name, dv.specification_inner_sn, dv.specification, 
+			1 as product_type, p.newest_register_sn as mdrf_sn, ps.specification_vendor_sn, dv.unit_inner_sn, dv.unit, ps.publish_time
+		from hospital_dealer_contract_product dv
+		left join product p on p.vendor_inner_sn=dv.product_vendor_inner_sn and p.product_inner_sn=dv.product_inner_sn
+		left join product_specification ps on ps.vendor_inner_sn=dv.product_vendor_inner_sn and ps.product_inner_sn=dv.product_inner_sn and ps.specification_inner_sn=dv.specification_inner_sn
+		where dv.hospital_inner_sn = #{org_id} and dv.dealer_inner_sn = #{organization_inner_sn}
+	        and (dv.hospital_inner_sn,dv.dealer_inner_sn,dv.contract_inner_sn) in(select hospital_inner_sn,dealer_inner_sn,contract_inner_sn from hospital_dealer_contract where hospital_inner_sn = #{org_id} and dealer_inner_sn = #{organization_inner_sn} and status in (4,5,7))
+			<if test="product_name != null and product_name != ''">and (dv.product_name like concat('%', #{product_name}, '%') OR p.pinyin like concat('%', #{product_name}, '%'))</if>
+			<if test="vendor_name != null and vendor_name != ''">and dv.product_vendor_name like concat('%', #{vendor_name}, '%')</if>
+            <if test="specification != null and specification != ''">and dv.specification like concat('%', #{specification}, '%')</if>
+            <if test="begin_date != null ">and ps.publish_time &gt;= #{begin_date}</if>
+	</select>
+	
+	<select id="selectVendorProductList" parameterType="map" resultType="ExternalProductInfo">
+		select ps.vendor_inner_sn, v.name as vendor_name, ps.product_inner_sn, p.name as product_name, ps.specification_inner_sn, ps.specification, 
+			1 as product_type, p.newest_register_sn as mdrf_sn, ps.specification_vendor_sn, ps.common_use_unit_inner_sn as unit_inner_sn, 
+			ps.common_use_unit as unit, ps.publish_time
+		from product_specification ps
+		join product p using(vendor_inner_sn,product_inner_sn)  
+		join vendor v using(vendor_inner_sn)
+		where 1=1
+			and p.release_status = 1  and p.status = 1 and p.is_delete = 0 and length(trim(ps.common_use_unit))>0
+	        and ps.status = 1 and ps.is_delete = 0
+	        and ps.common_use_unit_inner_sn is not null
+			<if test="product_name != null and product_name != ''">and (p.name like concat('%', #{product_name}, '%') OR p.pinyin like concat('%', #{product_name}, '%'))</if>
+			<if test="vendor_name != null and vendor_name != ''">and v.name like concat('%', #{vendor_name}, '%')</if>
+            <if test="specification != null and specification != ''">and ps.specification like concat('%', #{specification}, '%')</if>
+            <if test="begin_date != null ">and ps.publish_time &gt;= #{begin_date}</if>
+	</select>
+	
+	<!-- 获取相关机构列表 -->
+	<select id="selectRelatedOrg4DropDownList" parameterType="map" resultType="Org4DropDown">
+		SELECT
+			dealer_inner_sn as org_id, name, social_credit_code, 2 as org_type
+		FROM dealer
+		WHERE 1=1
+	        AND status=1
+	        AND is_delete = 0
+	        <if test="name != null">and name like concat('%', #{name}, '%')</if>
+	    UNION ALL
+	    SELECT
+			vendor_inner_sn as org_id, name, social_credit_code, 3 as org_type
+		FROM vendor
+		WHERE 1=1
+	        AND status=1
+	        AND is_delete = 0
+	        <if test="name != null">and name like concat('%', #{name}, '%')</if>
+	</select>
+</mapper> 

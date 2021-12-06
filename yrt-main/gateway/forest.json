@@ -1,0 +1,1562 @@
+[
+{
+"ID": "platform_tree",
+"Type": "cat",
+"Parent": "",
+"Name": "平台菜单",
+"Icon": "",
+"URI": "/",
+"Index": "0",
+"ChildrenIDs": [
+"bjlu53eck2r85ode1j50",
+"bjlu1quck2r85ode1iig",
+"bjlu3t6ck2r85ode1iv0",
+"bjlu596ck2r85ode1j60",
+"bjlu5cuck2r85ode1j70",
+"bjlu5qmck2r85ode1j90"
+],
+"children": [
+{
+"ID": "bjlu53eck2r85ode1j50",
+"Type": "leaf",
+"Parent": "platform_tree",
+"Name": "组织架构",
+"Icon": "yrt-zuzhijigou",
+"URI": "/ptm/OrganizationalStructure",
+"Index": "0.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 0
+},
+{
+"ID": "bjlu1quck2r85ode1iig",
+"Type": "cat",
+"Parent": "platform_tree",
+"Name": "机构管理",
+"Icon": "yrt-jigouguanli",
+"URI": "",
+"Index": "0.1",
+"ChildrenIDs": [
+"bjlu29eck2r85ode1is0",
+"bjlu2geck2r85ode1it0",
+"bjlu2mmck2r85ode1iu0"
+],
+"children": [
+{
+"ID": "bjlu29eck2r85ode1is0",
+"Type": "leaf",
+"Parent": "bjlu1quck2r85ode1iig",
+"Name": "注册审核",
+"Icon": "yrt-xiangmushenhe",
+"URI": "/ptm/agencyManage/RegistAudit",
+"Index": "0.1.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu2geck2r85ode1it0",
+"Type": "leaf",
+"Parent": "bjlu1quck2r85ode1iig",
+"Name": "机构认证",
+"Icon": "yrt-dingdanshenhe",
+"URI": "/ptm/agencyManage/AgencyApproval",
+"Index": "0.1.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu2mmck2r85ode1iu0",
+"Type": "leaf",
+"Parent": "bjlu1quck2r85ode1iig",
+"Name": "机构",
+"Icon": "yrt-qiye-copy",
+"URI": "/ptm/agencyManage/AgencyManagement",
+"Index": "0.1.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu3t6ck2r85ode1iv0",
+"Type": "cat",
+"Parent": "platform_tree",
+"Name": "产品管理",
+"Icon": "yrt-chanpinguanli",
+"URI": "",
+"Index": "0.2",
+"ChildrenIDs": [
+"bjlu43mck2r85ode1j00",
+"bjlu49mck2r85ode1j10",
+"bjlu4fuck2r85ode1j20",
+"bkem8gmck2r8vsocsifg",
+"bjlu4meck2r85ode1j30",
+"bjlu4t6ck2r85ode1j40"
+],
+"children": [
+{
+"ID": "bjlu43mck2r85ode1j00",
+"Type": "leaf",
+"Parent": "bjlu3t6ck2r85ode1iv0",
+"Name": "产品初建",
+"Icon": "yrt-chanpinchujian",
+"URI": "/ptm/productBuild",
+"Index": "0.2.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu49mck2r85ode1j10",
+"Type": "leaf",
+"Parent": "bjlu3t6ck2r85ode1iv0",
+"Name": "产品发布",
+"Icon": "yrt-chanpinfabu",
+"URI": "/ptm/productIssue",
+"Index": "0.2.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu4fuck2r85ode1j20",
+"Type": "leaf",
+"Parent": "bjlu3t6ck2r85ode1iv0",
+"Name": "产品",
+"Icon": "yrt-yifabuchanpin",
+"URI": "/ptm/productReleased",
+"Index": "0.2.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bkem8gmck2r8vsocsifg",
+"Type": "cat",
+"Parent": "bjlu3t6ck2r85ode1iv0",
+"Name": "骨科",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "",
+"Index": "0.2.3",
+"ChildrenIDs": [
+"bkemfumck2r8vsocsln0",
+"bkiki3eck2ram5t0i9s0"
+],
+"children": [
+{
+"ID": "bkemfumck2r8vsocsln0",
+"Type": "leaf",
+"Parent": "bkem8gmck2r8vsocsifg",
+"Name": "手术包",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/ptm/operationKits",
+"Index": "0.2.3.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bkiki3eck2ram5t0i9s0",
+"Type": "leaf",
+"Parent": "bkem8gmck2r8vsocsifg",
+"Name": "手术径路",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/ptm/operationPath",
+"Index": "0.2.3.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu4meck2r85ode1j30",
+"Type": "leaf",
+"Parent": "bjlu3t6ck2r85ode1iv0",
+"Name": "68分类",
+"Icon": "yrt-yifabuchanpinfuzhi2",
+"URI": "/ptm/SixtyEightClassification",
+"Index": "0.2.4",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu4t6ck2r85ode1j40",
+"Type": "leaf",
+"Parent": "bjlu3t6ck2r85ode1iv0",
+"Name": "自定义类型",
+"Icon": "yrt-yifabuchanpinfuzhi",
+"URI": "/ptm/CustomType",
+"Index": "0.2.5",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu596ck2r85ode1j60",
+"Type": "leaf",
+"Parent": "platform_tree",
+"Name": "人力资源",
+"Icon": "yrt-qunzu1",
+"URI": "/ptm/HumanResources",
+"Index": "0.3",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu5cuck2r85ode1j70",
+"Type": "cat",
+"Parent": "platform_tree",
+"Name": "用户管理",
+"Icon": "yrt-yonghuguanli",
+"URI": "",
+"Index": "0.4",
+"ChildrenIDs": [
+"bjvkas6ck2rcbmj6gckg",
+"bjlu5meck2r85ode1j80"
+],
+"children": [
+{
+"ID": "bjvkas6ck2rcbmj6gckg",
+"Type": "leaf",
+"Parent": "bjlu5cuck2r85ode1j70",
+"Name": "账号",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/ptm/userManage/user",
+"Index": "0.4.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu5meck2r85ode1j80",
+"Type": "leaf",
+"Parent": "bjlu5cuck2r85ode1j70",
+"Name": "角色",
+"Icon": "yrt-jiaose",
+"URI": "/ptm/userManage/role",
+"Index": "0.4.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlu5qmck2r85ode1j90",
+"Type": "cat",
+"Parent": "platform_tree",
+"Name": "运维管理",
+"Icon": "yrt-yunweiguanli",
+"URI": "",
+"Index": "0.5",
+"ChildrenIDs": [
+"bjlu60eck2r85ode1ja0"
+],
+"children": [
+{
+"ID": "bjlu60eck2r85ode1ja0",
+"Type": "leaf",
+"Parent": "bjlu5qmck2r85ode1j90",
+"Name": "菜单功能",
+"Icon": "yrt-caidangongneng",
+"URI": "/ptm/maintenance/menuTree",
+"Index": "0.5.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "hospital_tree",
+"Type": "cat",
+"Parent": "",
+"Name": "医院菜单",
+"Icon": "",
+"URI": "/",
+"Index": "1",
+"ChildrenIDs": [
+"bjlrrrmck2rfhflgptrg",
+"bjlr6guck2rfhflgpreg",
+"bjlrs2eck2rfhflgptsg",
+"bk05p4eck2rcbmj6i2hg",
+"bjlrs76ck2rfhflgpttg",
+"bjlrsemck2rfhflgptug",
+"bjlrskuck2rfhflgptvg",
+"bjlrsq6ck2rfhflgpu0g"
+],
+"children": [
+{
+"ID": "bjlrrrmck2rfhflgptrg",
+"Type": "cat",
+"Parent": "hospital_tree",
+"Name": "仓库管理",
+"Icon": "yrt-cangkuguanli",
+"URI": "",
+"Index": "1.0",
+"ChildrenIDs": [
+"bjlrtqmck2rfhflgpu4g",
+"bjlru06ck2rfhflgpu5g",
+"bjlru5uck2rfhflgpu6g",
+"bjlrvdmck2rfhflgpu7g",
+"bjlrvquck2rfhflgpu8g",
+"bjls006ck2rfhflgpu9g",
+"bjls0oeck2rfhflgpur0",
+"bjqscqeck2re9p1tlgr0"
+],
+"children": [
+{
+"ID": "bjlrtqmck2rfhflgpu4g",
+"Type": "leaf",
+"Parent": "bjlrrrmck2rfhflgptrg",
+"Name": "库存",
+"Icon": "yrt-kucun1",
+"URI": "/commonView/inventory",
+"Index": "1.0.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlru06ck2rfhflgpu5g",
+"Type": "leaf",
+"Parent": "bjlrrrmck2rfhflgptrg",
+"Name": "入库单",
+"Icon": "yrt-rukudan1",
+"URI": "/commonView/godownEntry",
+"Index": "1.0.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlru5uck2rfhflgpu6g",
+"Type": "leaf",
+"Parent": "bjlrrrmck2rfhflgptrg",
+"Name": "出库单",
+"Icon": "yrt-chukudan",
+"URI": "/commonView/outboundOrder",
+"Index": "1.0.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrvdmck2rfhflgpu7g",
+"Type": "leaf",
+"Parent": "bjlrrrmck2rfhflgptrg",
+"Name": "盘点",
+"Icon": "yrt-pandian",
+"URI": "/commonView/takeStock",
+"Index": "1.0.3",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrvquck2rfhflgpu8g",
+"Type": "leaf",
+"Parent": "bjlrrrmck2rfhflgptrg",
+"Name": "预警",
+"Icon": "yrt-yuce",
+"URI": "/commonView/warning",
+"Index": "1.0.4",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjls006ck2rfhflgpu9g",
+"Type": "leaf",
+"Parent": "bjlrrrmck2rfhflgptrg",
+"Name": "报表",
+"Icon": "yrt-baobiao",
+"URI": "/commonView/report",
+"Index": "1.0.5",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjls0oeck2rfhflgpur0",
+"Type": "leaf",
+"Parent": "bjlrrrmck2rfhflgptrg",
+"Name": "仓库建模",
+"Icon": "yrt-jianmo",
+"URI": "/commonView/warehouseModeling",
+"Index": "1.0.6",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjqscqeck2re9p1tlgr0",
+"Type": "leaf",
+"Parent": "bjlrrrmck2rfhflgptrg",
+"Name": "期初库存",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/initialInventory",
+"Index": "1.0.7",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlr6guck2rfhflgpreg",
+"Type": "leaf",
+"Parent": "hospital_tree",
+"Name": "耗材申领",
+"Icon": "yrt-haocaishenling",
+"URI": "/hospital/SuppliesClaim",
+"Index": "1.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrs2eck2rfhflgptsg",
+"Type": "cat",
+"Parent": "hospital_tree",
+"Name": "合同管理",
+"Icon": "yrt-qunzu1",
+"URI": "",
+"Index": "1.2",
+"ChildrenIDs": [
+"bjlrtbmck2rfhflgpu2g",
+"bjlrtheck2rfhflgpu3g",
+"bjmdomeck2r85ode2p10",
+"bkhg2ueck2rbmpdgu560"
+],
+"children": [
+{
+"ID": "bjlrtbmck2rfhflgpu2g",
+"Type": "leaf",
+"Parent": "bjlrs2eck2rfhflgptsg",
+"Name": "合同草稿",
+"Icon": "yrt-caidangongneng",
+"URI": "/commonView/contractDraft",
+"Index": "1.2.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrtheck2rfhflgpu3g",
+"Type": "leaf",
+"Parent": "bjlrs2eck2rfhflgptsg",
+"Name": "合同审批",
+"Icon": "yrt-caidangongneng",
+"URI": "/commonView/contractApprove",
+"Index": "1.2.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjmdomeck2r85ode2p10",
+"Type": "leaf",
+"Parent": "bjlrs2eck2rfhflgptsg",
+"Name": "合同",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/contractList",
+"Index": "1.2.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bkhg2ueck2rbmpdgu560",
+"Type": "leaf",
+"Parent": "bjlrs2eck2rfhflgptsg",
+"Name": "骨科合作意向",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/opCooperationDea",
+"Index": "1.2.3",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk05p4eck2rcbmj6i2hg",
+"Type": "cat",
+"Parent": "hospital_tree",
+"Name": "采购管理",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "",
+"Index": "1.3",
+"ChildrenIDs": [
+"bk05qreck2rcbmj6i49g",
+"bk091heck2rcbmj6ig2g",
+"bk5k76eck2rcbmj71ij0"
+],
+"children": [
+{
+"ID": "bk05qreck2rcbmj6i49g",
+"Type": "leaf",
+"Parent": "bk05p4eck2rcbmj6i2hg",
+"Name": "询价",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/enquiryList",
+"Index": "1.3.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk091heck2rcbmj6ig2g",
+"Type": "leaf",
+"Parent": "bk05p4eck2rcbmj6i2hg",
+"Name": "计划",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/plan",
+"Index": "1.3.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk5k76eck2rcbmj71ij0",
+"Type": "leaf",
+"Parent": "bk05p4eck2rcbmj6i2hg",
+"Name": "订单",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/purchaseOrder",
+"Index": "1.3.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrs76ck2rfhflgpttg",
+"Type": "cat",
+"Parent": "hospital_tree",
+"Name": "资证管理",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "",
+"Index": "1.4",
+"ChildrenIDs": [
+"bjls2amck2rfhflgpuvg",
+"bjmun7uck2rbm3ro1jo0",
+"bk9cv7uck2rcbmj7cv90"
+],
+"children": [
+{
+"ID": "bjls2amck2rfhflgpuvg",
+"Type": "leaf",
+"Parent": "bjlrs76ck2rfhflgpttg",
+"Name": "经销商",
+"Icon": "yrt-caidangongneng",
+"URI": "/commonView/licRecord/dealerLic",
+"Index": "1.4.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjmun7uck2rbm3ro1jo0",
+"Type": "leaf",
+"Parent": "bjlrs76ck2rfhflgpttg",
+"Name": "厂商",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/licRecord/vendorLic",
+"Index": "1.4.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk9cv7uck2rcbmj7cv90",
+"Type": "leaf",
+"Parent": "bjlrs76ck2rfhflgpttg",
+"Name": "我的资证",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/licRecord/myLic/hospital",
+"Index": "1.4.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrsemck2rfhflgptug",
+"Type": "leaf",
+"Parent": "hospital_tree",
+"Name": "组织架构",
+"Icon": "yrt-zuzhijigou",
+"URI": "/ptm/OrganizationalStructure",
+"Index": "1.5",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrskuck2rfhflgptvg",
+"Type": "leaf",
+"Parent": "hospital_tree",
+"Name": "人力资源",
+"Icon": "yrt-qunzu1",
+"URI": "/ptm/HumanResources",
+"Index": "1.6",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrsq6ck2rfhflgpu0g",
+"Type": "cat",
+"Parent": "hospital_tree",
+"Name": "用户管理",
+"Icon": "yrt-yonghuguanli",
+"URI": "",
+"Index": "1.7",
+"ChildrenIDs": [
+"bjvkb4uck2rcbmj6gcmg",
+"bjlrt06ck2rfhflgpu1g"
+],
+"children": [
+{
+"ID": "bjvkb4uck2rcbmj6gcmg",
+"Type": "leaf",
+"Parent": "bjlrsq6ck2rfhflgpu0g",
+"Name": "用户",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/ptm/userManage/user",
+"Index": "1.7.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrt06ck2rfhflgpu1g",
+"Type": "leaf",
+"Parent": "bjlrsq6ck2rfhflgpu0g",
+"Name": "角色",
+"Icon": "yrt-jiaose",
+"URI": "/ptm/userManage/role",
+"Index": "1.7.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "dealer_tree",
+"Type": "cat",
+"Parent": "",
+"Name": "经销商菜单",
+"Icon": "",
+"URI": "/",
+"Index": "2",
+"ChildrenIDs": [
+"bjlri96ck2rfhflgps9g",
+"bjlrijeck2rfhflgpsb0",
+"bk05r36ck2rcbmj6i4ag",
+"bjlrireck2rfhflgpsc0",
+"bjlrjiuck2rfhflgpshg",
+"bjlrjquck2rfhflgpsig",
+"bjlrk1eck2rfhflgpsjg",
+"bk5k86mck2rcbmj71il0"
+],
+"children": [
+{
+"ID": "bjlri96ck2rfhflgps9g",
+"Type": "cat",
+"Parent": "dealer_tree",
+"Name": "仓库管理",
+"Icon": "yrt-cangkuguanli",
+"URI": "",
+"Index": "2.0",
+"ChildrenIDs": [
+"bjlrl6mck2rfhflgpslg",
+"bjlrlieck2rfhflgpsmg",
+"bjlrlouck2rfhflgpsng",
+"bjlrlv6ck2rfhflgpsog",
+"bjlrm4mck2rfhflgpspg",
+"bjlrma6ck2rfhflgpsqg",
+"bjlrmfuck2rfhflgpsrg",
+"bjqsd9eck2re9p1tlh00"
+],
+"children": [
+{
+"ID": "bjlrl6mck2rfhflgpslg",
+"Type": "leaf",
+"Parent": "bjlri96ck2rfhflgps9g",
+"Name": "库存",
+"Icon": "yrt-kucun1",
+"URI": "/commonView/inventory",
+"Index": "2.0.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrlieck2rfhflgpsmg",
+"Type": "leaf",
+"Parent": "bjlri96ck2rfhflgps9g",
+"Name": "入库单",
+"Icon": "yrt-rukudan1",
+"URI": "/commonView/godownEntry",
+"Index": "2.0.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrlouck2rfhflgpsng",
+"Type": "leaf",
+"Parent": "bjlri96ck2rfhflgps9g",
+"Name": "出库单",
+"Icon": "yrt-chukudan",
+"URI": "/commonView/outboundOrder",
+"Index": "2.0.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrlv6ck2rfhflgpsog",
+"Type": "leaf",
+"Parent": "bjlri96ck2rfhflgps9g",
+"Name": "盘点",
+"Icon": "yrt-pandian",
+"URI": "/commonView/takeStock",
+"Index": "2.0.3",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrm4mck2rfhflgpspg",
+"Type": "leaf",
+"Parent": "bjlri96ck2rfhflgps9g",
+"Name": "预警",
+"Icon": "yrt-yuce",
+"URI": "/commonView/warning",
+"Index": "2.0.4",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrma6ck2rfhflgpsqg",
+"Type": "leaf",
+"Parent": "bjlri96ck2rfhflgps9g",
+"Name": "报表",
+"Icon": "yrt-baobiao",
+"URI": "/commonView/report",
+"Index": "2.0.5",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrmfuck2rfhflgpsrg",
+"Type": "leaf",
+"Parent": "bjlri96ck2rfhflgps9g",
+"Name": "仓库建模",
+"Icon": "yrt-jianmo",
+"URI": "/commonView/warehouseModeling",
+"Index": "2.0.6",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjqsd9eck2re9p1tlh00",
+"Type": "leaf",
+"Parent": "bjlri96ck2rfhflgps9g",
+"Name": "期初库存",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/initialInventory",
+"Index": "2.0.7",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrijeck2rfhflgpsb0",
+"Type": "cat",
+"Parent": "dealer_tree",
+"Name": "合同管理",
+"Icon": "yrt-qunzu1",
+"URI": "",
+"Index": "2.1",
+"ChildrenIDs": [
+"bjlrmrmck2rfhflgpstg",
+"bjlrn0uck2rfhflgpsug",
+"bjmdm0mck2r85ode2o70",
+"bke19imck2rcbmj7rvfg"
+],
+"children": [
+{
+"ID": "bjlrmrmck2rfhflgpstg",
+"Type": "leaf",
+"Parent": "bjlrijeck2rfhflgpsb0",
+"Name": "合同草稿",
+"Icon": "yrt-caidangongneng",
+"URI": "/commonView/contractDraft",
+"Index": "2.1.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrn0uck2rfhflgpsug",
+"Type": "leaf",
+"Parent": "bjlrijeck2rfhflgpsb0",
+"Name": "合同审批",
+"Icon": "yrt-caidangongneng",
+"URI": "/commonView/contractApprove",
+"Index": "2.1.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjmdm0mck2r85ode2o70",
+"Type": "leaf",
+"Parent": "bjlrijeck2rfhflgpsb0",
+"Name": "合同",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/contractList",
+"Index": "2.1.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bke19imck2rcbmj7rvfg",
+"Type": "leaf",
+"Parent": "bjlrijeck2rfhflgpsb0",
+"Name": "骨科合作意向",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/opCooperationDea",
+"Index": "2.1.3",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk05r36ck2rcbmj6i4ag",
+"Type": "cat",
+"Parent": "dealer_tree",
+"Name": "采购管理",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "",
+"Index": "2.2",
+"ChildrenIDs": [
+"bk05rfmck2rcbmj6i4eg",
+"bk091s6ck2rcbmj6ig4g",
+"bk5k7tmck2rcbmj71ik0"
+],
+"children": [
+{
+"ID": "bk05rfmck2rcbmj6i4eg",
+"Type": "leaf",
+"Parent": "bk05r36ck2rcbmj6i4ag",
+"Name": "询价",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/enquiryList",
+"Index": "2.2.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk091s6ck2rcbmj6ig4g",
+"Type": "leaf",
+"Parent": "bk05r36ck2rcbmj6i4ag",
+"Name": "计划",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/plan",
+"Index": "2.2.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk5k7tmck2rcbmj71ik0",
+"Type": "leaf",
+"Parent": "bk05r36ck2rcbmj6i4ag",
+"Name": "订单",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/purchaseOrder",
+"Index": "2.2.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrireck2rfhflgpsc0",
+"Type": "cat",
+"Parent": "dealer_tree",
+"Name": "资证管理",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "",
+"Index": "2.3",
+"ChildrenIDs": [
+"bjls1umck2rfhflgputg",
+"bjls23mck2rfhflgpuug",
+"bjmunmmck2rbm3ro1jp0",
+"bk9cvhuck2rcbmj7cvi0"
+],
+"children": [
+{
+"ID": "bjls1umck2rfhflgputg",
+"Type": "leaf",
+"Parent": "bjlrireck2rfhflgpsc0",
+"Name": "医院",
+"Icon": "yrt-caidangongneng",
+"URI": "/commonView/licRecord/hospitalLic",
+"Index": "2.3.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjls23mck2rfhflgpuug",
+"Type": "leaf",
+"Parent": "bjlrireck2rfhflgpsc0",
+"Name": "经销商",
+"Icon": "yrt-caidangongneng",
+"URI": "/commonView/licRecord/dealerLic",
+"Index": "2.3.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjmunmmck2rbm3ro1jp0",
+"Type": "leaf",
+"Parent": "bjlrireck2rfhflgpsc0",
+"Name": "厂商",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/licRecord/vendorLic",
+"Index": "2.3.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk9cvhuck2rcbmj7cvi0",
+"Type": "leaf",
+"Parent": "bjlrireck2rfhflgpsc0",
+"Name": "我的资证",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/licRecord/myLic/dealer",
+"Index": "2.3.3",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrjiuck2rfhflgpshg",
+"Type": "leaf",
+"Parent": "dealer_tree",
+"Name": "组织架构",
+"Icon": "yrt-zuzhijigou",
+"URI": "/ptm/OrganizationalStructure",
+"Index": "2.4",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrjquck2rfhflgpsig",
+"Type": "leaf",
+"Parent": "dealer_tree",
+"Name": "人力资源",
+"Icon": "yrt-qunzu1",
+"URI": "/ptm/HumanResources",
+"Index": "2.5",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrk1eck2rfhflgpsjg",
+"Type": "cat",
+"Parent": "dealer_tree",
+"Name": "用户管理",
+"Icon": "yrt-yonghuguanli",
+"URI": "",
+"Index": "2.6",
+"ChildrenIDs": [
+"bjvkbduck2rcbmj6gcs0",
+"bjlrk7mck2rfhflgpskg"
+],
+"children": [
+{
+"ID": "bjvkbduck2rcbmj6gcs0",
+"Type": "leaf",
+"Parent": "bjlrk1eck2rfhflgpsjg",
+"Name": "用户",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/ptm/userManage/user",
+"Index": "2.6.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrk7mck2rfhflgpskg",
+"Type": "leaf",
+"Parent": "bjlrk1eck2rfhflgpsjg",
+"Name": "角色",
+"Icon": "yrt-jiaose",
+"URI": "/ptm/userManage/role",
+"Index": "2.6.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk5k86mck2rcbmj71il0",
+"Type": "cat",
+"Parent": "dealer_tree",
+"Name": "销售管理",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "",
+"Index": "2.7",
+"ChildrenIDs": [
+"bk5k8iuck2rcbmj71im0"
+],
+"children": [
+{
+"ID": "bk5k8iuck2rcbmj71im0",
+"Type": "leaf",
+"Parent": "bk5k86mck2rcbmj71il0",
+"Name": "订单",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/salesOrder",
+"Index": "2.7.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "facotry_tree",
+"Type": "cat",
+"Parent": "",
+"Name": "厂家菜单",
+"Icon": "root",
+"URI": "/",
+"Index": "3",
+"ChildrenIDs": [
+"bjlro8mck2rfhflgptag",
+"bjlrosuck2rfhflgptbg",
+"bk05rmmck2rcbmj6i4hg",
+"bjlrp16ck2rfhflgptcg",
+"bjlrp8mck2rfhflgptdg",
+"bjlrpduck2rfhflgpteg",
+"bjlrpheck2rfhflgptfg",
+"bk5k8oeck2rcbmj71in0"
+],
+"children": [
+{
+"ID": "bjlro8mck2rfhflgptag",
+"Type": "cat",
+"Parent": "facotry_tree",
+"Name": "仓库管理",
+"Icon": "yrt-cangkuguanli",
+"URI": "",
+"Index": "3.0",
+"ChildrenIDs": [
+"bjlrqa6ck2rfhflgptjg",
+"bjlrqeuck2rfhflgptkg",
+"bjlrqjmck2rfhflgptlg",
+"bjlrqouck2rfhflgptmg",
+"bjlrqtuck2rfhflgptng",
+"bjlrr3mck2rfhflgptog",
+"bjlrr96ck2rfhflgptpg",
+"bjqsdfmck2re9p1tlh10"
+],
+"children": [
+{
+"ID": "bjlrqa6ck2rfhflgptjg",
+"Type": "leaf",
+"Parent": "bjlro8mck2rfhflgptag",
+"Name": "库存",
+"Icon": "yrt-kucun1",
+"URI": "/commonView/inventory",
+"Index": "3.0.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrqeuck2rfhflgptkg",
+"Type": "leaf",
+"Parent": "bjlro8mck2rfhflgptag",
+"Name": "入库单",
+"Icon": "yrt-rukudan1",
+"URI": "/commonView/godownEntry",
+"Index": "3.0.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrqjmck2rfhflgptlg",
+"Type": "leaf",
+"Parent": "bjlro8mck2rfhflgptag",
+"Name": "出库单",
+"Icon": "yrt-chukudan",
+"URI": "/commonView/outboundOrder",
+"Index": "3.0.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrqouck2rfhflgptmg",
+"Type": "leaf",
+"Parent": "bjlro8mck2rfhflgptag",
+"Name": "盘点",
+"Icon": "yrt-pandian",
+"URI": "/commonView/takeStock",
+"Index": "3.0.3",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrqtuck2rfhflgptng",
+"Type": "leaf",
+"Parent": "bjlro8mck2rfhflgptag",
+"Name": "预警",
+"Icon": "yrt-yuce",
+"URI": "/commonView/warning",
+"Index": "3.0.4",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrr3mck2rfhflgptog",
+"Type": "leaf",
+"Parent": "bjlro8mck2rfhflgptag",
+"Name": "报表",
+"Icon": "yrt-baobiao",
+"URI": "/commonView/report",
+"Index": "3.0.5",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrr96ck2rfhflgptpg",
+"Type": "leaf",
+"Parent": "bjlro8mck2rfhflgptag",
+"Name": "仓库建模",
+"Icon": "yrt-jianmo",
+"URI": "/commonView/warehouseModeling",
+"Index": "3.0.6",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjqsdfmck2re9p1tlh10",
+"Type": "leaf",
+"Parent": "bjlro8mck2rfhflgptag",
+"Name": "期初库存",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/initialInventory",
+"Index": "3.0.7",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrosuck2rfhflgptbg",
+"Type": "cat",
+"Parent": "facotry_tree",
+"Name": "合同管理",
+"Icon": "yrt-qunzu1",
+"URI": "",
+"Index": "3.1",
+"ChildrenIDs": [
+"bjlrpu6ck2rfhflgpthg",
+"bjlrq3eck2rfhflgptig",
+"bjmdrceck2r85ode2pi0"
+],
+"children": [
+{
+"ID": "bjlrpu6ck2rfhflgpthg",
+"Type": "leaf",
+"Parent": "bjlrosuck2rfhflgptbg",
+"Name": "合同草稿",
+"Icon": "yrt-caidangongneng",
+"URI": "/commonView/contractDraft",
+"Index": "3.1.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrq3eck2rfhflgptig",
+"Type": "leaf",
+"Parent": "bjlrosuck2rfhflgptbg",
+"Name": "合同审批",
+"Icon": "yrt-caidangongneng",
+"URI": "/commonView/contractApprove",
+"Index": "3.1.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjmdrceck2r85ode2pi0",
+"Type": "leaf",
+"Parent": "bjlrosuck2rfhflgptbg",
+"Name": "合同",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/contractList",
+"Index": "3.1.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk05rmmck2rcbmj6i4hg",
+"Type": "cat",
+"Parent": "facotry_tree",
+"Name": "采购管理",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "",
+"Index": "3.2",
+"ChildrenIDs": [
+"bk05s3uck2rcbmj6i4lg"
+],
+"children": [
+{
+"ID": "bk05s3uck2rcbmj6i4lg",
+"Type": "leaf",
+"Parent": "bk05rmmck2rcbmj6i4hg",
+"Name": "询价",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/enquiryList",
+"Index": "3.2.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrp16ck2rfhflgptcg",
+"Type": "cat",
+"Parent": "facotry_tree",
+"Name": "资证管理",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "",
+"Index": "3.3",
+"ChildrenIDs": [
+"bjmuo1eck2rbm3ro1jq0",
+"bjmuo8uck2rbm3ro1jr0",
+"bk9cvpmck2rcbmj7cvj0"
+],
+"children": [
+{
+"ID": "bjmuo1eck2rbm3ro1jq0",
+"Type": "leaf",
+"Parent": "bjlrp16ck2rfhflgptcg",
+"Name": "经销商",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/licRecord/dealerLic",
+"Index": "3.3.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjmuo8uck2rbm3ro1jr0",
+"Type": "leaf",
+"Parent": "bjlrp16ck2rfhflgptcg",
+"Name": "医院",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/licRecord/hospitalLic",
+"Index": "3.3.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk9cvpmck2rcbmj7cvj0",
+"Type": "leaf",
+"Parent": "bjlrp16ck2rfhflgptcg",
+"Name": "我的资证",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/licRecord/myLic/vendor",
+"Index": "3.3.2",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrp8mck2rfhflgptdg",
+"Type": "leaf",
+"Parent": "facotry_tree",
+"Name": "组织架构",
+"Icon": "yrt-zuzhijigou",
+"URI": "/ptm/OrganizationalStructure",
+"Index": "3.4",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrpduck2rfhflgpteg",
+"Type": "leaf",
+"Parent": "facotry_tree",
+"Name": "人力资源",
+"Icon": "yrt-qunzu1",
+"URI": "/ptm/HumanResources",
+"Index": "3.5",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrpheck2rfhflgptfg",
+"Type": "cat",
+"Parent": "facotry_tree",
+"Name": "用户管理",
+"Icon": "yrt-yonghuguanli",
+"URI": "",
+"Index": "3.6",
+"ChildrenIDs": [
+"bjvkbqmck2rcbmj6gctg",
+"bjlrpneck2rfhflgptgg"
+],
+"children": [
+{
+"ID": "bjvkbqmck2rcbmj6gctg",
+"Type": "leaf",
+"Parent": "bjlrpheck2rfhflgptfg",
+"Name": "用户",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/ptm/userManage/user",
+"Index": "3.6.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bjlrpneck2rfhflgptgg",
+"Type": "leaf",
+"Parent": "bjlrpheck2rfhflgptfg",
+"Name": "角色",
+"Icon": "yrt-jiaose",
+"URI": "/ptm/userManage/role",
+"Index": "3.6.1",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+},
+{
+"ID": "bk5k8oeck2rcbmj71in0",
+"Type": "cat",
+"Parent": "facotry_tree",
+"Name": "销售管理",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/",
+"Index": "3.7",
+"ChildrenIDs": [
+"bk5k8umck2rcbmj71io0"
+],
+"children": [
+{
+"ID": "bk5k8umck2rcbmj71io0",
+"Type": "leaf",
+"Parent": "bk5k8oeck2rcbmj71in0",
+"Name": "订单",
+"Icon": "yrt-tubiao_huabanfuben",
+"URI": "/commonView/salesOrder",
+"Index": "3.7.0",
+"ChildrenIDs": [],
+"children": [],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+}
+],
+"Features": null,
+"State": 1
+}
+]

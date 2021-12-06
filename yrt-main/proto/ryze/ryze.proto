@@ -1,0 +1,53 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+
+service UserService {
+    // create user
+    rpc Create(User) returns (UserResponse) {}
+    // delete user
+    rpc Delete(UserId) returns (UserResponse) {}
+    // get User by userID
+    rpc GetUserById(UserId) returns (UserResponse) {}
+    // get User by userName
+    rpc GetUserByName(UserName) returns (UserResponse) {}
+    // Auth user
+    rpc Auth(NamePwd) returns (UserResponse) {}
+    // modify user
+    rpc Modify(User) returns (UserResponse) {}
+    // rpc Hello(HelloRequest) returns (HelloResponse) {}
+}
+
+message UserId {
+    int32 id = 1;
+}
+
+message UserName{
+    string name = 1;
+}
+
+message NamePwd{
+    string name = 1;
+    string pwd = 2;
+}
+
+message User {
+    int32 id = 1;
+    string name = 2;
+    string pwd = 3;
+    google.protobuf.Timestamp CreateAt = 4;
+}
+
+message UserResponse{
+    string code = 1;
+    string msg = 2;
+    User user = 3;
+}
+
+// message HelloRequest {
+//     string name = 1;
+//     google.protobuf.Timestamp Time = 2;
+// }
+
+// message HelloResponse {
+//     string greeting = 2;
+// }

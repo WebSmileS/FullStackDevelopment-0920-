@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.LeaseMapper">
+
+	<insert id="insertLease" parameterType="map">
+ 		insert into lease_dealer(
+ 			id,
+			org_id,
+			dealer_inner_sn
+ 		)values(
+ 			#{id},
+ 			#{org_id},
+ 			#{dealer_inner_sn}
+ 		)
+	</insert>
+	
+	<delete id="deleteLease" parameterType="Long">
+ 		delete from lease_dealer where id = #{id}
+ 	</delete>
+ 	
+	<select id="selectLeaseList" parameterType="map" resultType="Lease">
+		SELECT
+    		id, org_id, dealer_inner_sn, name as dealer_name, social_credit_code, phone, email, register_time
+		FROM
+		    lease_dealer
+		JOIN dealer using(dealer_inner_sn)
+		WHERE org_id = #{org_id}
+		<if test="dealer_name != null and dealer_name != ''">and name like concat('%', #{dealer_name}, '%')</if>
+	</select>
+	
+	<select id="selectLeaseById" parameterType="map" resultType="Lease">
+		SELECT
+    		id, org_id, dealer_inner_sn, name as dealer_name, social_credit_code, phone, email, register_time
+		FROM
+		    lease_dealer
+		JOIN dealer using(dealer_inner_sn)
+		WHERE id = #{id}
+	</select>
+	
+	<select id="existLease" parameterType="map" resultType="Lease">
+		SELECT
+    		id, org_id, dealer_inner_sn, name as dealer_name, social_credit_code, phone, email, register_time
+		FROM
+		    lease_dealer
+		JOIN dealer using(dealer_inner_sn)
+		WHERE 1 = 1
+		<if test="org_id == null">and org_id = 0</if>
+		<if test="org_id != null">and org_id = #{org_id}</if>
+		<if test="dealer_inner_sn != null">and dealer_inner_sn = #{dealer_inner_sn}</if>
+		limit 1
+	</select>
+	
+</mapper>

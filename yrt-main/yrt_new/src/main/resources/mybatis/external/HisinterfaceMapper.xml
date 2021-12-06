@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.external.mapper.HisInterfaceMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.external.domain.HisInterface">
+    <!--@mbg.generated-->
+    <!--@Table his_interface-->
+    <id column="inner_sn" jdbcType="BIGINT" property="innerSn" />
+    <result column="organization_inner_sn" jdbcType="INTEGER" property="organizationInnerSn" />
+    <result column="organization_type" jdbcType="TINYINT" property="organizationType" />
+    <result column="voucher_type" jdbcType="TINYINT" property="voucherType" />
+    <result column="url" jdbcType="VARCHAR" property="url" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    inner_sn, organization_inner_sn, organization_type, voucher_type, url
+  </sql>
+	
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.common.mapper.VHCommMapper">
+
+	<!-- 获取厂商列表(只包含机构ID，机构名称和入库单类型字段) -->
+	<select id="selectAllOrg4DropDownList" parameterType="map" resultType="map">
+		SELECT
+			hospital_inner_sn as org_id, name, alias,social_credit_code, 'VH' as billsType,
+			case when certification_status = 2 then '已认证' else '未认证' end as status
+		FROM hospital
+		WHERE 1=1
+	        AND status=1
+	        AND is_delete = 0
+	        <if test="name != null">and name like concat('%', #{name}, '%')</if>
+	</select>
+	
+	<select id="selectRelatedOrg4DropDownList" parameterType="map" resultType="map">
+		SELECT DISTINCT
+        	c.hospital_inner_sn as org_id, d.name, d.alias,social_credit_code, 'VH' as billsType,
+        	case when certification_status = 2 then '已认证' else '未认证' end as status
+		FROM hospital_vendor_contract c
+		LEFT JOIN hospital d on d.hospital_inner_sn=c.hospital_inner_sn
+		WHERE 1=1
+	        AND c.vendor_inner_sn = #{id}
+	        AND c.status in (3,4,5,7)
+	        AND d.status=1
+	        AND d.is_delete=0
+	        <if test="name != null">and d.name like concat('%', #{name}, '%')</if>
+	</select>
+	
+	<select id="selectContractVendorProductList" parameterType="map" resultType="ResponseProductInfo">
+		select 
+			concat(a.vendor_inner_sn, '-',  a.product_inner_sn, '-', a.specification_inner_sn, '-1') as id,
+			a.*
+        from(
+			select distinct 
+				dv.product_vendor_inner_sn as vendor_inner_sn, dv.product_vendor_name as vendor_name, dv.product_inner_sn, dv.product_name, 
+				dv.specification_inner_sn, dv.specification, 1 as product_type, p.newest_register_sn as mdrf_sn, ps.specification_vendor_sn, 
+				dv.unit_inner_sn as common_use_unit_inner_sn, dv.unit as common_use_unit, u.unit_inner_sn as min_unit_inner_sn, u.name as min_unit
+			from hospital_vendor_contract_product dv
+			join product p on p.vendor_inner_sn=dv.product_vendor_inner_sn and p.product_inner_sn=dv.product_inner_sn
+			join product_specification ps on ps.vendor_inner_sn=dv.product_vendor_inner_sn and ps.product_inner_sn=dv.product_inner_sn and ps.specification_inner_sn=dv.specification_inner_sn
+		    	and  length(trim(ps.common_use_unit))>0
+			join hospital_vendor_contract c on c.vendor_inner_sn=dv.vendor_inner_sn and c.hospital_inner_sn=dv.hospital_inner_sn and c.contract_inner_sn=dv.contract_inner_sn
+			join product_unit u on ps.vendor_inner_sn=u.vendor_inner_sn and ps.product_inner_sn=u.product_inner_sn 
+			     and ps.specification_inner_sn = u.specification_inner_sn and u.parent_unit_inner_sn is null and u.is_delete = 0
+			where dv.vendor_inner_sn = #{org_id} and dv.hospital_inner_sn = #{organization_inner_sn}
+		        and c.status in (4,5,7)
+				<if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+				<if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+				<if test="product_name != null and product_name != ''">and (dv.product_name like concat('%', #{product_name}, '%') OR p.pinyin like concat('%', #{product_name}, '%'))</if>
+				<if test="vendor_inner_sn != null">and dv.product_vendor_inner_sn = #{vendor_inner_sn}</if>
+				<if test="specification_vendor_sn != null and specification_vendor_sn != ''">and ps.specification_vendor_sn like concat('%', #{specification_vendor_sn}, '%')</if>
+	            <if test="specification != null and specification != ''">and dv.specification like concat('%', #{specification}, '%')</if>
+	            <if test="product_inner_sn != null">AND dv.product_inner_sn = #{product_inner_sn}</if>
+				<if test="specification_inner_sn != null">AND dv.specification_inner_sn = #{specification_inner_sn}</if>
+        ) a
+	</select>
+</mapper>

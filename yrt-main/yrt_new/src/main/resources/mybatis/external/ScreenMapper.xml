@@ -1,0 +1,1016 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.external.mapper.ScreenMapper">
+	<select id="searchOrgs"
+			resultType="com.yrt.project.api.external.screen.dto.OrgTypeCount">
+		SELECT * FROM (
+						  WITH RECURSIVE x AS (
+							  SELECT a.*
+							  FROM administrative_division a,hospital h
+							  WHERE h.administrative_division_sn = a.administrative_division_sn
+							  UNION ALL
+							  SELECT a.*
+							  FROM administrative_division a,x
+							  WHERE a.administrative_division_sn = x.parent_administrative_division_sn
+						  )
+						  SELECT 1 AS type, COUNT(1) AS `count`, `name` AS area,`administrative_division_sn` FROM x WHERE x.parent_administrative_division_sn IS NULL GROUP BY `name`
+						  )temp1
+		UNION ALL
+
+		SELECT * FROM (
+						  WITH RECURSIVE y AS (
+							  SELECT a.*
+							  FROM administrative_division a,dealer d
+							  WHERE d.administrative_division_sn = a.administrative_division_sn
+							  UNION ALL
+							  SELECT a.*
+							  FROM administrative_division a,y
+							  WHERE a.administrative_division_sn = y.parent_administrative_division_sn
+						  )
+						  SELECT 2 AS type, COUNT(1) AS `count`, `name` AS area,`administrative_division_sn` FROM y WHERE y.parent_administrative_division_sn IS NULL GROUP BY `name`
+						  )temp2
+
+		UNION ALL
+
+		SELECT * FROM (
+						  WITH RECURSIVE z AS (
+							  SELECT a.*
+							  FROM administrative_division a,vendor v
+							  WHERE v.administrative_division_sn = a.administrative_division_sn
+							  UNION ALL
+							  SELECT a.*
+							  FROM administrative_division a,z
+							  WHERE a.administrative_division_sn = z.parent_administrative_division_sn
+						  )
+						  SELECT 3 AS type, COUNT(1) AS `count`, `name` AS area,`administrative_division_sn` FROM z WHERE z.parent_administrative_division_sn IS NULL GROUP BY `name`
+						  )temp3
+	</select>
+
+    <select id="searchOrgWarn" resultType="com.yrt.project.api.external.screen.dto.OrgWarn">
+		SELECT
+			`system_type` AS type,count(1) AS `count`
+		FROM `certification_warning`
+		GROUP BY `system_type`
+	</select>
+	<select id="searchOrgWarnInfos" resultType="com.yrt.project.api.external.screen.dto.OrgWarnInfo">
+		SELECT
+			organization_name AS orgName,social_credit_code,CONCAT(certification_name,'过期') AS warnType,phone
+		FROM `certification_warning`
+	</select>
+
+	<select id="searchProductWarn" resultType="com.yrt.project.api.external.screen.dto.ProductWarn">
+		SELECT '产品注册证预警' AS warnType,count(1) AS `count`
+		FROM `product_mdrf_warning`
+		UNION ALL
+		SELECT '产品过期预警' AS warnType,count(1) AS `count`
+		FROM `product_validity_warning`
+		UNION ALL
+		SELECT '不良产品预警' AS warnType,0 AS `count`
+	</select>
+	<select id="searchProductWarnInfos" resultType="com.yrt.project.api.external.screen.dto.ProductWarnInfo">
+		SELECT
+			product_name AS productName,vendor_name AS orgName,'产品注册证过期' AS warnType,expiration_date AS expireAt
+		FROM product_mdrf_warning
+		UNION ALL
+		SELECT product_name AS productName,vendor_name AS orgName,'产品过期' AS warnType,expiration_date AS expireAt
+		FROM product_validity_warning
+	</select>
+
+	<select id="searchOrgWarnInfoPage" resultType="com.yrt.project.api.external.screen.dto.OrgWarnInfo">
+		SELECT distinct
+			h.`name` AS orgName,h.`social_credit_code`,CONCAT(cw.certification_name,'过期') AS warnType,cw.phone,cw.system_type AS type,
+		       0 AS friendOrgNum,0 AS friendProductCategoryNum,NOW() AS lastTradeAt,h.`address`
+		FROM `certification_warning` cw
+		INNER JOIN `hospital` h USING(social_credit_code)
+		<where>
+			cw.system_type=1
+			<if test="content !=null and content !=''">
+				AND cw.`organization_name` LIKE concat('%',#{content},'%')
+			</if>
+			<if test="province !=null and province !=''">
+				AND cw.organization_name IN(
+					SELECT `name` FROM `hospital` WHERE `administrative_division_sn` LIKE concat( #{province} DIV 10000, '%')
+					<if test="city !=null and city !=''">
+						AND `administrative_division_sn` =#{city}
+					</if>
+					)
+			</if>
+		</where>
+
+		UNION ALL
+
+		SELECT distinct
+			d.`name` AS orgName,d.`social_credit_code`,CONCAT(cw.certification_name,'过期') AS warnType,cw.phone,cw.system_type AS type,
+			0 AS friendOrgNum,0 AS friendProductCategoryNum,NOW() AS lastTradeAt,d.`address`
+		FROM `certification_warning` cw
+		INNER JOIN `dealer` d USING(social_credit_code)
+		<where>
+			cw.system_type=2
+			<if test="content !=null and content !=''">
+				AND cw.`organization_name` LIKE concat('%',#{content},'%')
+			</if>
+			<if test="province !=null and province !=''">
+				AND cw.organization_name IN(
+				SELECT `name` FROM `dealer` WHERE `administrative_division_sn` LIKE concat( #{province} DIV 10000, '%')
+				<if test="city !=null and city !=''">
+					AND `administrative_division_sn` =#{city}
+				</if>
+				)
+			</if>
+		</where>
+
+		UNION ALL
+
+		SELECT distinct
+			v.`name` AS orgName,v.`social_credit_code`,CONCAT(cw.certification_name,'过期') AS warnType,cw.phone,cw.system_type AS type,
+			0 AS friendOrgNum,0 AS friendProductCategoryNum,NOW() AS lastTradeAt,v.`address`
+		FROM `certification_warning` cw
+		INNER JOIN `vendor` v USING(social_credit_code)
+		<where>
+			cw.system_type=3
+			<if test="content !=null and content !=''">
+				AND cw.`organization_name` LIKE concat('%',#{content},'%')
+			</if>
+			<if test="province !=null and province !=''">
+				AND cw.organization_name IN(
+				SELECT `name` FROM `vendor` WHERE `administrative_division_sn` LIKE concat( #{province} DIV 10000, '%')
+				<if test="city !=null and city !=''">
+					AND `administrative_division_sn` =#{city}
+				</if>
+				)
+			</if>
+		</where>
+	</select>
+
+	<select id="searchProductWarnInfoPage"
+			resultType="com.yrt.project.api.external.screen.dto.ProductWarnInfo">
+		<if test="type ==0 or type==1">
+			SELECT
+				product_name AS productName,vendor_name AS orgName,'产品注册证过期' AS warnType,expiration_date AS expireAt,
+				'' AS specification,'' AS vendor_name,'' AS batch_number,product_inner_sn,vendor_inner_sn
+			FROM product_mdrf_warning
+			<where>
+				1=1
+				<if test="content !=null and content !=''">
+					AND (`vendor_name` LIKE concat('%',#{content},'%') OR `product_name` LIKE concat('%',#{content},'%'))
+				</if>
+			</where>
+		</if>
+		<if test="type ==0">
+			UNION ALL
+		</if>
+		<if test="type ==0 or type==2">
+			SELECT product_name AS productName,vendor_name AS orgName,'产品过期' AS warnType,expiration_date AS expireAt,
+				   specification,vendor_name,batch_number,product_inner_sn,vendor_inner_sn
+			FROM product_validity_warning
+			<where>
+				1=1
+				<if test="content !=null and content !=''">
+					AND (`vendor_name` LIKE concat('%',#{content},'%') OR `product_name` LIKE concat('%',#{content},'%'))
+				</if>
+			</where>
+		</if>
+	</select>
+
+	<select id="searchOrgsByAdministrative_division_sn" resultType="com.yrt.project.api.external.screen.dto.OrgTypeCount">
+		WITH RECURSIVE temp AS (
+			SELECT a.* FROM administrative_division a WHERE a.`administrative_division_sn`=#{administrative_division_sn_province}
+			UNION ALL
+			SELECT a.*
+			FROM administrative_division a,temp t
+			WHERE a.parent_administrative_division_sn=t.administrative_division_sn
+		)
+
+		SELECT 1 AS type,count(1) AS `count`,t.`name` AS area,h.administrative_division_sn
+		FROM temp t,hospital h
+		WHERE t.administrative_division_sn=h.administrative_division_sn
+		GROUP BY h.administrative_division_sn
+
+		UNION ALL
+
+		SELECT 2 AS type,count(1) AS `count`,t.`name` AS area,d.administrative_division_sn
+		FROM temp t,dealer d
+		WHERE t.administrative_division_sn=d.administrative_division_sn
+		GROUP BY d.administrative_division_sn
+
+		UNION ALL
+
+		SELECT 3 AS type,count(1) AS `count`,t.`name` AS area,v.administrative_division_sn
+		FROM temp t,vendor v
+		WHERE t.administrative_division_sn=v.administrative_division_sn
+		GROUP BY v.administrative_division_sn
+	</select>
+
+	<select id="searchOrgsByTypeAndAdministrative_division_sn" resultType="com.yrt.project.modular.organization.domain.Company">
+		<if test="type==1">
+			SELECT
+				h.hospital_inner_sn AS id,h.`name`,h.social_credit_code,phone
+			FROM `hospital` h
+			INNER JOIN administrative_division a USING(administrative_division_sn)
+			WHERE a.`administrative_division_sn`=#{administrative_division_sn_city}
+		</if>
+		<if test="type==2">
+			SELECT
+			d.dealer_inner_sn AS id,d.`name`,d.social_credit_code,phone
+			FROM `dealer` d
+			INNER JOIN administrative_division a USING(administrative_division_sn)
+			WHERE a.`administrative_division_sn`=#{administrative_division_sn_city}
+		</if>
+		<if test="type==3">
+			SELECT
+			v.vendor_inner_sn AS id,v.`name`,v.social_credit_code,phone
+			FROM `vendor` v
+			INNER JOIN administrative_division a USING(administrative_division_sn)
+			WHERE a.`administrative_division_sn`=#{administrative_division_sn_city}
+		</if>
+</select>
+
+	<select id="searchGospitalDeptTotal" resultType="decimal">
+		SELECT count(1) FROM `hospital_department`
+	</select>
+
+	<select id="searchProduct" resultType="com.yrt.project.modular.product.domain.Product">
+		select p.vendor_inner_sn,
+			   v.name               as vendor_name,
+			   code68_type,
+			   p.product_inner_sn,
+			   p.release_employee_inner_sn,
+			   p.type_inner_sn,
+			   pt.type              as type_name,
+			   p.code68_sn,
+			   c.name               as code68_name,
+			   p.data_source,
+			   p.status,
+			   p.release_status,
+			   p.storage_condition,
+			   p.health_care_type,
+			   p.name,
+			   p.product_vendor_sn,
+			   p.type,
+			   p.newest_register_sn as cert_no,
+			   p.product_uniform_sn,
+			   p.specifications,
+			   p.description
+		from product p
+				 inner join vendor v using (vendor_inner_sn)
+				 left join code68 c on c.code68_sn = p.code68_sn
+				 left join product_type pt on pt.type_inner_sn = p.type_inner_sn
+		where p.is_delete = 0 and p.vendor_inner_sn = #{vendor_inner_sn} and p.product_inner_sn = #{product_inner_sn}
+		<if test="vendor_inner_sn != null">and p.vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and p.product_inner_sn = #{product_inner_sn}</if>
+	</select>
+
+	<select id="searchProductImages" resultType="com.yrt.project.modular.product.domain.ProductRelImage">
+		select vendor_inner_sn, product_inner_sn, image_inner_sn, type, url, begin_date, end_date
+		from product_image
+		where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+	</select>
+
+	<select id="searchHospitalUpstream" resultType="com.yrt.project.api.external.screen.dto.OrgInfo">
+		SELECT vendor_inner_sn AS org_id,`name` AS org_name,3 AS type
+		FROM `vendor`
+		WHERE vendor_inner_sn IN(
+		    SELECT DISTINCT vendor_inner_sn
+		    FROM `vendor_hospital_grn`
+		    WHERE organization_inner_sn=#{org_id} AND status=2
+		    UNION ALL
+		    SELECT DISTINCT vendor_inner_sn
+		    FROM `hospital_vendor_contract`
+		    WHERE hospital_inner_sn=#{org_id} AND `is_delete`=0
+		)
+
+		UNION ALL
+
+		SELECT dealer_inner_sn AS org_id,`name` AS org_name,2 AS type
+		FROM `dealer`
+		WHERE dealer_inner_sn IN(
+			SELECT DISTINCT dealer_inner_sn
+			FROM `dealer_hospital_grn`
+			WHERE organization_inner_sn=#{org_id} AND status=2
+			UNION ALL
+			SELECT DISTINCT dealer_inner_sn
+			FROM `hospital_dealer_contract`
+			WHERE hospital_inner_sn=#{org_id} AND `is_delete`=0
+		)
+
+		UNION ALL
+
+		SELECT hospital_inner_sn AS org_id,`name` AS org_name,1 AS type
+		FROM `hospital`
+		WHERE hospital_inner_sn=#{org_id}
+	</select>
+
+	<select id="searchVendorDownstream" resultType="com.yrt.project.api.external.screen.dto.OrgInfo">
+		SELECT dealer_inner_sn AS org_id,`name` AS org_name,2 AS type
+		FROM `dealer`
+		WHERE dealer_inner_sn IN(
+			SELECT DISTINCT organization_inner_sn
+			FROM `vendor_dealer_odo`
+			WHERE vendor_inner_sn=#{org_id} AND status=2
+		    UNION ALL
+			SELECT DISTINCT dealer_inner_sn
+			FROM `dealer_vendor_contract`
+			WHERE vendor_inner_sn=#{org_id} AND `is_delete`=0
+		)
+
+		UNION ALL
+
+		SELECT hospital_inner_sn AS org_id,`name` AS org_name,1 AS type
+		FROM `hospital`
+		WHERE hospital_inner_sn IN(
+			SELECT DISTINCT organization_inner_sn
+			FROM `vendor_hospital_odo`
+			WHERE vendor_inner_sn=#{org_id} AND status=2
+			UNION ALL
+			SELECT DISTINCT hospital_inner_sn
+			FROM `hospital_vendor_contract`
+			WHERE vendor_inner_sn=#{org_id} AND `is_delete`=0
+		)
+	</select>
+
+	<select id="searchDealerUpstream" resultType="com.yrt.project.api.external.screen.dto.OrgInfo">
+		SELECT vendor_inner_sn AS org_id,`name` AS org_name,3 AS type
+		FROM `vendor`
+		WHERE vendor_inner_sn IN(
+			SELECT DISTINCT organization_inner_sn
+			FROM `dealer_vendor_grn`
+			WHERE dealer_inner_sn=#{org_id} AND status=2
+		    UNION ALL
+		    SELECT DISTINCT vendor_inner_sn
+		    FROM `dealer_vendor_contract`
+		    WHERE dealer_inner_sn=#{org_id} AND `is_delete`=0
+		)
+
+		UNION ALL
+
+		SELECT dealer_inner_sn AS org_id,`name` AS org_name,2 AS type
+		FROM `dealer`
+		WHERE dealer_inner_sn IN(
+			SELECT DISTINCT organization_inner_sn
+			FROM `dealer_dealer_grn`
+			WHERE dealer_inner_sn=#{org_id} AND status=2
+			UNION ALL
+			SELECT DISTINCT dealer_b_inner_sn
+			FROM `dealer_dealer_contract`
+			WHERE dealer_a_inner_sn=#{org_id} AND `is_delete`=0
+			UNION ALL
+			SELECT DISTINCT dealer_a_inner_sn
+			FROM `dealer_dealer_contract`
+			WHERE dealer_b_inner_sn=#{org_id} AND `is_delete`=0
+		)
+	</select>
+
+	<select id="searchDealerDownstream" resultType="com.yrt.project.api.external.screen.dto.OrgInfo">
+		SELECT dealer_inner_sn AS org_id,`name` AS org_name,2 AS type
+		FROM `dealer`
+		WHERE dealer_inner_sn IN(
+			SELECT DISTINCT organization_inner_sn
+		    FROM `dealer_dealer_odo`
+		    WHERE dealer_inner_sn=#{org_id} AND status=2
+		    UNION ALL
+			SELECT DISTINCT dealer_b_inner_sn
+			FROM `dealer_dealer_contract`
+			WHERE dealer_a_inner_sn=#{org_id} AND `is_delete`=0
+			UNION ALL
+			SELECT DISTINCT dealer_a_inner_sn
+			FROM `dealer_dealer_contract`
+			WHERE dealer_b_inner_sn=#{org_id} AND `is_delete`=0
+		)
+
+		UNION ALL
+
+		SELECT hospital_inner_sn AS org_id,`name` AS org_name,1 AS type
+		FROM `hospital`
+		WHERE hospital_inner_sn IN(
+			SELECT DISTINCT organization_inner_sn
+			FROM `dealer_hospital_odo`
+			WHERE dealer_inner_sn=#{org_id} AND status=2
+			UNION ALL
+			SELECT DISTINCT hospital_inner_sn
+			FROM `hospital_dealer_contract`
+			WHERE dealer_inner_sn=#{org_id} AND `is_delete`=0
+		)
+	</select>
+
+	<select id="searchDeptsLevel1" resultType="com.yrt.project.api.external.screen.dto.DeptInfo">
+		SELECT	hospital_inner_sn,department_inner_sn,`name`,department_sn
+		FROM `hospital_department`
+		WHERE hospital_inner_sn=#{oid} AND parent_department_inner_sn IS NULL AND is_delete=0
+	</select>
+
+	<select id="searchProductType" resultType="com.yrt.project.api.external.screen.dto.ProductTypeQuantity">
+		SELECT FLOOR(SUM(quantity)) AS quantity,type FROM(
+			 SELECT
+				 SUM(i.quantity/1000) AS quantity,
+				 CASE  MOD(CONCAT(p.vendor_inner_sn,p.product_inner_sn,IFNULL(p.type_inner_sn,p.product_inner_sn))+0, 4)
+					 WHEN 0 THEN '心脏耗材'
+					 WHEN 1 THEN '检验耗材'
+					 WHEN 2 THEN '普通耗材'
+					 ELSE '骨科耗材' END type
+			 FROM dealer_product_min_unit_inventory i
+			 INNER JOIN product p ON p.vendor_inner_sn=i.product_vendor_inner_sn AND p.product_inner_sn=i.product_inner_sn
+			 WHERE p.is_delete=0
+			 GROUP BY i.dealer_inner_sn,i.product_vendor_inner_sn,i.product_inner_sn
+
+		     UNION ALL
+
+			 SELECT
+				 SUM(i.quantity/1000) AS quantity,
+				 CASE  MOD(CONCAT(p.vendor_inner_sn,p.product_inner_sn,IFNULL(p.type_inner_sn,p.product_inner_sn))+0, 4)
+					 WHEN 0 THEN '心脏耗材'
+					 WHEN 1 THEN '检验耗材'
+					 WHEN 2 THEN '普通耗材'
+					 ELSE '骨科耗材' END type
+			 FROM hospital_product_min_unit_inventory i
+			 INNER JOIN product p ON p.vendor_inner_sn=i.product_vendor_inner_sn AND p.product_inner_sn=i.product_inner_sn
+			 WHERE p.is_delete=0
+			 GROUP BY i.hospital_inner_sn,i.product_vendor_inner_sn,i.product_inner_sn
+
+			UNION ALL
+
+			 SELECT
+				 SUM(i.quantity/1000) AS quantity,
+				 CASE  MOD(CONCAT(p.vendor_inner_sn,p.product_inner_sn,IFNULL(p.type_inner_sn,p.product_inner_sn))+0, 4)
+					 WHEN 0 THEN '心脏耗材'
+					 WHEN 1 THEN '检验耗材'
+					 WHEN 2 THEN '普通耗材'
+					 ELSE '骨科耗材' END type
+			 FROM vendor_product_min_unit_inventory i
+			 INNER JOIN product p ON p.vendor_inner_sn=i.product_vendor_inner_sn AND p.product_inner_sn=i.product_inner_sn
+			 WHERE p.is_delete=0
+			 GROUP BY i.vendor_inner_sn,i.product_vendor_inner_sn,i.product_inner_sn
+		) temp
+		GROUP BY temp.type
+	</select>
+
+	<select id="searchTrade" resultType="com.yrt.project.api.external.screen.dto.ProductTrade">
+		SELECT
+		       d.product_vendor_inner_sn AS vd_inner_sn,d.product_inner_sn,d.specification_inner_sn,
+			   d.unit_inner_sn,d.quantity/1000 AS quantity,
+		       DATE_FORMAT(o.out_time,
+				<choose>
+					<when test="flag==0">
+						'%Y-%m-%d'
+					</when>
+					<otherwise>
+						'%Y-%m'
+					</otherwise>
+				</choose>
+			   ) AS `date`,
+		       d.`unit_price`/10000 AS unit_price,quantity*unit_price/10000000 AS amount,
+			   CASE  MOD(CONCAT(d.product_vendor_inner_sn,d.product_inner_sn,IFNULL(pp.type_inner_sn,d.product_inner_sn))+0, 4)
+			   WHEN 0 THEN '心脏耗材'
+			   WHEN 1 THEN '检验耗材'
+			   WHEN 2 THEN '普通耗材'
+			   ELSE '骨科耗材' END type
+		FROM `vendor_hospital_odo_product_detail` d
+		INNER JOIN vendor_hospital_odo o ON d.vendor_inner_sn=o.vendor_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		INNER JOIN product pp ON d.product_vendor_inner_sn=pp.vendor_inner_sn AND d.product_inner_sn=pp.product_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+		<choose>
+			<when test="flag==0">
+				AND DATE_FORMAT(o.out_time,'%Y-%m-%d') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					#{item}
+				</foreach>
+			</when>
+			<otherwise>
+				AND DATE_FORMAT(o.out_time,'%Y-%m') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					DATE_FORMAT(#{item},'%Y-%m')
+				</foreach>
+			</otherwise>
+		</choose>
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,d.product_inner_sn,d.specification_inner_sn,
+			d.unit_inner_sn,d.quantity,
+			DATE_FORMAT(o.out_time,
+			<choose>
+				<when test="flag==0">
+					'%Y-%m-%d'
+				</when>
+				<otherwise>
+					'%Y-%m'
+				</otherwise>
+			</choose>
+			) AS `date`,
+		    d.`unit_price`/10000 AS unit_price,quantity*unit_price/10000000 AS amount,
+			CASE  MOD(CONCAT(d.product_vendor_inner_sn,d.product_inner_sn,IFNULL(pp.type_inner_sn,d.product_inner_sn))+0, 4)
+			WHEN 0 THEN '心脏耗材'
+			WHEN 1 THEN '检验耗材'
+			WHEN 2 THEN '普通耗材'
+			ELSE '骨科耗材' END type
+		FROM `vendor_dealer_odo_product_detail` d
+		INNER JOIN vendor_dealer_odo o ON d.vendor_inner_sn=o.vendor_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		INNER JOIN product pp ON d.product_vendor_inner_sn=pp.vendor_inner_sn AND d.product_inner_sn=pp.product_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+		<choose>
+			<when test="flag==0">
+				AND DATE_FORMAT(o.out_time,'%Y-%m-%d') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					#{item}
+				</foreach>
+			</when>
+			<otherwise>
+				AND DATE_FORMAT(o.out_time,'%Y-%m') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					DATE_FORMAT(#{item},'%Y-%m')
+				</foreach>
+			</otherwise>
+		</choose>
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,d.product_inner_sn,d.specification_inner_sn,
+			d.unit_inner_sn,d.quantity,
+			DATE_FORMAT(o.out_time,
+			<choose>
+				<when test="flag==0">
+					'%Y-%m-%d'
+				</when>
+				<otherwise>
+					'%Y-%m'
+				</otherwise>
+			</choose>
+			) AS `date`,
+			d.`unit_price`/10000 AS unit_price,quantity*unit_price/10000000 AS amount,
+			CASE  MOD(CONCAT(d.product_vendor_inner_sn,d.product_inner_sn,IFNULL(pp.type_inner_sn,d.product_inner_sn))+0, 4)
+			WHEN 0 THEN '心脏耗材'
+			WHEN 1 THEN '检验耗材'
+			WHEN 2 THEN '普通耗材'
+			ELSE '骨科耗材' END type
+		FROM `dealer_vendor_odo_product_detail` d
+		INNER JOIN dealer_vendor_odo o ON d.dealer_inner_sn=o.dealer_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		INNER JOIN product pp ON d.product_vendor_inner_sn=pp.vendor_inner_sn AND d.product_inner_sn=pp.product_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+		<choose>
+			<when test="flag==0">
+				AND DATE_FORMAT(o.out_time,'%Y-%m-%d') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					#{item}
+				</foreach>
+			</when>
+			<otherwise>
+				AND DATE_FORMAT(o.out_time,'%Y-%m') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					DATE_FORMAT(#{item},'%Y-%m')
+				</foreach>
+			</otherwise>
+		</choose>
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,d.product_inner_sn,d.specification_inner_sn,
+			d.unit_inner_sn,d.quantity,
+			DATE_FORMAT(o.out_time,
+			<choose>
+				<when test="flag==0">
+					'%Y-%m-%d'
+				</when>
+				<otherwise>
+					'%Y-%m'
+				</otherwise>
+			</choose>
+			) AS `date`,
+			d.`unit_price`/10000 AS unit_price,quantity*unit_price/10000000 AS amount,
+			CASE  MOD(CONCAT(d.product_vendor_inner_sn,d.product_inner_sn,IFNULL(pp.type_inner_sn,d.product_inner_sn))+0, 4)
+			WHEN 0 THEN '心脏耗材'
+			WHEN 1 THEN '检验耗材'
+			WHEN 2 THEN '普通耗材'
+			ELSE '骨科耗材' END type
+		FROM `dealer_hospital_odo_product_detail` d
+		INNER JOIN dealer_hospital_odo o ON d.dealer_inner_sn=o.dealer_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		INNER JOIN product pp ON d.product_vendor_inner_sn=pp.vendor_inner_sn AND d.product_inner_sn=pp.product_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+		<choose>
+			<when test="flag==0">
+				AND DATE_FORMAT(o.out_time,'%Y-%m-%d') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					#{item}
+				</foreach>
+			</when>
+			<otherwise>
+				AND DATE_FORMAT(o.out_time,'%Y-%m') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					DATE_FORMAT(#{item},'%Y-%m')
+				</foreach>
+			</otherwise>
+		</choose>
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,d.product_inner_sn,d.specification_inner_sn,
+			d.unit_inner_sn,d.quantity,
+			DATE_FORMAT(o.out_time,
+			<choose>
+				<when test="flag==0">
+					'%Y-%m-%d'
+				</when>
+				<otherwise>
+					'%Y-%m'
+				</otherwise>
+			</choose>
+			) AS `date`,
+			d.`unit_price`/10000 AS unit_price,quantity*unit_price/10000000 AS amount,
+			CASE  MOD(CONCAT(d.product_vendor_inner_sn,d.product_inner_sn,IFNULL(pp.type_inner_sn,d.product_inner_sn))+0, 4)
+			WHEN 0 THEN '心脏耗材'
+			WHEN 1 THEN '检验耗材'
+			WHEN 2 THEN '普通耗材'
+			ELSE '骨科耗材' END type
+		FROM `dealer_dealer_odo_product_detail` d
+		INNER JOIN dealer_dealer_odo o ON d.dealer_inner_sn=o.dealer_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		INNER JOIN product pp ON d.product_vendor_inner_sn=pp.vendor_inner_sn AND d.product_inner_sn=pp.product_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+		<choose>
+			<when test="flag==0">
+				AND DATE_FORMAT(o.out_time,'%Y-%m-%d') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					#{item}
+				</foreach>
+			</when>
+			<otherwise>
+				AND DATE_FORMAT(o.out_time,'%Y-%m') IN
+				<foreach item="item" collection="times" separator="," open="(" close=")" index="">
+					DATE_FORMAT(#{item},'%Y-%m')
+				</foreach>
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="searchTradeItems" resultType="com.yrt.project.api.external.screen.dto.ProductTradeInfo">
+		SELECT
+			d.product_vendor_name AS orgName,d.product_name AS productName,d.quantity/1000 AS quantity,d.unit AS unit_name,
+			DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`
+		FROM `vendor_hospital_odo_product_detail` d
+		INNER JOIN vendor_hospital_odo o ON d.vendor_inner_sn=o.vendor_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_name AS orgName,d.product_name AS productName,d.quantity/1000 AS quantity,d.unit AS unit_name,
+			DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`
+		FROM `vendor_dealer_odo_product_detail` d
+		INNER JOIN vendor_dealer_odo o ON d.vendor_inner_sn=o.vendor_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_name AS orgName,d.product_name AS productName,d.quantity/1000 AS quantity,d.unit AS unit_name,
+			DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`
+		FROM `dealer_vendor_odo_product_detail` d
+		INNER JOIN dealer_vendor_odo o ON d.dealer_inner_sn=o.dealer_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_name AS orgName,d.product_name AS productName,d.quantity/1000 AS quantity,d.unit AS unit_name,
+			DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`
+		FROM `dealer_hospital_odo_product_detail` d
+		INNER JOIN dealer_hospital_odo o ON d.dealer_inner_sn=o.dealer_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_name AS orgName,d.product_name AS productName,d.quantity/1000 AS quantity,d.unit AS unit_name,
+			DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`
+		FROM `dealer_dealer_odo_product_detail` d
+		INNER JOIN dealer_dealer_odo o ON d.dealer_inner_sn=o.dealer_inner_sn AND d.odo_inner_sn=o.odo_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+	</select>
+
+	<select id="searchVendorTradeItems" resultType="com.yrt.project.api.external.screen.dto.ProductTradeInfo">
+		SELECT
+		       d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+			d.product_name AS productName,v.name AS orgName,d.quantity/1000 AS quantity,
+		       d.unit AS unit_name,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+		       d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM vendor_hospital_odo_product_detail d
+		INNER JOIN vendor v USING(vendor_inner_sn)
+		INNER JOIN vendor_hospital_odo o USING(vendor_inner_sn,odo_inner_sn)
+		WHERE d.vendor_inner_sn=#{orgId} AND d.voucher_type_c IN(0,2) AND o.status=2
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+			d.product_name AS productName,v.name AS orgName,d.quantity/1000 AS quantity,
+			d.unit AS unit_name,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+			d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM vendor_dealer_odo_product_detail d
+		INNER JOIN vendor v USING(vendor_inner_sn)
+		INNER JOIN vendor_hospital_odo o USING(vendor_inner_sn,odo_inner_sn)
+		WHERE d.vendor_inner_sn=#{orgId} AND d.voucher_type_c IN(0,2) AND o.status=2
+	</select>
+
+	<select id="searchDealerTradeItems" resultType="com.yrt.project.api.external.screen.dto.ProductTradeInfo">
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+			d.product_name AS productName,dd.name AS orgName,d.quantity/1000 AS quantity,
+			d.unit AS unit_name,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+			d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM dealer_vendor_grn_product_detail d
+		INNER JOIN dealer_vendor_grn g USING(dealer_inner_sn,grn_inner_sn)
+		INNER JOIN vendor v ON g.organization_inner_sn=v.vendor_inner_sn
+		INNER JOIN dealer dd USING(dealer_inner_sn)
+		WHERE d.dealer_inner_sn=#{orgId} AND d.voucher_type_c IN(0,2) AND g.status=2
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+			d.product_name AS productName,d2.name AS orgName,d.quantity/1000 AS quantity,
+			d.unit AS unit_name,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+			d.specification,d.product_vendor_name AS producer_org,d1.name AS sale_org,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM dealer_dealer_grn_product_detail d
+		INNER JOIN dealer_dealer_grn g USING(dealer_inner_sn,grn_inner_sn)
+		INNER JOIN dealer d1 ON g.organization_inner_sn=d1.dealer_inner_sn
+		INNER JOIN dealer d2 ON d2.dealer_inner_sn=d.dealer_inner_sn
+		WHERE d.dealer_inner_sn=#{orgId} AND d.voucher_type_c IN(0,2) AND g.status=2
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+			d.product_name AS productName,dd.name AS orgName,d.quantity/1000 AS quantity,
+			d.unit AS unit_name,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+			d.specification,d.product_vendor_name AS producer_org,dd.name AS sale_org,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM dealer_dealer_odo_product_detail d
+		INNER JOIN dealer_dealer_odo o USING(dealer_inner_sn,odo_inner_sn)
+		INNER JOIN dealer dd ON dd.dealer_inner_sn=d.dealer_inner_sn
+		WHERE d.dealer_inner_sn=#{orgId} AND d.voucher_type_c IN(0,2) AND o.status=2
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+			d.product_name AS productName,dd.name AS orgName,d.quantity/1000 AS quantity,
+			d.unit AS unit_name,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+			d.specification,d.product_vendor_name AS producer_org,dd.name AS sale_org,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM dealer_hospital_odo_product_detail d
+		INNER JOIN dealer_hospital_odo o USING(dealer_inner_sn,odo_inner_sn)
+		INNER JOIN dealer dd ON dd.dealer_inner_sn=d.dealer_inner_sn
+		WHERE d.dealer_inner_sn=#{orgId} AND d.voucher_type_c IN(0,2) AND o.status=2
+	</select>
+
+	<select id="searchHospitalTradeItems"
+			resultType="com.yrt.project.api.external.screen.dto.ProductTradeInfo">
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+			d.product_name AS productName,h.name AS orgName,d.quantity/1000 AS quantity,
+			d.unit AS unit_name,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+			d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM hospital_vendor_grn_product_detail d
+		INNER JOIN hospital_vendor_grn g USING(hospital_inner_sn,grn_inner_sn)
+		INNER JOIN vendor v ON g.organization_inner_sn=v.vendor_inner_sn
+		INNER JOIN hospital h USING (hospital_inner_sn)
+		WHERE d.hospital_inner_sn=#{orgId} AND d.voucher_type_c IN(0,2) AND g.status=2
+
+		UNION ALL
+
+		SELECT
+			d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+			d.product_name AS productName,h.name AS orgName,d.quantity/1000 AS quantity,
+			d.unit AS unit_name,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+			d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM hospital_dealer_grn_product_detail d
+		 INNER JOIN hospital_dealer_grn g USING(hospital_inner_sn,grn_inner_sn)
+		 INNER JOIN dealer v ON g.organization_inner_sn=v.dealer_inner_sn
+		 INNER JOIN hospital h USING (hospital_inner_sn)
+		WHERE d.hospital_inner_sn=#{orgId} AND d.voucher_type_c IN(0,2) AND g.status=2
+	</select>
+
+	<select id="searchTradeItemsByAdSn" resultType="com.yrt.project.api.external.screen.dto.ProductTradeInfo">
+		SELECT
+		d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+		d.product_name AS productName,v.name AS orgName,d.quantity/1000 AS quantity,
+		d.unit AS unit_name,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+		d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM vendor_hospital_odo_product_detail d
+		INNER JOIN vendor v USING(vendor_inner_sn)
+		INNER JOIN vendor_hospital_odo o USING(vendor_inner_sn,odo_inner_sn)
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+		<if test="adSn !=null">
+			AND d.vendor_inner_sn IN(
+				SELECT vendor_inner_sn FROM vendor WHERE administrative_division_sn=#{adSn}
+			)
+		</if>
+
+		UNION ALL
+
+		SELECT
+		d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+		d.product_name AS productName,v.name AS orgName,d.quantity/1000 AS quantity,
+		d.unit AS unit_name,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+		d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM vendor_dealer_odo_product_detail d
+		INNER JOIN vendor v USING(vendor_inner_sn)
+		INNER JOIN vendor_hospital_odo o USING(vendor_inner_sn,odo_inner_sn)
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+		<if test="adSn !=null">
+			AND d.vendor_inner_sn IN(
+			SELECT vendor_inner_sn FROM vendor WHERE administrative_division_sn=#{adSn}
+			)
+		</if>
+
+		UNION ALL
+
+		SELECT
+		d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+		d.product_name AS productName,dd.name AS orgName,d.quantity/1000 AS quantity,
+		d.unit AS unit_name,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+		d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM dealer_vendor_grn_product_detail d
+		INNER JOIN dealer_vendor_grn g USING(dealer_inner_sn,grn_inner_sn)
+		INNER JOIN vendor v ON g.organization_inner_sn=v.vendor_inner_sn
+		INNER JOIN dealer dd USING(dealer_inner_sn)
+		WHERE d.voucher_type_c IN(0,2) AND g.status=2
+		<if test="adSn !=null">
+			AND d.dealer_inner_sn IN(
+			SELECT dealer_inner_sn FROM dealer WHERE administrative_division_sn=#{adSn}
+			)
+		</if>
+
+		UNION ALL
+
+		SELECT
+		d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+		d.product_name AS productName,d2.name AS orgName,d.quantity/1000 AS quantity,
+		d.unit AS unit_name,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+		d.specification,d.product_vendor_name AS producer_org,d1.name AS sale_org,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM dealer_dealer_grn_product_detail d
+		INNER JOIN dealer_dealer_grn g USING(dealer_inner_sn,grn_inner_sn)
+		INNER JOIN dealer d1 ON g.organization_inner_sn=d1.dealer_inner_sn
+		INNER JOIN dealer d2 ON d2.dealer_inner_sn=d.dealer_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND g.status=2
+		<if test="adSn !=null">
+			AND d.dealer_inner_sn IN(
+			SELECT dealer_inner_sn FROM dealer WHERE administrative_division_sn=#{adSn}
+			)
+		</if>
+
+		UNION ALL
+
+		SELECT
+		d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+		d.product_name AS productName,dd.name AS orgName,d.quantity/1000 AS quantity,
+		d.unit AS unit_name,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+		d.specification,d.product_vendor_name AS producer_org,dd.name AS sale_org,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM dealer_dealer_odo_product_detail d
+		INNER JOIN dealer_dealer_odo o USING(dealer_inner_sn,odo_inner_sn)
+		INNER JOIN dealer dd ON dd.dealer_inner_sn=d.dealer_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+		<if test="adSn !=null">
+			AND d.dealer_inner_sn IN(
+			SELECT dealer_inner_sn FROM dealer WHERE administrative_division_sn=#{adSn}
+			)
+		</if>
+
+		UNION ALL
+
+		SELECT
+		d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+		d.product_name AS productName,dd.name AS orgName,d.quantity/1000 AS quantity,
+		d.unit AS unit_name,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+		d.specification,d.product_vendor_name AS producer_org,dd.name AS sale_org,DATE_FORMAT(o.out_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM dealer_hospital_odo_product_detail d
+		INNER JOIN dealer_hospital_odo o USING(dealer_inner_sn,odo_inner_sn)
+		INNER JOIN dealer dd ON dd.dealer_inner_sn=d.dealer_inner_sn
+		WHERE d.voucher_type_c IN(0,2) AND o.status=2
+		<if test="adSn !=null">
+			AND d.dealer_inner_sn IN(
+			SELECT dealer_inner_sn FROM dealer WHERE administrative_division_sn=#{adSn}
+			)
+		</if>
+
+		UNION ALL
+
+		SELECT
+		d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+		d.product_name AS productName,h.name AS orgName,d.quantity/1000 AS quantity,
+		d.unit AS unit_name,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+		d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM hospital_vendor_grn_product_detail d
+		INNER JOIN hospital_vendor_grn g USING(hospital_inner_sn,grn_inner_sn)
+		INNER JOIN vendor v ON g.organization_inner_sn=v.vendor_inner_sn
+		INNER JOIN hospital h USING (hospital_inner_sn)
+		WHERE d.voucher_type_c IN(0,2) AND g.status=2
+		<if test="adSn !=null">
+			AND d.hospital_inner_sn IN(
+			SELECT hospital_inner_sn FROM hospital WHERE administrative_division_sn=#{adSn}
+			)
+		</if>
+
+		UNION ALL
+
+		SELECT
+		d.product_vendor_inner_sn AS vd_inner_sn,product_inner_sn,
+		d.product_name AS productName,h.name AS orgName,d.quantity/1000 AS quantity,
+		d.unit AS unit_name,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS `at`,d.batch_number,
+		d.specification,d.product_vendor_name AS producer_org,v.name AS sale_org,DATE_FORMAT(g.in_time,'%Y-%m-%d %h:%i') AS in_time
+		FROM hospital_dealer_grn_product_detail d
+		INNER JOIN hospital_dealer_grn g USING(hospital_inner_sn,grn_inner_sn)
+		INNER JOIN dealer v ON g.organization_inner_sn=v.dealer_inner_sn
+		INNER JOIN hospital h USING (hospital_inner_sn)
+		WHERE d.voucher_type_c IN(0,2) AND g.status=2
+		<if test="adSn !=null">
+			AND d.hospital_inner_sn IN(
+			SELECT hospital_inner_sn FROM hospital WHERE administrative_division_sn=#{adSn}
+			)
+		</if>
+	</select>
+
+	<select id="getProductTotal" resultType="com.yrt.project.api.external.screen.dto.ProductTotal">
+		SELECT SUM(amount) AS saleAmount,SUM(`count`) AS batchNumberCount
+		FROM (
+				 SELECT
+					 SUM(unit_price/1000*(quantity/10000)) AS amount,count(batch_number) AS `count`
+				 FROM vendor_dealer_odo_product_detail d
+				 INNER JOIN vendor_dealer_odo o USING(vendor_inner_sn,odo_inner_sn)
+				 WHERE d.product_vendor_inner_sn=#{vd_inner_sn}
+				 AND d.product_inner_sn=#{product_inner_sn}
+				 AND d.voucher_type_c IN(0,2)
+				 AND o.status=2
+
+				 UNION ALL
+
+				 SELECT
+					 SUM(unit_price/1000*(quantity/10000)) AS amount,count(batch_number) AS `count`
+				 FROM vendor_hospital_odo_product_detail d
+				 INNER JOIN vendor_hospital_odo o USING(vendor_inner_sn,odo_inner_sn)
+				 WHERE product_vendor_inner_sn=#{vd_inner_sn} AND product_inner_sn=#{product_inner_sn}
+				 AND d.voucher_type_c IN(0,2)
+				 AND o.status=2
+
+				 UNION ALL
+
+				 SELECT
+					 SUM(unit_price/1000*(quantity/10000)) AS amount,count(batch_number) AS `count`
+				 FROM dealer_dealer_odo_product_detail d
+				 INNER JOIN dealer_dealer_odo o USING(dealer_inner_sn,odo_inner_sn)
+				 WHERE product_vendor_inner_sn=#{vd_inner_sn} AND product_inner_sn=#{product_inner_sn}
+				 AND d.voucher_type_c IN(0,2)
+				 AND o.status=2
+
+				 UNION ALL
+
+				 SELECT
+					 SUM(unit_price/1000*(quantity/10000)) AS amount,count(batch_number) AS `count`
+				 FROM dealer_hospital_odo_product_detail d
+				 INNER JOIN dealer_hospital_odo o USING(dealer_inner_sn,odo_inner_sn)
+				 WHERE product_vendor_inner_sn=#{vd_inner_sn} AND product_inner_sn=#{product_inner_sn}
+				 AND d.voucher_type_c IN(0,2)
+				 AND o.status=2
+		)temp
+	</select>
+
+	<select id="getTradeDealerCount" resultType="java.lang.Long">
+		SELECT COUNT(1)
+		FROM(
+				SELECT DISTINCT dealer_inner_sn
+				FROM dealer_dealer_odo_product_detail d
+				INNER JOIN dealer_dealer_odo o USING(dealer_inner_sn,odo_inner_sn)
+				WHERE d.product_vendor_inner_sn=#{vd_inner_sn} AND d.product_inner_sn=#{product_inner_sn} AND d.voucher_type_c IN(0,2)
+				AND o.status=2
+
+				UNION
+
+				SELECT DISTINCT dealer_inner_sn
+				FROM dealer_hospital_odo_product_detail d
+				INNER JOIN dealer_hospital_odo o USING(dealer_inner_sn,odo_inner_sn)
+				WHERE d.product_vendor_inner_sn=#{vd_inner_sn} AND d.product_inner_sn=#{product_inner_sn} AND d.voucher_type_c IN(0,2)
+				AND o.status=2
+
+				UNION
+
+				SELECT DISTINCT dealer_inner_sn
+				FROM dealer_vendor_grn_product_detail d
+				INNER JOIN dealer_vendor_grn g USING(dealer_inner_sn,grn_inner_sn)
+				WHERE d.product_vendor_inner_sn=#{vd_inner_sn} AND d.product_inner_sn=#{product_inner_sn} AND d.voucher_type_c IN(0,2)
+				  AND g.status=2
+				)temp
+	</select>
+
+	<select id="getDeptCount" resultType="java.lang.Long">
+		SELECT COUNT(1)
+		FROM inventory_use_record_detail
+		WHERE vd_inner_sn=#{vd_inner_sn} AND product_inner_sn=#{product_inner_sn} AND status=1
+	</select>
+
+	<select id="getImgUrl" resultType="java.lang.String">
+		SELECT `url`
+		FROM product_image
+		WHERE vendor_inner_sn=#{vd_inner_sn} AND product_inner_sn=#{product_inner_sn} LIMIT 1
+	</select>
+</mapper>

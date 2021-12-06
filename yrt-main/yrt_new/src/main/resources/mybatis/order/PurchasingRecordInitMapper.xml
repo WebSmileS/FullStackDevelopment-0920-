@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.order.mapper.PurchasingRecordInitMapper">
+
+	<select id="searchPurchaseOrderList" parameterType="map" resultType="PurchaseOrder">
+		select c.dealer_a_inner_sn as partA, h.name as partA_name, c.dealer_b_inner_sn as partB, d.name as partB_name, 
+	        '' as alias, c.po_so_inner_sn, c.buyer_inner_sn, c.buyer_name, c.purchase_department_inner_sn, c.purchase_department as department_name, 
+	        c.dealer_a_creator_inner_sn as creator_id, c.dealer_a_creator_name as creator_name, c.dealer_a_auditor_inner_sn as auditor_id, c.dealer_a_auditor_name as auditor_name, 
+	        c.dealer_a_affirmant_inner_sn as affirment_inner_sn, c.dealer_a_affirmant_name as affirmant_name,
+	        c.dealer_a_po_sn as po_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, c.audit_time, 
+	        c.confirm_time, c.description, 0 as billsType, c.dealer_a_warehouse_inner_sn as warehouse_inner_sn, c.dealer_a_warehouse_name as warehouse_name
+		from dealer_po_dealer_so c
+		inner join dealer h on h.dealer_inner_sn = c.dealer_a_inner_sn
+		inner join dealer d on  d.dealer_inner_sn = c.dealer_b_inner_sn
+		where 1=1
+		union distinct
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, 
+	        '' as alias, c.po_so_inner_sn, c.buyer_inner_sn, c.buyer_name, c.purchase_department_inner_sn, c.purchase_department as department_name, 
+	        c.dealer_creator_inner_sn as creator_id, c.dealer_creator_name as creator_name, c.dealer_auditor_inner_sn as auditor_id, c.dealer_auditor_name as auditor_name, 
+	        c.dealer_affirmant_inner_sn as affirment_inner_sn, c.dealer_affirmant_name as affirmant_name,
+	        c.dealer_po_sn as po_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, c.audit_time, 
+	        c.confirm_time, c.description, 1 as billsType, c.dealer_warehouse_inner_sn as warehouse_inner_sn, c.dealer_warehouse_name as warehouse_name
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		where 1=1
+		union distinct
+		select c.hospital_inner_sn as partA, h.name as partA_name, c.dealer_inner_sn as partB, d.name as partB_name, 
+	        h.alias, c.po_so_inner_sn, c.buyer_inner_sn, c.buyer_name, c.purchase_department_inner_sn, c.purchase_department as department_name, 
+	        c.hospital_creator_inner_sn as creator_id, c.hospital_creator_name as creator_name, c.hospital_auditor_inner_sn as auditor_id, c.hospital_auditor_name as auditor_name, 
+	        c.hospital_affirmant_inner_sn as affirment_inner_sn, c.hospital_affirmant_name as affirmant_name,
+	        c.hospital_po_sn as po_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, c.audit_time, 
+	        c.confirm_time, c.description, 4 as billsType, c.hospital_warehouse_inner_sn as warehouse_inner_sn, c.hospital_warehouse_name as warehouse_name
+		from hospital_po_dealer_so c
+		left join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		left join dealer d on  d.dealer_inner_sn = c.dealer_inner_sn
+		where 1=1
+		union distinct
+		select c.hospital_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, h.alias,
+	        c.po_so_inner_sn, c.buyer_inner_sn, c.buyer_name, c.purchase_department_inner_sn, c.purchase_department as department_name, 
+	        c.hospital_creator_inner_sn as creator_id, c.hospital_creator_name as creator_name, 
+	        c.hospital_auditor_inner_sn as auditor_id, c.hospital_auditor_name as auditor_name, 
+	        c.hospital_affirmant_inner_sn as affirment_inner_sn, c.hospital_affirmant_name as affirmant_name,
+	        c.hospital_po_sn as po_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, c.audit_time, 
+	        c.confirm_time, c.description, 5 as billsType, c.hospital_warehouse_inner_sn as warehouse_inner_sn, c.hospital_warehouse_name as warehouse_name
+		from hospital_po_vendor_so c
+		left join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		where 1=1
+	</select>
+	
+	<select id="selectDDOrderDetailList" parameterType="map" resultType="OrderDetail">
+		select d.dealer_a_inner_sn, h.name as partA_name, d.dealer_b_inner_sn, d.product_vendor_name as partB_name, d.po_so_inner_sn, rate, discount, 
+			d.detail_inner_sn, d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, d.product_name, d.batch_number,
+	        d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity, d.unit_price/10000 as unit_price, 
+	        d.sort_number, d.status, 1 as product_type,p.`newest_register_sn`
+		from dealer_po_dealer_so_product_detail d
+		inner join dealer h on h.dealer_inner_sn = d.dealer_a_inner_sn
+		left join `product` p ON p.`vendor_inner_sn`=d.`product_vendor_inner_sn` and p.`product_inner_sn`=d.`product_inner_sn`
+		where d.dealer_a_inner_sn = #{partA}  and d.dealer_b_inner_sn=#{partB} and d.po_so_inner_sn = #{po_so_inner_sn}
+	</select>
+	<select id="selectDVOrderDetailList" parameterType="map" resultType="OrderDetail">
+		select d.dealer_inner_sn, h.name as partA_name, d.vendor_inner_sn, d.product_vendor_name as partB_name, d.po_so_inner_sn, rate, discount, 
+			d.detail_inner_sn, d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, d.product_name, d.batch_number,
+	        d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity, d.unit_price/10000 as unit_price,
+	        d.sort_number, d.status, 1 as product_type,p.`newest_register_sn`
+		from dealer_po_vendor_so_product_detail d
+		inner join dealer h on h.dealer_inner_sn = d.dealer_inner_sn
+		left join `product` p ON p.`vendor_inner_sn`=d.`product_vendor_inner_sn` and p.`product_inner_sn`=d.`product_inner_sn`
+		where d.dealer_inner_sn = #{partA}  and d.vendor_inner_sn=#{partB} and d.po_so_inner_sn = #{po_so_inner_sn}
+	</select>
+	<select id="selectHDOrderDetailList" parameterType="map" resultType="OrderDetail">
+		select d.hospital_inner_sn, h.name as partA_name, d.dealer_inner_sn, d.product_vendor_name as partB_name, d.po_so_inner_sn, rate, discount, 
+			d.detail_inner_sn, d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, d.product_name, d.batch_number,
+	        d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity, d.unit_price/10000 as unit_price, 
+	        d.sort_number, d.status, 1 as product_type,p.`newest_register_sn`
+		from hospital_po_dealer_so_product_detail d
+		left join hospital h on h.hospital_inner_sn = d.hospital_inner_sn
+		left join `product` p ON p.`vendor_inner_sn`=d.`product_vendor_inner_sn` and p.`product_inner_sn`=d.`product_inner_sn`
+		where d.hospital_inner_sn = #{partA}  and d.dealer_inner_sn=#{partB} and d.po_so_inner_sn = #{po_so_inner_sn}
+	</select>
+	<select id="selectHVOrderDetailList" parameterType="map" resultType="OrderDetail">
+		select d.hospital_inner_sn, h.name as partA_name, d.vendor_inner_sn, d.product_vendor_name as partB_name, d.po_so_inner_sn, rate, discount, 
+			d.detail_inner_sn, d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, d.product_name, d.batch_number,
+	        d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity, d.unit_price/10000 as unit_price, 
+	        d.sort_number, d.status, 1 as product_type,p.`newest_register_sn`
+		from hospital_po_vendor_so_product_detail d
+		left join hospital h on h.hospital_inner_sn = d.hospital_inner_sn
+		left join `product` p ON p.`vendor_inner_sn`=d.`product_vendor_inner_sn` and p.`product_inner_sn`=d.`product_inner_sn`
+		where d.hospital_inner_sn = #{partA}  and d.vendor_inner_sn=#{partB} and d.po_so_inner_sn = #{po_so_inner_sn}
+	</select>
+</mapper>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.finance.mapper.InventoryRecordMapper">
+
+	<select id="selectDealerInventoryProductList" parameterType="map" resultType="InventoryRecord">
+		SELECT org_id, warehouse_inner_sn, warehouse_name, product_vendor_inner_sn, product_vendor_name, product_inner_sn, product_name, specification_inner_sn,
+			specification, unit, employee_name, unit_price, quantity, produce_date, overdue_date, batch_number, product_type, 
+			CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money, product_type
+		FROM(
+			SELECT d.dealer_inner_sn AS org_id, d.warehouse_inner_sn, m.name as warehouse_name ,d.product_vendor_inner_sn, d.product_vendor_name, 
+		        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit, e.name as employee_name,
+		        CAST(((d.average_price/10000)*(d.quantity/1000))/((d.quantity)/1000) AS DECIMAL(16,4)) as unit_price, 
+		        (d.quantity)/1000 as quantity, max(d.produce_date) as produce_date, max(d.overdue_date) as overdue_date, 
+		        d.batch_number, 1 as product_type
+			from dealer_product_min_unit_inventory d
+			join dealer_warehouse_model m on d.dealer_inner_sn=m.dealer_inner_sn and d.warehouse_inner_sn=m.warehouse_model_inner_sn
+			left join (
+			     select dealer_inner_sn, warehouse_model_inner_sn, employee_inner_sn, e.name
+			     from dealer_employee_dealer_warehouse_model
+			     join dealer_employee e using(dealer_inner_sn, employee_inner_sn)
+			     where dealer_inner_sn = #{org_id} and type = 0
+			     <if test="employee_inner_sn != null">and employee_inner_sn=#{employee_inner_sn}</if>
+			     group by dealer_inner_sn, warehouse_model_inner_sn
+			)e on d.dealer_inner_sn=e.dealer_inner_sn and d.warehouse_inner_sn=e.warehouse_model_inner_sn
+			where d.dealer_inner_sn = #{org_id} AND d.quantity != 0 and e.employee_inner_sn is not null
+		        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+		        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+		    group by d.dealer_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.warehouse_inner_sn, d.batch_number
+			union all
+			SELECT d.dealer_inner_sn AS org_id, d.warehouse_inner_sn, m.name as warehouse_name ,d.product_dealer_inner_sn as product_vendor_inner_sn, d.product_dealer_name as product_vendor_name, 
+		        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit, e.name as employee_name,
+		        CAST(((d.average_price/10000)*(d.quantity/1000))/((d.quantity)/1000) AS DECIMAL(16,4)) as unit_price, 
+		        (d.quantity)/1000 as quantity, max(d.produce_date) as produce_date, max(d.overdue_date) as overdue_date, 
+		        d.batch_number, 0 as product_type
+			from dealer_dealer_product_min_unit_inventory d
+			join dealer_warehouse_model m on d.dealer_inner_sn=m.dealer_inner_sn and d.warehouse_inner_sn=m.warehouse_model_inner_sn
+			left join (
+			     select dealer_inner_sn, warehouse_model_inner_sn, employee_inner_sn, e.name
+			     from dealer_employee_dealer_warehouse_model
+			     join dealer_employee e using(dealer_inner_sn, employee_inner_sn)
+			     where dealer_inner_sn = #{org_id} and type = 0
+			     <if test="employee_inner_sn != null">and employee_inner_sn=#{employee_inner_sn}</if>
+			     group by dealer_inner_sn, warehouse_model_inner_sn
+			)e on d.dealer_inner_sn=e.dealer_inner_sn and d.warehouse_inner_sn=e.warehouse_model_inner_sn
+			where d.dealer_inner_sn = #{org_id} AND d.quantity != 0 and e.employee_inner_sn is not null
+		        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+		        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+		    group by d.dealer_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.warehouse_inner_sn, d.batch_number
+       	) A
+		<if test="orderByColumn != null and orderByColumn !=''">order by ${orderByColumn}</if>
+	</select>
+	
+	<select id="selectHospitalInventoryProductList" parameterType="map" resultType="InventoryRecord">
+		SELECT org_id, warehouse_inner_sn, warehouse_name, product_vendor_inner_sn, product_vendor_name, product_inner_sn, product_name, specification_inner_sn,
+			specification, unit, employee_name, unit_price, quantity, produce_date, overdue_date, batch_number, product_type, 
+			CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money, product_type
+		FROM(
+			SELECT d.hospital_inner_sn AS org_id, d.warehouse_inner_sn, m.name as warehouse_name ,d.product_vendor_inner_sn, d.product_vendor_name, 
+		        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit, e.name as employee_name,
+		        CAST(((d.average_price/10000)*(d.quantity/1000))/((d.quantity)/1000) AS DECIMAL(16,4)) as unit_price,
+		         (d.quantity)/1000 as quantity, max(d.produce_date) as produce_date, max(d.overdue_date) as overdue_date, 
+		        d.batch_number, 1 as product_type
+			from hospital_product_min_unit_inventory d
+			join hospital_warehouse_model m on d.hospital_inner_sn=m.hospital_inner_sn and d.warehouse_inner_sn=m.warehouse_model_inner_sn
+			left join (
+			     select hospital_inner_sn, warehouse_model_inner_sn, employee_inner_sn, e.name
+			     from hospital_employee_hospital_warehouse_model
+			     join hospital_employee e using(hospital_inner_sn, employee_inner_sn)
+			     where hospital_inner_sn = #{org_id} and type = 0
+			     <if test="employee_inner_sn != null">and employee_inner_sn=#{employee_inner_sn}</if>
+			     group by hospital_inner_sn, warehouse_model_inner_sn
+			)e on d.hospital_inner_sn=e.hospital_inner_sn and d.warehouse_inner_sn=e.warehouse_model_inner_sn
+			where d.hospital_inner_sn = #{org_id} AND d.quantity != 0 and e.employee_inner_sn is not null
+		        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+		        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+		    group by d.hospital_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.warehouse_inner_sn, d.batch_number
+			union all
+			SELECT d.hospital_inner_sn AS org_id, d.warehouse_inner_sn, m.name as warehouse_name ,d.product_dealer_inner_sn as product_vendor_inner_sn, d.product_dealer_name as product_vendor_name, 
+		        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit, e.name as employee_name,
+		        CAST(((d.average_price/10000)*(d.quantity/1000))/((d.quantity)/1000) AS DECIMAL(16,4)) as unit_price, 
+		        (d.quantity)/1000 as quantity, max(d.produce_date) as produce_date, max(d.overdue_date) as overdue_date, 
+		        d.batch_number, 0 as product_type
+			from hospital_dealer_product_min_unit_inventory d
+			join hospital_warehouse_model m on d.hospital_inner_sn=m.hospital_inner_sn and d.warehouse_inner_sn=m.warehouse_model_inner_sn
+			left join (
+			     select hospital_inner_sn, warehouse_model_inner_sn, employee_inner_sn, e.name
+			     from hospital_employee_hospital_warehouse_model
+			     join hospital_employee e using(hospital_inner_sn, employee_inner_sn)
+			     where hospital_inner_sn = #{org_id} and type = 0
+			     <if test="employee_inner_sn != null">and employee_inner_sn=#{employee_inner_sn}</if>
+			     group by hospital_inner_sn, warehouse_model_inner_sn
+			)e on d.hospital_inner_sn=e.hospital_inner_sn and d.warehouse_inner_sn=e.warehouse_model_inner_sn
+			where d.hospital_inner_sn = #{org_id} AND d.quantity != 0 and e.employee_inner_sn is not null
+		        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+		        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+	        group by d.hospital_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.warehouse_inner_sn, d.batch_number
+        )A
+		<if test="orderByColumn != null and orderByColumn !=''">order by ${orderByColumn}</if>
+	</select>
+	
+	<select id="selectVendorInventoryProductList" parameterType="map" resultType="InventoryRecord">
+		SELECT org_id, warehouse_inner_sn, warehouse_name, product_vendor_inner_sn, product_vendor_name, product_inner_sn, product_name, specification_inner_sn,
+			specification, unit, employee_name, unit_price, quantity, produce_date, overdue_date, batch_number, product_type, 
+			CAST(unit_price*quantity AS DECIMAL(16,4)) as amount_of_money, product_type
+		FROM(
+			SELECT d.vendor_inner_sn AS org_id, d.warehouse_inner_sn, m.name as warehouse_name ,d.product_vendor_inner_sn, d.product_vendor_name, 
+		        d.product_inner_sn, d.product_name, d.specification_inner_sn, d.specification, d.unit, e.name as employee_name,
+		        CAST(((d.average_price/10000)*(d.quantity/1000))/((d.quantity)/1000) AS DECIMAL(16,4)) as unit_price, 
+		        (d.quantity)/1000 as quantity, max(d.produce_date) as produce_date, max(d.overdue_date) as overdue_date, 
+		        d.batch_number, 1 as product_type
+			from vendor_product_min_unit_inventory d
+			join vendor_warehouse_model m on d.vendor_inner_sn=m.vendor_inner_sn and d.warehouse_inner_sn=m.warehouse_model_inner_sn
+			left join (
+			     select vendor_inner_sn, warehouse_model_inner_sn, employee_inner_sn, e.name
+			     from vendor_employee_vendor_warehouse_model
+			     join vendor_employee e using(vendor_inner_sn, employee_inner_sn)
+			     where vendor_inner_sn = #{org_id} and type = 0
+			     <if test="employee_inner_sn != null">and employee_inner_sn=#{employee_inner_sn}</if>
+			     group by vendor_inner_sn, warehouse_model_inner_sn
+			)e on d.vendor_inner_sn=e.vendor_inner_sn and d.warehouse_inner_sn=e.warehouse_model_inner_sn
+			where d.vendor_inner_sn = #{org_id} AND d.quantity != 0 and e.employee_inner_sn is not null
+		        <if test="product_name != null and product_name !=''">and d.product_name like concat('%', #{product_name}, '%')</if>
+		        <if test="warehouse_inner_sn != null">and d.warehouse_inner_sn=#{warehouse_inner_sn}</if>
+	        group by d.vendor_inner_sn, d.product_inner_sn, d.product_name, d.specification_inner_sn, d.warehouse_inner_sn, d.batch_number
+        )A
+		<if test="orderByColumn != null and orderByColumn !=''">order by ${orderByColumn}</if>
+	</select>
+</mapper>

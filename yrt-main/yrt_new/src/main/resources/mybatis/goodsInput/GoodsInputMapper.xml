@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.system.quartz.mapper.GoodsInputMapper">
+
+	<resultMap type="GoodsInput" id="GoodsInputResult">
+		<id     property="id"         column="id"/>
+		<result property="goods_name"          column="goods_name"/>
+		<result property="goods_spec"   column="goods_spec" />
+		<result property="mfg_name"         column="mfg_name"/>
+		<result property="goods_cert_no"   column="goods_cert_no"/>
+		<result property="start_date"       column="start_date"/>
+		<result property="end_date"       column="end_date"/>
+		<result property="production_address"       column="production_address"/>
+		<result property="structure_composition"       column="structure_composition"/>
+		<result property="scope_application"       column="scope_application"/>
+		<result property="product_tandards"       column="product_tandards"/>
+		<result property="vendor_address"   column="vendor_address" />
+		<result property="description"   column="description"/>
+		<result property="department"   column="department"/>
+		<result property="status"        column="status" />
+		<result property="msg"         column="msg"/>
+		<result property="mmsg"         column="mmsg"/>
+		<result property="pmsg"         column="pmsg"/>
+	</resultMap>
+
+
+	<select id="selectAllGoods" parameterType="GoodsInput" resultMap="GoodsInputResult">
+		select id,goods_name,goods_spec,mfg_name,goods_cert_no,start_date,end_date,production_address,structure_composition,
+			scope_application,product_tandards,vendor_address,description,department,status,msg,mmsg,pmsg
+		from goods_input where status = 0 order by id
+	</select>
+	
+	<update id="updateMsgAndStatus" parameterType="GoodsInput">
+		update goods_input set status=1,msg = #{msg} where id= #{id}
+	</update>
+	
+	<update id="updateMsgAndNostatus"	parameterType="GoodsInput">
+		update goods_input set status=#{status},msg = #{msg} where id = #{id}
+	</update>
+	
+	<update id="updateErrorMsg"	parameterType="GoodsInput">
+		update goods_input set status=#{status},msg = #{msg} where id = #{id}
+	</update>
+	
+	<update id="updateMDRFErrorMsg"	parameterType="GoodsInput">
+		update goods_input set status=#{status},mmsg = #{msg} where id = #{id}
+	</update>
+	
+	<update id="updatePublishErrorMsg"	parameterType="GoodsInput">
+		update goods_input set status=#{status},pmsg = #{msg} where id = #{id}
+	</update>
+	
+	
+	<!-- 以下为ImportProductTask3版本 -->
+	<select id="selectAllGoods2" parameterType="GoodsInput" resultMap="GoodsInputResult">
+		select id,goods_name,goods_spec,mfg_name,goods_cert_no,start_date,end_date,production_address,structure_composition,
+			scope_application,product_tandards,vendor_address,description,department,status,msg,mmsg,pmsg,
+			product_unit,specmsg,umsg,product_vendor_sn
+		from goods_input_2 where status = 0 order by id
+	</select>
+	
+	<select id="selectGoodsById2" parameterType="GoodsInput" resultMap="GoodsInputResult">
+		select id,goods_name,goods_spec,mfg_name,goods_cert_no,start_date,end_date,production_address,structure_composition,
+			scope_application,product_tandards,vendor_address,description,department,status,msg,mmsg,pmsg,
+			product_unit,specmsg,umsg,product_vendor_sn
+		from goods_input_2 where status = 0 and id = #{id}
+	</select>
+	
+	<update id="updateMsgAndStatus2" parameterType="GoodsInput">
+		update goods_input_2 set status=1,msg = #{msg} where id= #{id}
+	</update>
+	
+	<update id="updateMsgAndNostatus2"	parameterType="GoodsInput">
+		update goods_input_2 set status=#{status},msg = #{msg} where id = #{id}
+	</update>
+	
+	<update id="updateErrorMsg2"	parameterType="GoodsInput">
+		update goods_input_2 set status=#{status},msg = #{msg} where id = #{id}
+	</update>
+	
+	<update id="updateMDRFErrorMsg2"	parameterType="GoodsInput">
+		update goods_input_2 set status=#{status},mmsg = #{msg} where id = #{id}
+	</update>
+	
+	<update id="updatePublishErrorMsg2"	parameterType="GoodsInput">
+		update goods_input_2 set status=#{status},pmsg = #{msg} where id = #{id}
+	</update>
+	
+	<update id="updateSPecErrorMsg2"	parameterType="GoodsInput">
+		update goods_input_2 set status=#{status},specmsg = #{msg} where id = #{id}
+	</update>
+	
+	<update id="updateUnitErrorMsg2"	parameterType="GoodsInput">
+		update goods_input_2 set status=#{status},umsg = #{msg} where id = #{id}
+	</update>
+</mapper>

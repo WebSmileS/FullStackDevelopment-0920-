@@ -1,0 +1,792 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.product.mapper.ProductMapper">
+
+    <resultMap type="Product" id="ProductResult">
+        <id property="vendor_inner_sn" column="vendor_inner_sn"/><!-- 厂商内部编号 -->
+        <result property="vendor_name" column="vendor_name"/><!-- 厂商名称 -->
+        <result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+        <result property="release_employee_inner_sn" column="release_employee_inner_sn"/><!-- 发布员工内部编号 -->
+        <result property="type_inner_sn" column="type_inner_sn"/><!-- 自定义分类内部编号  -->
+        <result property="type_name" column="type_name"/><!-- 自定义分类名称  -->
+        <result property="code68_sn" column="code68_sn"/><!-- 68分类目录编号  -->
+        <result property="code68_name" column="code68_name"/><!-- 68分类目录名称  -->
+        <result property="data_source" column="data_source"/><!-- 数据来源 -->
+        <result property="status" column="status"/><!-- 状态 -->
+        <result property="release_status" column="release_status"/><!-- 发布状态 -->
+        <result property="storage_condition" column="storage_condition"/><!-- 存储条件 -->
+        <result property="health_care_type" column="health_care_type"/><!-- 医保类型 -->
+        <result property="code68_type" column="code68_type"/><!-- 医疗器械分类目录类别:1-一类 2-二类 3-三类 -->
+        <result property="name" column="name"/><!-- 名称* -->
+        <result property="product_vendor_sn" column="product_vendor_sn"/><!-- 产品编号 -->
+        <result property="specifications" column="specifications"/><!-- 型号规格(总览) -->
+        <result property="description" column="description"/><!-- 描述 -->
+        <result property="cert_no" column="cert_no"/><!-- 注册证号 -->
+        <result property="type" column="type"/><!-- 产品类型 -->
+        <result property="pinyin" column="pinyin"/><!-- 拼音简拼 -->
+
+    </resultMap>
+
+    <sql id="selectProduct">
+        select p.vendor_inner_sn, v.name as vendor_name, code68_type, p.product_inner_sn, p.release_employee_inner_sn,
+               p.type_inner_sn, pt.type as type_name, p.code68_sn, c.name as code68_name, p.data_source, p.status,
+               p.release_status, p.storage_condition, p.health_care_type, p.name, p.product_vendor_sn, p.type,
+               p.newest_register_sn as cert_no, p.product_uniform_sn, p.specifications, p.description
+        from product p
+        inner join vendor v using (vendor_inner_sn)
+        left join code68 c on c.code68_sn = p.code68_sn
+        left join product_type pt on pt.type_inner_sn = p.type_inner_sn
+    </sql>
+
+    <select id="selectProductAll" parameterType="Product" resultMap="ProductResult">
+        select * from product p
+    </select>
+
+    <select id="selectProductInfo" parameterType="Product" resultMap="ProductResult">
+        <include refid="selectProduct"/>
+        where 1=1
+        and p.product_inner_sn = #{product_inner_sn} and p.vendor_inner_sn = #{vendor_inner_sn}
+    </select>
+
+    <select id="selectProductDetailInfo" parameterType="map" resultType="ProductDetail">
+        select p.vendor_inner_sn,
+               v.name  as vendor_name,
+               code68_type,
+               p.product_inner_sn,
+               p.type_inner_sn,
+               pt.type as type_name,
+               p.code68_sn,
+               c.name  as code68_name,
+               p.data_source,
+               p.storage_condition,
+               p.health_care_type,
+               p.name  as product_name,
+               p.product_vendor_sn,
+               p.type,
+               p.specifications,
+               p.description
+        from product p
+        join vendor v using (vendor_inner_sn)
+        left join code68 c using (code68_sn)
+        left join product_type pt using (type_inner_sn)
+        where 1 = 1
+          and p.product_inner_sn = #{product_inner_sn}
+          and p.vendor_inner_sn = #{vendor_inner_sn}
+    </select>
+
+    <select id="searchProductList" parameterType="map" resultMap="ProductResult">
+        select p.vendor_inner_sn, v.name as vendor_name, code68_type, p.product_inner_sn, p.release_employee_inner_sn,
+	        p.type_inner_sn, pt.type as type_name, p.code68_sn, c.name as code68_name, p.data_source, p.status,
+	        p.release_status, p.storage_condition, p.health_care_type, p.name, p.product_vendor_sn, p.type,
+	        p.newest_register_sn as cert_no, p.product_uniform_sn, p.specifications, p.description
+        from product p
+        inner join vendor v using (vendor_inner_sn)
+        left join code68 c on c.code68_sn = p.code68_sn
+        left join product_type pt on pt.type_inner_sn = p.type_inner_sn
+        <if test="register_sn != null and register_sn !=''">
+        	left join product_mdrf pm using (vendor_inner_sn, product_inner_sn)
+        </if>
+        where p.is_delete = 0 and v.is_delete = 0
+        <if test="register_sn != null and register_sn !=''">and pm.is_delete = 0</if>
+        <if test="data_source != null and vendor==null">and p.data_source = #{data_source}</if>
+        <if test="data_source != null and vendor!=null">and p.data_source in (0,3)</if>
+        <if test="status != null">and p.status = #{status}</if>
+        <if test="release_status != null">and p.release_status = #{release_status}</if>
+        <if test="type_inner_sn != null">and p.type_inner_sn = #{type_inner_sn}</if>
+        <if test="code68_sn != null">and p.code68_sn = #{code68_sn}</if>
+        <if test="name != null and name != ''">and (p.name like concat('%', #{name}, '%') OR p.pinyin like concat('%', #{name}, '%'))</if>
+        <if test="vendor_inner_sn != null">and p.vendor_inner_sn = #{vendor_inner_sn}</if>
+        <if test="register_sn != null and register_sn !=''">and pm.register_sn = #{register_sn}</if>
+    </select>
+    
+    <select id="selectProductByVendorIdAndName" parameterType="map" resultMap="ProductResult">
+        <include refid="selectProduct"/>
+        where p.is_delete = 0 and v.is_delete = 0
+        and p.name = #{name}
+        and p.vendor_inner_sn = #{vendor_inner_sn}
+    </select>
+
+    <select id="searchExistsProductList" parameterType="map" resultMap="ProductResult">
+        <include refid="selectProduct"/>
+        where 1=1
+        <if test="is_delete != null">and p.is_delete =#{is_delete}</if>
+        <if test="name != null and name != ''">and p.name =#{name}</if>
+        <if test="vendor_inner_sn != null">and p.vendor_inner_sn = #{vendor_inner_sn}</if>
+    </select>
+
+    <insert id="insertProduct" parameterType="Product">
+        insert into product(vendor_inner_sn, product_inner_sn, type_inner_sn, code68_sn, release_employee_inner_sn,
+	        data_source, status,
+	        release_status, storage_condition, health_care_type, type, name, product_uniform_sn,
+	        product_vendor_sn,
+	        description, newest_register_sn, specifications, code68_type)
+        values (#{vendor_inner_sn},
+                #{product_inner_sn},
+                #{type_inner_sn},
+                #{code68_sn},
+                #{release_employee_inner_sn},
+                #{data_source},
+                #{status},
+                #{release_status},
+                #{storage_condition},
+                #{health_care_type},
+                #{type},
+                #{name},
+                #{product_uniform_sn},
+                #{product_vendor_sn},
+                #{description},
+                #{cert_no},
+                #{specifications},
+                #{code68_type})
+    </insert>
+
+    <select id="p_add_product" parameterType="map" statementType="CALLABLE" useCache="false" flushCache="true"
+            resultType="map">
+        call p_add_product( #{vendor_inner_sn_i,mode=IN},
+            #{release_employee_inner_sn_i,mode=IN},
+            #{type_inner_sn_i,mode=IN},
+            #{code68_sn_i,mode=IN},
+            #{data_source_i,mode=IN},
+            #{storage_condition_i,mode=IN},
+            #{health_care_type_i,mode=IN},
+            #{name_i,mode=IN},
+            #{product_vendor_sn_i,mode=IN},
+            #{description_i,mode=IN},
+            #{specifications_i,mode=IN},
+            #{type_i,mode=IN},
+            #{code68_type_i,mode=IN},
+            #{pinyin_i,mode=IN},
+            #{product_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+            #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+            #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+            #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+            )
+    </select>
+
+    <update id="updateProduct" parameterType="Product">
+        update product
+        <set>
+            <if test="release_employee_inner_sn != null">release_employee_inner_sn = #{release_employee_inner_sn},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="type_inner_sn != null and type_inner_sn != -1">type_inner_sn = #{type_inner_sn},</if>
+            <if test="type_inner_sn == -1">type_inner_sn = null,</if>
+            <if test="code68_sn != null and code68_sn != -1">code68_sn = #{code68_sn},</if>
+            <if test="code68_sn == -1">code68_sn = null,</if>
+            <if test="storage_condition != null">storage_condition = #{storage_condition},</if>
+            <if test="health_care_type != null">health_care_type = #{health_care_type},</if>
+            <if test="product_uniform_sn != null">product_uniform_sn=#{product_uniform_sn},</if>
+            <if test="product_vendor_sn != null">product_vendor_sn=#{product_vendor_sn},</if>
+            <if test="specifications != null">specifications=#{specifications},</if>
+            <if test="description != null">description=#{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="release_status != null">release_status = #{release_status},</if>
+            <if test="cert_no != null">newest_register_sn = #{cert_no},</if>
+            <if test="code68_type != null">code68_type = #{code68_type},</if>
+            <if test="pinyin != null">pinyin = #{pinyin},</if>
+        </set>
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+    </update>
+
+    <update id="updateProduct4Map" parameterType="map">
+        update product
+        <set>
+            <if test="release_employee_inner_sn != null">release_employee_inner_sn = #{release_employee_inner_sn},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="type_inner_sn != null and type_inner_sn != -1">type_inner_sn = #{type_inner_sn},</if>
+            <if test="type_inner_sn == -1">type_inner_sn = null,</if>
+            <if test="code68_sn != null and code68_sn != -1">code68_sn = #{code68_sn},</if>
+            <if test="code68_sn == -1">code68_sn = null,</if>
+            <if test="storage_condition != null">storage_condition = #{storage_condition},</if>
+            <if test="health_care_type != null">health_care_type = #{health_care_type},</if>
+            <if test="product_uniform_sn != null">product_uniform_sn=#{product_uniform_sn},</if>
+            <if test="product_vendor_sn != null">product_vendor_sn=#{product_vendor_sn},</if>
+            <if test="specifications != null">specifications=#{specifications},</if>
+            <if test="description != null">description=#{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="release_status != null">release_status = #{release_status},</if>
+            <if test="cert_no != null">newest_register_sn = #{cert_no},</if>
+            <if test="code68_type != null">code68_type = #{code68_type},</if>
+        </set>
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+    </update>
+
+    <update id="deleteProduct" parameterType="Product">
+        update product
+        set is_delete = 1
+        where vendor_inner_sn = #{vendor_inner_sn}
+          and product_inner_sn = #{product_inner_sn}
+    </update>
+
+    <!-- 产品相关图片 -->
+    <resultMap type="ProductRelImage" id="ImageResult">
+        <result property="vendor_inner_sn" column="vendor_inner_sn"/><!-- 厂商内部编号 -->
+        <result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+        <result property="image_inner_sn" column="image_inner_sn"/><!-- 图片内部编号  -->
+        <result property="type" column="type"/><!-- 类别 -->
+        <result property="begin_date" column="begin_date"/><!-- 开始日期 -->
+        <result property="end_date" column="end_date"/><!-- 截止日期 -->
+        <result property="url" column="url"/><!-- 统一资源定位符  -->
+    </resultMap>
+
+    <sql id="selectCertImage">
+        select vendor_inner_sn, product_inner_sn, image_inner_sn, type, url, begin_date, end_date
+        from product_image
+    </sql>
+
+    <select id="selectCertImageList" parameterType="ProductRelImage" resultMap="ImageResult">
+        <include refid="selectCertImage"/>
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+        <if test="type != null">and type = #{type}</if>
+    </select>
+
+    <select id="selectCertImageInfoById" parameterType="ProductRelImage" resultMap="ImageResult">
+        <include refid="selectCertImage"/>
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+        <if test="type != null">and type = #{type}</if>
+        <if test="image_inner_sn != null">and image_inner_sn = #{image_inner_sn}</if>
+    </select>
+
+    <delete id="deleteProductImage" parameterType="map">
+        delete
+        from product_image
+        where vendor_inner_sn = #{vendor_inner_sn}
+          and product_inner_sn = #{product_inner_sn}
+          and type = #{type}
+          and image_inner_sn = #{image_inner_sn}
+    </delete>
+
+    <update id="updateProductImage" parameterType="ProductRelImage">
+        update product_image
+        <set>
+            <if test="type != null ">type = #{type},</if>
+            <if test="begin_date != null ">begin_date = #{begin_date},</if>
+            <if test="end_date != null ">end_date = #{end_date},</if>
+            <if test="url != null">url = #{url},</if>
+        </set>
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and image_inner_sn =
+        #{image_inner_sn}
+    </update>
+
+    <insert id="insertProductImage" parameterType="ProductRelImage">
+        insert into product_image(vendor_inner_sn, product_inner_sn, image_inner_sn, type,
+                                  begin_date, end_date, url)
+        values (#{vendor_inner_sn},
+                #{product_inner_sn},
+                #{image_inner_sn},
+                #{type},
+                #{begin_date},
+                #{end_date},
+                #{url})
+    </insert>
+
+    <select id="p_add_product_image" parameterType="map" statementType="CALLABLE" useCache="false" flushCache="true"
+            resultType="map">
+        call p_add_product_image( #{vendor_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{type_i,mode=IN},
+            #{begin_date_i,mode=IN},
+            #{end_date_i,mode=IN},
+            #{url_i,mode=IN},
+            #{image_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+            #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+            #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+            #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+            )
+    </select>
+
+    <!-- 已发布产品型号规格 -->
+    <resultMap type="ProductSpecification" id="SpecResult">
+        <result property="vendor_inner_sn" column="vendor_inner_sn"/><!-- 厂商内部编号 -->
+        <result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+        <result property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号  -->
+        <result property="status" column="status"/><!-- 状态 -->
+        <result property="is_delete" column="is_delete"/><!-- 已删除 -->
+        <result property="specification" column="specification"/><!-- 型号规格*  -->
+        <result property="specification_vendor_sn" column="specification_vendor_sn"/><!-- 产品编码（自建）*  -->
+        <result property="common_use_unit_inner_sn" column="common_use_unit_inner_sn"/><!-- 常用单位内部编号 -->
+        <result property="common_use_unit" column="common_use_unit"/><!-- 常用单位(冗余)  -->
+    </resultMap>
+
+    <sql id="selectSpec">
+        select vendor_inner_sn,
+               product_inner_sn,
+               specification_inner_sn,
+               status,
+               specification,
+               specification_vendor_sn,
+               common_use_unit_inner_sn,
+               common_use_unit
+        from product_specification
+    </sql>
+
+    <select id="selectProductSpecListById" parameterType="ProductSpecification" resultMap="SpecResult">
+        <include refid="selectSpec"/>
+        where is_delete=0
+        and vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+        <if test="status != null">and status = #{status}</if>
+    </select>
+
+    <select id="selectProductSpecInfoById" parameterType="ProductSpecification" resultMap="SpecResult">
+        <include refid="selectSpec"/>
+        where is_delete=0
+        and vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and specification_inner_sn =
+        #{specification_inner_sn}
+        <if test="status != null">and status = #{status}</if>
+    </select>
+
+    <select id="searchProductSpecifications" parameterType="ProductSpecification" resultMap="SpecResult">
+        <include refid="selectSpec"/>
+        where 1=1
+        <if test="vendor_inner_sn != null">and vendor_inner_sn = #{vendor_inner_sn}</if>
+        <if test="is_delete != null">and is_delete = #{is_delete}</if>
+        <if test="product_inner_sn != null">and product_inner_sn =#{product_inner_sn}</if>
+        <if test="specification_inner_sn != null">and specification_inner_sn =#{specification_inner_sn}</if>
+        <if test="specification != null and specification != ''">and specification like concat('%', #{specification},
+            '%')
+        </if>
+        <if test="status != null">and status = #{status}</if>
+    </select>
+
+    <select id="selectAllProductSpecifications" parameterType="map" resultType="String">
+        select specification_inner_sn where 1=1
+			and vendor_inner_sn = #{vendor_inner_sn}
+            and product_inner_sn =#{product_inner_sn}
+    </select>
+
+    <select id="p_add_product_specification" parameterType="map" statementType="CALLABLE" useCache="false"
+            flushCache="true" resultType="map">
+        call p_add_product_specification( #{vendor_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{specification_i,mode=IN},
+            #{specification_vendor_sn_i,mode=IN},
+            #{status_i,mode=IN},
+            #{specification_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+            #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+            #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+            #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+            )
+    </select>
+
+    <insert id="insertProductSpec" parameterType="ProductSpecification">
+        insert into product_specification(vendor_inner_sn, product_inner_sn, specification_inner_sn,
+                                          common_use_unit_inner_sn,
+                                          status, specification, specification_vendor_sn, common_use_unit, publish_time)
+        values (#{vendor_inner_sn},
+                #{product_inner_sn},
+                #{specification_inner_sn},
+                #{common_use_unit_inner_sn},
+                #{status},
+                #{specification},
+                #{specification_vendor_sn},
+                #{common_use_unit},
+                now())
+    </insert>
+
+    <update id="updateProductSpec" parameterType="ProductSpecification">
+        update product_specification
+        <set>
+            <if test="specification != null and specification != ''">specification = #{specification},</if>
+            <if test="specification_vendor_sn != null">specification_vendor_sn = #{specification_vendor_sn},</if>
+            <if test="specification_vendor_sn == null">specification_vendor_sn = null,</if>
+            <if test="common_use_unit_inner_sn != null ">common_use_unit_inner_sn = #{common_use_unit_inner_sn},</if>
+            <if test="common_use_unit != null ">common_use_unit = #{common_use_unit},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and specification_inner_sn
+        = #{specification_inner_sn}
+    </update>
+    
+    <update id="updateProductSpecCommonUnit" parameterType="ProductSpecification">
+        update product_specification
+        <set>
+            <if test="common_use_unit_inner_sn != null ">common_use_unit_inner_sn = #{common_use_unit_inner_sn},</if>
+            <if test="common_use_unit != null ">common_use_unit = #{common_use_unit},</if>
+        </set>
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and specification_inner_sn
+        = #{specification_inner_sn}
+    </update>
+
+    <update id="cleanCommonUse" parameterType="ProductSpecification">
+        update product_specification
+        set common_use_unit_inner_sn = null,
+            common_use_unit=''
+        where vendor_inner_sn = #{vendor_inner_sn}
+          and product_inner_sn = #{product_inner_sn}
+          and specification_inner_sn = #{specification_inner_sn}
+    </update>
+
+    <update id="deleteProductSpec" parameterType="ProductSpecification">
+        update product_specification
+        set is_delete = 1
+        where vendor_inner_sn = #{vendor_inner_sn}
+          and product_inner_sn = #{product_inner_sn}
+          and specification_inner_sn = #{specification_inner_sn}
+    </update>
+
+    <delete id="trueDeleteProduct" parameterType="map">
+        delete from product_specification
+        where vendor_inner_sn = #{vendor_inner_sn}
+        <if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+    </delete>
+
+    <delete id="trueDeleteProductSpec" parameterType="map">
+        delete from product_specification
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+        <if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+    </delete>
+
+    <!-- 产品医疗器械注册登记表 -->
+    <resultMap type="ProductMDRF" id="MDRFResult">
+        <result property="vendor_inner_sn" column="vendor_inner_sn"/><!-- 厂商内部编号 -->
+        <result property="vendor_name" column="vendor_name"/><!-- 厂商内部编号 -->
+        <result property="vendor_address" column="vendor_address"/><!-- 厂商内部编号 -->
+        <result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+        <result property="product_name" column="product_name"/><!-- 产品内部编号 -->
+        <result property="mdrf_inner_sn" column="mdrf_inner_sn"/><!-- 登记表内部编号 -->
+        <result property="issue_date" column="issue_date"/><!-- 颁发日期  -->
+        <result property="begin_date" column="begin_date"/><!-- 颁发日期  -->
+        <result property="end_date" column="end_date"/><!-- 颁发日期  -->
+        <result property="register_sn" column="register_sn"/><!-- 注册号 -->
+        <result property="issue_organization" column="issue_organization"/><!-- 发证部门 -->
+        <result property="standard" column="standard"/><!-- 标准  -->
+        <result property="production_address" column="production_address"/><!-- 生产地址  -->
+        <result property="performance_structure" column="performance_structure"/><!-- 性能结构及组成  -->
+        <result property="application_range" column="application_range"/><!-- 适用范围  -->
+        <result property="contraindication" column="contraindication"/><!-- 禁忌症  -->
+        <result property="description" column="description"/><!-- 描述*  -->
+        <result property="specifications" column="specifications"/><!-- 型号规格(总览)  -->
+        <result property="hasCertImage" column="hasCertImage"/><!-- 是否存在注册证图片  -->
+    </resultMap>
+
+    <sql id="selectMDRF">
+        SELECT m.vendor_inner_sn,
+               v.name                  as vendor_name,
+               v.address               as vendor_address,
+               m.product_inner_sn,
+               p.name                  as product_name,
+               m.mdrf_inner_sn,
+               m.issue_date,
+               m.begin_date,
+               m.end_date,
+               m.register_sn,
+               m.issue_organization,
+               m.standard,
+               m.production_address,
+               m.performance_structure,
+               m.application_range,
+               m.contraindication,
+               m.description,
+               m.specifications,
+               IFNULL(hasCertImage, 0) as hasCertImage
+        FROM product_mdrf m
+                 INNER JOIN vendor v using (vendor_inner_sn)
+                 INNER JOIN product p using (vendor_inner_sn, product_inner_sn)
+                 LEFT JOIN (
+            SELECT vendor_inner_sn,
+                   product_inner_sn,
+                   mdrf_inner_sn,
+                   CASE when IFNULL(COUNT(*), 0) > 0 then 1 else 0 end as hasCertImage
+            FROM product_mdrf_image i
+                     INNER JOIN product_mdrf m using (vendor_inner_sn, product_inner_sn, mdrf_inner_sn)
+            where m.is_delete = 0
+            GROUP BY vendor_inner_sn, product_inner_sn, mdrf_inner_sn
+        ) i USING (vendor_inner_sn, product_inner_sn, mdrf_inner_sn)
+    </sql>
+
+    <select id="selectProductMDRF" parameterType="ProductMDRF" resultMap="MDRFResult">
+        <include refid="selectMDRF"/>
+        where 1=1 and m.is_delete = 0
+        and m.vendor_inner_sn = #{vendor_inner_sn} and m.product_inner_sn = #{product_inner_sn} and m.mdrf_inner_sn =
+        #{mdrf_inner_sn}
+    </select>
+
+    <select id="searchProductMDRFList" parameterType="map" resultMap="MDRFResult">
+        <include refid="selectMDRF"/>
+        where 1=1 and m.is_delete = 0
+        <if test="vendor_inner_sn != null">and m.vendor_inner_sn = #{vendor_inner_sn}</if>
+        <if test="product_inner_sn != null">and m.product_inner_sn = #{product_inner_sn}</if>
+        <if test="mdrf_inner_sn != null">and m.mdrf_inner_sn = #{mdrf_inner_sn}</if>
+        <if test="vendor_name != null">and v.name like concat('%', #{vendor_name}, '%')</if>
+        <if test="product_name != null">and p.name like concat('%', #{product_name}, '%')</if>
+        <if test="begin_date != null">AND date_format(m.begin_date,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')
+        </if>
+        <if test="end_date != null">AND date_format(m.end_date,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+        <if test="register_sn != null and register_sn != ''">and m.register_sn like concat('%', #{register_sn}, '%')
+        </if>
+        order by m.end_date desc
+    </select>
+
+    <select id="searchProductMDRFList1" parameterType="map" resultMap="MDRFResult">
+        <include refid="selectMDRF"/>
+        where 1=1 and m.is_delete = 0 and p.release_status=1 and p.is_delete = 0
+        <if test="vendor_inner_sn != null">and m.vendor_inner_sn = #{vendor_inner_sn}</if>
+        <if test="product_inner_sn != null">and m.product_inner_sn = #{product_inner_sn}</if>
+        <if test="mdrf_inner_sn != null">and m.mdrf_inner_sn = #{mdrf_inner_sn}</if>
+        <if test="vendor_name != null">and v.name like concat('%', #{vendor_name}, '%')</if>
+        <if test="product_name != null">and p.name like concat('%', #{product_name}, '%')</if>
+        <if test="begin_date != null">AND date_format(m.begin_date,'%y%m%d') &gt;= date_format(#{begin_date},'%y%m%d')
+        </if>
+        <if test="end_date != null">AND date_format(m.end_date,'%y%m%d') &lt;= date_format(#{end_date},'%y%m%d')</if>
+        <if test="register_sn != null and register_sn != ''">and m.register_sn like concat('%', #{register_sn}, '%')
+        </if>
+        <if test="hasCertImage == 1">and hasCertImage = 1</if>
+        <if test="hasCertImage == 2">and hasCertImage is null</if>
+        order by m.end_date desc
+    </select>
+
+    <select id="p_add_product_mdrf" parameterType="map" statementType="CALLABLE" useCache="false" flushCache="true"
+            resultType="map">
+        call p_add_product_mdrf( #{vendor_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{issue_date_i,mode=IN},
+            #{register_sn_i,mode=IN},
+            #{issue_organization_i,mode=IN},
+            #{standard_i,mode=IN},
+            #{production_address_i,mode=IN},
+            #{performance_structure_i,mode=IN},
+            #{application_range_i,mode=IN},
+            #{contraindication_i,mode=IN},
+            #{description_i,mode=IN},
+            #{specifications_i,mode=IN},
+            #{begin_date_i,mode=IN},
+            #{end_date_i,mode=IN},
+            #{mdrf_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+            #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+            #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+            #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+            )
+    </select>
+
+    <insert id="insertProductMDRF" parameterType="ProductMDRF">
+        insert into product_mdrf(vendor_inner_sn, product_inner_sn, mdrf_inner_sn, issue_date, begin_date, end_date,
+                                 register_sn,
+                                 issue_organization, standard, production_address, performance_structure,
+                                 application_range, contraindication, description, specifications)
+        values (#{vendor_inner_sn},
+                #{product_inner_sn},
+                #{mdrf_inner_sn},
+                #{issue_date},
+                #{begin_date},
+                #{end_date},
+                #{register_sn},
+                #{issue_organization},
+                #{standard},
+                #{production_address},
+                #{performance_structure},
+                #{application_range},
+                #{contraindication},
+                #{description},
+                #{specifications})
+    </insert>
+
+    <update id="updateProductMDRF" parameterType="ProductMDRF">
+        update product_mdrf
+        <set>
+            <if test="issue_date != null">issue_date = #{issue_date},</if>
+            <if test="begin_date != null">begin_date = #{begin_date},</if>
+            <if test="end_date != null">end_date = #{end_date},</if>
+            <if test="register_sn != null">register_sn = #{register_sn},</if>
+            <if test="issue_organization != null">issue_organization = #{issue_organization},</if>
+            <if test="standard != null">standard = #{standard},</if>
+            <if test="production_address != null">production_address = #{production_address},</if>
+            <if test="performance_structure != null">performance_structure = #{performance_structure},</if>
+            <if test="application_range != null">application_range = #{application_range},</if>
+            <if test="contraindication != null">contraindication = #{contraindication},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="specifications != null">specifications = #{specifications},</if>
+        </set>
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and mdrf_inner_sn =
+        #{mdrf_inner_sn}
+    </update>
+
+    <update id="updateProductMDRF4Map" parameterType="map">
+        update product_mdrf
+        <set>
+            <if test="issue_date != null">issue_date = #{issue_date},</if>
+            <if test="begin_date != null">begin_date = #{begin_date},</if>
+            <if test="end_date != null">end_date = #{end_date},</if>
+            <if test="register_sn != null">register_sn = #{register_sn},</if>
+            <if test="issue_organization != null">issue_organization = #{issue_organization},</if>
+            <if test="standard != null">standard = #{standard},</if>
+            <if test="production_address != null">production_address = #{production_address},</if>
+            <if test="performance_structure != null">performance_structure = #{performance_structure},</if>
+            <if test="application_range != null">application_range = #{application_range},</if>
+            <if test="contraindication != null">contraindication = #{contraindication},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="specifications != null">specifications = #{specifications},</if>
+            <if test="is_delete != null">is_delete = #{is_delete},</if>
+        </set>
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and mdrf_inner_sn =
+        #{mdrf_inner_sn}
+    </update>
+
+    <delete id="deleteProductMDRF" parameterType="map">
+        delete from product_mdrf
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+        <if test="mdrf_inner_sn != null">and mdrf_inner_sn = #{mdrf_inner_sn}</if>
+    </delete>
+
+    <!-- 产品注册证登记表图片 -->
+    <resultMap type="ProductMDRFImage" id="MDRFImageResult">
+        <result property="vendor_inner_sn" column="vendor_inner_sn"/><!-- 厂商内部编号 -->
+        <result property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+        <result property="mdrf_inner_sn" column="mdrf_inner_sn"/><!-- 登记表内部编号 -->
+        <result property="image_inner_sn" column="image_inner_sn"/><!-- 图片内部编号  -->
+        <result property="url" column="url"/><!-- 统一资源定位符  -->
+        <result property="file_name" column="file_name"/><!-- 统一资源定位符  -->
+    </resultMap>
+
+    <sql id="selectMDRFImage">
+        select vendor_inner_sn, product_inner_sn, mdrf_inner_sn, image_inner_sn, url, file_name
+        from product_mdrf_image
+    </sql>
+
+    <select id="selectMDRFImageInfo" parameterType="ProductMDRFImage" resultMap="MDRFImageResult">
+        <include refid="selectMDRFImage"/>
+        where 1=1
+        and vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and mdrf_inner_sn =
+        #{mdrf_inner_sn}
+        and image_inner_sn = #{image_inner_sn}
+    </select>
+
+    <select id="selectMDRFImageList" parameterType="ProductMDRFImage" resultMap="MDRFImageResult">
+        <include refid="selectMDRFImage"/>
+        where 1=1
+        and vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and mdrf_inner_sn =
+        #{mdrf_inner_sn}
+        <if test=" image_inner_sn !=null">and image_inner_sn = #{image_inner_sn}</if>
+    </select>
+
+    <select id="p_add_product_mdrf_image" parameterType="map" statementType="CALLABLE" useCache="false"
+            flushCache="true" resultType="map">
+        call p_add_product_mdrf_image( #{vendor_inner_sn_i,mode=IN},
+            #{product_inner_sn_i,mode=IN},
+            #{mdrf_inner_sn_i,mode=IN},
+            #{url_i,mode=IN},
+            #{file_name_i,mode=IN},
+            #{image_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+            #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+            #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+            #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+            )
+    </select>
+
+    <insert id="insertMDRFImage" parameterType="ProductMDRFImage">
+        insert into product_mdrf_image(vendor_inner_sn, product_inner_sn, mdrf_inner_sn, image_inner_sn, file_name, url)
+        values (#{vendor_inner_sn},
+                #{product_inner_sn},
+                #{mdrf_inner_sn},
+                #{image_inner_sn},
+                #{file_name},
+                #{url})
+    </insert>
+
+    <delete id="deleteMDRFImage" parameterType="ProductMDRFImage">
+        delete from product_mdrf_image
+        where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and mdrf_inner_sn =
+        #{mdrf_inner_sn}
+        <if test="image_inner_sn != null">and image_inner_sn=#{image_inner_sn}</if>
+    </delete>
+
+    <select id="selectNewestRegister_sn" parameterType="map" resultType="map">
+        SELECT mdrf_inner_sn, register_sn
+        FROM product_mdrf
+        WHERE vendor_inner_sn = #{vendor_inner_sn}
+          and product_inner_sn = #{product_inner_sn}
+          AND is_delete = 0
+        order by end_date desc
+    </select>
+
+    <!-- 手机专用 获取厂商产品列表(平台所有发布产品) -->
+    <select id="searchProductList4App" parameterType="map" statementType="CALLABLE" useCache="false" flushCache="true"
+            resultType="ProductBasic">
+        call c_get_products_image( #{key_i,mode=IN},
+            #{page_i,mode=IN},
+            #{row_i,mode=IN},
+            #{total_row_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+            #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+            #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+            #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+            )
+    </select>
+
+    <select id="selectVendorProductList" parameterType="map" statementType="CALLABLE" useCache="false" flushCache="true"
+            resultType="ResponseProductInfo">
+        call c_get_products( #{vendor_inner_sn_i,mode=IN},
+            #{type_inner_sn_i,mode=IN},
+            #{code68_sn_i,mode=IN},
+            #{product_name_i,mode=IN},
+            #{specification_vendor_sn_i,mode=IN},
+            #{specification_i,mode=IN},
+            #{key_i,mode=IN},
+            #{include_null_unit_i,mode=IN},
+            #{page_i,mode=IN},
+            #{row_i,mode=IN},
+            #{total_row_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+            #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+            #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+            #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+            )
+    </select>
+
+    <select id="selectVendorProductDropdown" parameterType="map" resultType="ResponseProductInfo4Dropdown">
+        SELECT vendor_inner_sn, product_inner_sn, v.name as vendor_name, p.name as product_name, p.newest_register_sn as
+        mdrf_sn
+        FROM product p
+        inner join vendor v using(vendor_inner_sn)
+        WHERE p.release_status=1 and p.is_delete=0
+        <if test="vendor_inner_sn != null">and p.vendor_inner_sn =#{vendor_inner_sn}</if>
+        <if test="product_name != null and product_name != ''">and p.name like concat('%', #{product_name}, '%')</if>
+    </select>
+
+    <!-- 产品内容检测 -->
+    <select id="checkProudctExist" parameterType="map" resultType="int">
+        select count(product_inner_sn)
+        from product
+        where vendor_inner_sn = #{vendor_inner_sn}
+          and name = #{name}
+    </select>
+
+    <select id="checkProudctSpecExist" parameterType="map" resultType="int">
+        select count(specification_inner_sn)
+        from product_specification
+        where vendor_inner_sn=#{vendor_inner_sn} and product_inner_sn=#{product_inner_sn}
+        <if test="specification != null and specification_vendor_sn != null">and (specification=#{specification} or
+            specification_vendor_sn=#{specification_vendor_sn})
+        </if>
+        <if test="specification != null">and specification=#{specification}</if>
+        <if test="specification_vendor_sn != null">and specification_vendor_sn=#{specification_vendor_sn}</if>
+    </select>
+
+    <select id="checkProudctMDRFExist" parameterType="map" resultType="int">
+        select count(mdrf_inner_sn)
+        from product_mdrf
+        where register_sn = #{register_sn}
+    </select>
+    
+    <select id="selectCompleteProductInfo" parameterType="map" resultType="CompleteProduct">
+    	select vendor_inner_sn as product_vendor_inner_sn, v.name as product_vendor_name, product_inner_sn, p.name as product_name,
+			specification_inner_sn, specification, unit_inner_sn, u.name as unit
+		from product_unit u
+		join product_specification s using(vendor_inner_sn, product_inner_sn, specification_inner_sn)
+		join vendor v using(vendor_inner_sn)
+		join product p using(vendor_inner_sn, product_inner_sn)
+		where u.is_delete = 0 and parent_unit_inner_sn is null
+			and v.is_delete = 0 and v.status = 1
+			and p.is_delete = 0 and p.status = 1
+			and s.is_delete = 0 and s.status = 1
+			and vendor_inner_sn=#{vendor_inner_sn}
+        	and product_inner_sn=#{product_inner_sn}
+    </select>
+</mapper>

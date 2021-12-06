@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.advance.mapper.AdvanceSaleDetailMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.advance.domain.AdvanceSaleDetail">
+    <!--@mbg.generated-->
+    <!--@Table advance_sale_detail-->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="type" jdbcType="TINYINT" property="type" />
+    <result column="batch_number" jdbcType="VARCHAR" property="batchNumber" />
+    <result column="advance_sale_id" jdbcType="BIGINT" property="advanceSaleId" />
+    <result column="discount" jdbcType="DECIMAL" property="discount" />
+    <result column="unit_price" jdbcType="BIGINT" property="unitPrice" />
+    <result column="unit_name" jdbcType="VARCHAR" property="unitName" />
+    <result column="product_vendor_id" jdbcType="BIGINT" property="productVendorId" />
+    <result column="sort_number" jdbcType="INTEGER" property="sortNumber" />
+    <result column="rate" jdbcType="DECIMAL" property="rate" />
+    <result column="quantity" jdbcType="INTEGER" property="quantity" />
+    <result column="unit_id" jdbcType="BIGINT" property="unitId" />
+    <result column="specification_name" jdbcType="VARCHAR" property="specificationName" />
+    <result column="specification_id" jdbcType="BIGINT" property="specificationId" />
+    <result column="product_vendor_name" jdbcType="VARCHAR" property="productVendorName" />
+    <result column="product_name" jdbcType="VARCHAR" property="productName" />
+    <result column="product_id" jdbcType="BIGINT" property="productId" />
+    <result column="product_type" jdbcType="INTEGER" property="productType" />
+    <result column="produce_date" jdbcType="DATE" property="produceDate" />
+    <result column="overdue_date" jdbcType="DATE" property="overdueDate" />
+    <result column="buying_price" jdbcType="BIGINT" property="buyingPrice" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, `type`, batch_number, advance_sale_id, discount, unit_price, unit_name, product_vendor_id, 
+    sort_number, rate, quantity, unit_id, specification_name, specification_id, product_vendor_name, 
+    product_name, product_id, product_type, produce_date, overdue_date, buying_price
+  </sql>
+</mapper>

@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.surgery.plan.mapper.OrthopaedicOperationPlanOisInstanceMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanOisInstance">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="plan_id" jdbcType="BIGINT" property="plan_id" />
+    <result column="platform_ois_inner_sn" jdbcType="BIGINT" property="platform_ois_inner_sn" />
+    <result column="cust_ois_id" jdbcType="BIGINT" property="cust_ois_id" />
+    <result column="dealer_inner_sn" jdbcType="BIGINT" property="dealer_inner_sn" />
+    <result column="dealer_name" jdbcType="VARCHAR" property="dealer_name" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+    <result column="type_inner_sn" jdbcType="TINYINT" property="type_inner_sn" />
+    <result column="brand_inner_sn" jdbcType="SMALLINT" property="brand_inner_sn" />
+    <result column="ois_sn" jdbcType="VARCHAR" property="ois_sn" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="keywords" jdbcType="VARCHAR" property="keywords" />
+    <result column="assistant_employee_inner_sn" jdbcType="BIGINT" property="assistant_employee_inner_sn" />
+    <result column="assistant_employee_name" jdbcType="VARCHAR" property="assistant_employee_name" />
+    <result column="out_warehouse_inner_sn" jdbcType="BIGINT" property="out_warehouse_inner_sn" />
+    <result column="out_warehouse_name" jdbcType="VARCHAR" property="out_warehouse_name" />
+    <result column="out_employee_inner_sn" jdbcType="BIGINT" property="out_employee_inner_sn" />
+    <result column="out_employee_name" jdbcType="VARCHAR" property="out_employee_name" />
+    <result column="out_time" jdbcType="TIMESTAMP" property="out_time" />
+    <result column="back_employee_inner_sn" jdbcType="BIGINT" property="back_employee_inner_sn" />
+    <result column="back_employee_name" jdbcType="VARCHAR" property="back_employee_name" />
+    <result column="back_time" jdbcType="TIMESTAMP" property="back_time" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="created_time" />
+    <result column="last_modified_time" jdbcType="TIMESTAMP" property="last_modified_time" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    id, plan_id, platform_ois_inner_sn, cust_ois_id, dealer_inner_sn, dealer_name, status, type_inner_sn, 
+    brand_inner_sn, ois_sn, name, description, keywords, 
+    assistant_employee_inner_sn, assistant_employee_name, 
+    out_warehouse_inner_sn, out_warehouse_name, 
+    out_employee_inner_sn, out_employee_name, out_time, back_employee_inner_sn, 
+    back_employee_name, back_time, created_time, last_modified_time
+  </sql>
+  <select id="selectByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanOisInstanceExample" resultMap="BaseResultMap">
+    WITH ois AS(select 
+        a.*,
+        t.name as type_name,
+        b.name as brand_name 
+      from orthopaedic_operation_plan_ois_instance a
+      left join orthopaedic_operation_top_type t on t.type_inner_sn = a.type_inner_sn
+      left join orthopaedic_ois_brand b on b.brand_inner_sn = a.brand_inner_sn
+    )
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />, type_name, brand_name
+    from ois
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from orthopaedic_operation_plan_ois_instance
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from orthopaedic_operation_plan_ois_instance
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanOisInstanceExample">
+    delete from orthopaedic_operation_plan_ois_instance
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanOisInstance">
+    insert into orthopaedic_operation_plan_ois_instance (id, plan_id, platform_ois_inner_sn, 
+      cust_ois_id, dealer_inner_sn, dealer_name, status, 
+      type_inner_sn, brand_inner_sn, ois_sn, 
+      name, description, keywords, 
+      assistant_employee_inner_sn, assistant_employee_name, 
+      out_warehouse_inner_sn, out_warehouse_name, 
+      out_employee_inner_sn, out_employee_name, 
+      out_time, back_employee_inner_sn, back_employee_name, 
+      back_time, created_time, last_modified_time
+      )
+    values (#{id,jdbcType=BIGINT}, #{plan_id,jdbcType=BIGINT}, #{platform_ois_inner_sn,jdbcType=BIGINT}, 
+      #{cust_ois_id,jdbcType=BIGINT}, #{dealer_inner_sn,jdbcType=BIGINT}, #{dealer_name,jdbcType=VARCHAR}, #{status,jdbcType=TINYINT}, 
+      #{type_inner_sn,jdbcType=TINYINT}, #{brand_inner_sn,jdbcType=SMALLINT}, #{ois_sn,jdbcType=VARCHAR}, 
+      #{name,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{keywords,jdbcType=VARCHAR}, 
+      #{assistant_employee_inner_sn,jdbcType=BIGINT}, #{assistant_employee_name,jdbcType=VARCHAR}, 
+      #{out_warehouse_inner_sn,jdbcType=BIGINT}, #{out_warehouse_name,jdbcType=VARCHAR},
+      #{out_employee_inner_sn,jdbcType=BIGINT}, #{out_employee_name,jdbcType=VARCHAR}, 
+      #{out_time,jdbcType=TIMESTAMP}, #{back_employee_inner_sn,jdbcType=BIGINT}, #{back_employee_name,jdbcType=VARCHAR}, 
+      #{back_time,jdbcType=TIMESTAMP}, #{created_time,jdbcType=TIMESTAMP}, #{last_modified_time,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanOisInstance">
+    insert into orthopaedic_operation_plan_ois_instance
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="plan_id != null">
+        plan_id,
+      </if>
+      <if test="platform_ois_inner_sn != null">
+        platform_ois_inner_sn,
+      </if>
+      <if test="cust_ois_id != null">
+        cust_ois_id,
+      </if>
+      <if test="dealer_inner_sn != null">
+        dealer_inner_sn,
+      </if>
+      <if test="dealer_name != null">
+        dealer_name,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="type_inner_sn != null">
+        type_inner_sn,
+      </if>
+      <if test="brand_inner_sn != null">
+        brand_inner_sn,
+      </if>
+      <if test="ois_sn != null">
+        ois_sn,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="description != null">
+        description,
+      </if>
+      <if test="keywords != null">
+        keywords,
+      </if>
+      <if test="assistant_employee_inner_sn != null">
+        assistant_employee_inner_sn,
+      </if>
+      <if test="assistant_employee_name != null">
+        assistant_employee_name,
+      </if>
+      <if test="out_warehouse_inner_sn != null">
+        out_warehouse_inner_sn,
+      </if>
+      <if test="out_warehouse_name != null">
+        out_warehouse_name,
+      </if>
+      <if test="out_employee_inner_sn != null">
+        out_employee_inner_sn,
+      </if>
+      <if test="out_employee_name != null">
+        out_employee_name,
+      </if>
+      <if test="out_time != null">
+        out_time,
+      </if>
+      <if test="back_employee_inner_sn != null">
+        back_employee_inner_sn,
+      </if>
+      <if test="back_employee_name != null">
+        back_employee_name,
+      </if>
+      <if test="back_time != null">
+        back_time,
+      </if>
+      <if test="created_time != null">
+        created_time,
+      </if>
+      <if test="last_modified_time != null">
+        last_modified_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="plan_id != null">
+        #{plan_id,jdbcType=BIGINT},
+      </if>
+      <if test="platform_ois_inner_sn != null">
+        #{platform_ois_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="cust_ois_id != null">
+        #{cust_ois_id,jdbcType=BIGINT},
+      </if>
+      <if test="dealer_inner_sn != null">
+        #{dealer_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="dealer_name != null">
+        #{dealer_name,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=TINYINT},
+      </if>
+      <if test="type_inner_sn != null">
+        #{type_inner_sn,jdbcType=TINYINT},
+      </if>
+      <if test="brand_inner_sn != null">
+        #{brand_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="ois_sn != null">
+        #{ois_sn,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="keywords != null">
+        #{keywords,jdbcType=VARCHAR},
+      </if>
+      <if test="assistant_employee_inner_sn != null">
+        #{assistant_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="assistant_employee_name != null">
+        #{assistant_employee_name,jdbcType=VARCHAR},
+      </if>
+      <if test="out_warehouse_inner_sn != null">
+        #{out_warehouse_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="out_warehouse_name != null">
+        #{out_warehouse_name,jdbcType=VARCHAR},
+      </if>
+      <if test="out_employee_inner_sn != null">
+        #{out_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="out_employee_name != null">
+        #{out_employee_name,jdbcType=VARCHAR},
+      </if>
+      <if test="out_time != null">
+        #{out_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="back_employee_inner_sn != null">
+        #{back_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="back_employee_name != null">
+        #{back_employee_name,jdbcType=VARCHAR},
+      </if>
+      <if test="back_time != null">
+        #{back_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="created_time != null">
+        #{created_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="last_modified_time != null">
+        #{last_modified_time,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanOisInstanceExample" resultType="java.lang.Long">
+    select count(*) from orthopaedic_operation_plan_ois_instance
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update orthopaedic_operation_plan_ois_instance
+    <set>
+      <if test="record.id != null">
+        id = #{record.id,jdbcType=BIGINT},
+      </if>
+      <if test="record.plan_id != null">
+        plan_id = #{record.plan_id,jdbcType=BIGINT},
+      </if>
+      <if test="record.platform_ois_inner_sn != null">
+        platform_ois_inner_sn = #{record.platform_ois_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.cust_ois_id != null">
+        cust_ois_id = #{record.cust_ois_id,jdbcType=BIGINT},
+      </if>
+      <if test="record.dealer_inner_sn != null">
+        dealer_inner_sn = #{record.dealer_inner_sn,jdbcType=BIGINT},
+      </if>
+       <if test="record.dealer_name != null">
+        dealer_name = #{record.dealer_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.status != null">
+        status = #{record.status,jdbcType=TINYINT},
+      </if>
+      <if test="record.type_inner_sn != null">
+        type_inner_sn = #{record.type_inner_sn,jdbcType=TINYINT},
+      </if>
+      <if test="record.brand_inner_sn != null">
+        brand_inner_sn = #{record.brand_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="record.ois_sn != null">
+        ois_sn = #{record.ois_sn,jdbcType=VARCHAR},
+      </if>
+      <if test="record.name != null">
+        name = #{record.name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.description != null">
+        description = #{record.description,jdbcType=VARCHAR},
+      </if>
+      <if test="record.keywords != null">
+        keywords = #{record.keywords,jdbcType=VARCHAR},
+      </if>
+      <if test="record.assistant_employee_inner_sn != null">
+        assistant_employee_inner_sn = #{record.assistant_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.assistant_employee_name != null">
+        assistant_employee_name = #{record.assistant_employee_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.out_warehouse_inner_sn != null">
+        out_warehouse_inner_sn = #{record.out_warehouse_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.out_warehouse_name != null">
+        out_warehouse_name = #{record.out_warehouse_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.out_employee_inner_sn != null">
+        out_employee_inner_sn = #{record.out_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.out_employee_name != null">
+        out_employee_name = #{record.out_employee_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.out_time != null">
+        out_time = #{record.out_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.back_employee_inner_sn != null">
+        back_employee_inner_sn = #{record.back_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="record.back_employee_name != null">
+        back_employee_name = #{record.back_employee_name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.back_time != null">
+        back_time = #{record.back_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.created_time != null">
+        created_time = #{record.created_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.last_modified_time != null">
+        last_modified_time = #{record.last_modified_time,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update orthopaedic_operation_plan_ois_instance
+    set id = #{record.id,jdbcType=BIGINT},
+      plan_id = #{record.plan_id,jdbcType=BIGINT},
+      platform_ois_inner_sn = #{record.platform_ois_inner_sn,jdbcType=BIGINT},
+      cust_ois_id = #{record.cust_ois_id,jdbcType=BIGINT},
+      dealer_inner_sn = #{record.dealer_inner_sn,jdbcType=BIGINT},
+      dealer_name = #{record.dealer_name,jdbcType=VARCHAR},
+      status = #{record.status,jdbcType=TINYINT},
+      type_inner_sn = #{record.type_inner_sn,jdbcType=TINYINT},
+      brand_inner_sn = #{record.brand_inner_sn,jdbcType=SMALLINT},
+      ois_sn = #{record.ois_sn,jdbcType=VARCHAR},
+      name = #{record.name,jdbcType=VARCHAR},
+      description = #{record.description,jdbcType=VARCHAR},
+      keywords = #{record.keywords,jdbcType=VARCHAR},
+      assistant_employee_inner_sn = #{record.assistant_employee_inner_sn,jdbcType=BIGINT},
+      assistant_employee_name = #{record.assistant_employee_name,jdbcType=VARCHAR},
+      out_warehouse_inner_sn = #{record.out_warehouse_inner_sn,jdbcType=BIGINT},
+      out_warehouse_name = #{record.out_warehouse_name,jdbcType=VARCHAR},
+      out_employee_inner_sn = #{record.out_employee_inner_sn,jdbcType=BIGINT},
+      out_employee_name = #{record.out_employee_name,jdbcType=VARCHAR},
+      out_time = #{record.out_time,jdbcType=TIMESTAMP},
+      back_employee_inner_sn = #{record.back_employee_inner_sn,jdbcType=BIGINT},
+      back_employee_name = #{record.back_employee_name,jdbcType=VARCHAR},
+      back_time = #{record.back_time,jdbcType=TIMESTAMP},
+      created_time = #{record.created_time,jdbcType=TIMESTAMP},
+      last_modified_time = #{record.last_modified_time,jdbcType=TIMESTAMP}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanOisInstance">
+    update orthopaedic_operation_plan_ois_instance
+    <set>
+      <if test="plan_id != null">
+        plan_id = #{plan_id,jdbcType=BIGINT},
+      </if>
+      <if test="platform_ois_inner_sn != null">
+        platform_ois_inner_sn = #{platform_ois_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="cust_ois_id != null">
+        cust_ois_id = #{cust_ois_id,jdbcType=BIGINT},
+      </if>
+      <if test="dealer_inner_sn != null">
+        dealer_inner_sn = #{dealer_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="dealer_name != null">
+        dealer_name = #{dealer_name,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=TINYINT},
+      </if>
+      <if test="type_inner_sn != null">
+        type_inner_sn = #{type_inner_sn,jdbcType=TINYINT},
+      </if>
+      <if test="brand_inner_sn != null">
+        brand_inner_sn = #{brand_inner_sn,jdbcType=SMALLINT},
+      </if>
+      <if test="ois_sn != null">
+        ois_sn = #{ois_sn,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="keywords != null">
+        keywords = #{keywords,jdbcType=VARCHAR},
+      </if>
+      <if test="assistant_employee_inner_sn != null">
+        assistant_employee_inner_sn = #{assistant_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="assistant_employee_name != null">
+        assistant_employee_name = #{assistant_employee_name,jdbcType=VARCHAR},
+      </if>
+      <if test="out_warehouse_inner_sn != null">
+        out_warehouse_inner_sn = #{out_warehouse_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="out_warehouse_name != null">
+        out_warehouse_name = #{out_warehouse_name,jdbcType=VARCHAR},
+      </if>
+      <if test="out_employee_inner_sn != null">
+        out_employee_inner_sn = #{out_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="out_employee_name != null">
+        out_employee_name = #{out_employee_name,jdbcType=VARCHAR},
+      </if>
+      <if test="out_time != null">
+        out_time = #{out_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="back_employee_inner_sn != null">
+        back_employee_inner_sn = #{back_employee_inner_sn,jdbcType=BIGINT},
+      </if>
+      <if test="back_employee_name != null">
+        back_employee_name = #{back_employee_name,jdbcType=VARCHAR},
+      </if>
+      <if test="back_time != null">
+        back_time = #{back_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="created_time != null">
+        created_time = #{created_time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="last_modified_time != null">
+        last_modified_time = #{last_modified_time,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.yrt.project.modular.surgery.plan.OrthopaedicOperationPlanOisInstance">
+    update orthopaedic_operation_plan_ois_instance
+    set plan_id = #{plan_id,jdbcType=BIGINT},
+      platform_ois_inner_sn = #{platform_ois_inner_sn,jdbcType=BIGINT},
+      cust_ois_id = #{cust_ois_id,jdbcType=BIGINT},
+      dealer_inner_sn = #{dealer_inner_sn,jdbcType=BIGINT},
+      dealer_name = #{dealer_name,jdbcType=VARCHAR},
+      status = #{status,jdbcType=TINYINT},
+      type_inner_sn = #{type_inner_sn,jdbcType=TINYINT},
+      brand_inner_sn = #{brand_inner_sn,jdbcType=SMALLINT},
+      ois_sn = #{ois_sn,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      description = #{description,jdbcType=VARCHAR},
+      keywords = #{keywords,jdbcType=VARCHAR},
+      assistant_employee_inner_sn = #{assistant_employee_inner_sn,jdbcType=BIGINT},
+      assistant_employee_name = #{assistant_employee_name,jdbcType=VARCHAR},
+      out_warehouse_inner_sn = #{out_warehouse_inner_sn,jdbcType=BIGINT},
+      out_warehouse_name = #{out_warehouse_name,jdbcType=VARCHAR},
+      out_employee_inner_sn = #{out_employee_inner_sn,jdbcType=BIGINT},
+      out_employee_name = #{out_employee_name,jdbcType=VARCHAR},
+      out_time = #{out_time,jdbcType=TIMESTAMP},
+      back_employee_inner_sn = #{back_employee_inner_sn,jdbcType=BIGINT},
+      back_employee_name = #{back_employee_name,jdbcType=VARCHAR},
+      back_time = #{back_time,jdbcType=TIMESTAMP},
+      created_time = #{created_time,jdbcType=TIMESTAMP},
+      last_modified_time = #{last_modified_time,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

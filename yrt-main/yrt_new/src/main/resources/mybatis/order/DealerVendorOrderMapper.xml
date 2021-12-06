@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.order.mapper.DealerVendorOrderMapper">
+
+	<resultMap type="PurchaseOrder" id="PurchaseOrderResult">
+		<result  property="partA" column="partA"/><!-- 采购方机构编号 -->
+		<result  property="partA_name" column="partA_name"/><!-- 采购方名称 -->
+		<result  property="partB" column="partB"/><!-- 销售方机构编号 -->
+		<result  property="partB_name" column="partB_name"/><!-- 销售方名称 -->
+		<result  property="po_so_inner_sn" column="po_so_inner_sn"/><!-- 订单内部编号 -->
+		<result  property="buyer_inner_sn" column="buyer_inner_sn"/><!-- 采购员内部编号 -->
+		<result  property="buyer_name" column="buyer_name"/><!-- 采购员名字 -->
+		<result property="department_inner_sn" column="purchase_department_inner_sn"/><!-- 部门内部编号  -->
+		<result property="department_name" column="department_name"/><!-- 部门名字  -->
+		<result property="creator_id" column="creator_id"/><!-- 制单人内部编号  -->
+		<result property="creator_name" column="creator_name"/><!-- 制单人名字  -->
+		<result property="auditor_id" column="auditor_id"/><!-- 审核人内部编号  -->
+		<result property="auditor_name" column="auditor_name"/><!-- 审核人名字-->
+		<result property="affirmant_inner_sn" column="affirmant_inner_sn"/><!-- 单据确认人编号  -->
+		<result property="affirmant_name" column="affirmant_name"/><!-- 单据确认人名字  -->
+		<result property="po_sn" column="po_sn"/><!-- 采购订单编号  -->
+		<result property="so_sn" column="so_sn"/><!-- 销售订单编号  -->
+		<result property="alias" column="alias"/><!-- 医院别名  -->
+		<result property="expect_aog_date" column="expect_aog_date"/><!-- 期望到货日期 -->
+		<result property="status" column="status"/><!-- 状态 0-草稿 1-正式 2-已审批 3-确认 4-已终止 5-已完结  -->
+		<result property="create_organization_type" column="create_organization_type"/><!-- 单据生成方 0-采购 1-销售  -->
+		<result property="create_time" column="create_time"/><!-- 单据生成时间  -->
+		<result property="audit_time" column="audit_time"/><!-- 单据审核时间 -->
+		<result property="confirm_time" column="confirm_time"/><!-- 单据确认时间  -->
+		<result property="warehouse_inner_sn" column="warehouse_inner_sn"/><!-- 收货仓库ID  -->
+		<result property="warehouse_name" column="warehouse_name"/><!-- 收货仓库名称  -->
+		<result property="delivery_address" column="delivery_address"/><!-- 收货地址  -->
+		<result property="description" column="description"/><!-- 描述  -->
+		<result property="billsType" column="billsType"/><!-- 单据类型  0-DealerDealer 1-DealerVendor 2-DealerHospital 3-HospitalHospital 4-hospitalDealer 5-hospitalVendor  -->
+
+		<result property="b_bank_name" column="b_bank_name"/>
+		<result property="b_bank_account" column="b_bank_account"/>
+
+		<result property="b_principal" column="b_principal"/>
+		<result property="b_phone" column="b_phone"/>
+	</resultMap>
+	
+	<sql id="selectDealerVendorPurchaseOrder">
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name,
+		       d.`bank_name` as b_bank_name,d.bank_account as b_bank_account,d.principal as b_principal,d.phone as b_phone,
+			c.po_so_inner_sn, c.buyer_inner_sn, c.buyer_name, c.purchase_department_inner_sn, c.purchase_department as department_name, 
+			CASE WHEN c.create_organization_type = 0 THEN c.dealer_creator_inner_sn ELSE c.vendor_creator_inner_sn END as creator_id, 
+			CASE WHEN c.create_organization_type = 0 THEN c.dealer_creator_name ELSE c.vendor_creator_name END as creator_name, 
+			CASE WHEN c.create_organization_type = 0 THEN c.dealer_auditor_inner_sn ELSE c.vendor_auditor_inner_sn END as auditor_id, 
+			CASE WHEN c.create_organization_type = 0 THEN c.dealer_auditor_name ELSE c.vendor_auditor_name END as auditor_name, 
+			c.dealer_affirmant_inner_sn as affirment_inner_sn, c.dealer_affirmant_name as affirmant_name, c.vendor_so_sn as so_sn,
+			c.dealer_po_sn as po_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, c.audit_time, c.confirm_time, 
+			c.dealer_warehouse_inner_sn as warehouse_inner_sn, c.dealer_warehouse_name as warehouse_name, delivery_address, c.description, 1 as billsType
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+	</sql>
+
+	<select id="searchPurchaseOrderList" parameterType="map" resultMap="PurchaseOrderResult">
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, 
+			c.po_so_inner_sn, c.buyer_inner_sn, c.buyer_name, c.purchase_department_inner_sn, c.purchase_department as department_name, 
+			c.dealer_creator_inner_sn as creator_id, c.dealer_creator_name as creator_name, c.dealer_auditor_inner_sn as auditor_id, c.dealer_auditor_name as auditor_name, 
+			c.dealer_affirmant_inner_sn as affirment_inner_sn, c.dealer_affirmant_name as affirmant_name,
+			c.dealer_po_sn as po_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, c.audit_time, 
+			c.confirm_time, c.description, 1 as billsType, c.dealer_warehouse_inner_sn as warehouse_inner_sn, c.dealer_warehouse_name as warehouse_name
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		where 1=1 and c.create_organization_type = 0 and c.dealer_inner_sn= #{partA} 
+		<if test="partB != null">and d.name like concat('%', #{partB}, '%')</if>
+		<if test="po_sn != null">and c.dealer_po_sn like concat('%', #{po_sn}, '%')</if>
+		<if test="purchase_department_inner_sn != null">and c.purchase_department_inner_sn= #{purchase_department_inner_sn}</if>
+		<if test="buyer_inner_sn != null">and c.buyer_inner_sn= #{buyer_inner_sn}</if>
+		<if test="status != null">and (c.status in (${status}) and ((c.status=0 and c.dealer_creator_inner_sn=#{uid}) or c.status>0))</if>
+		<if test="start_date != null"> AND DATE_FORMAT(c.`create_time`,'%Y-%m-%d') &gt;= DATE_FORMAT(#{start_date},'%Y-%m-%d')</if>
+		<if test="end_date != null"> AND DATE_FORMAT(c.`create_time`,'%Y-%m-%d') &lt;= DATE_FORMAT(#{end_date},'%Y-%m-%d')</if>
+		union distinct
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, 
+			c.po_so_inner_sn, c.buyer_inner_sn, c.buyer_name, c.purchase_department_inner_sn, c.purchase_department as department_name, 
+			c.dealer_creator_inner_sn as creator_id, c.dealer_creator_name as creator_name, c.dealer_auditor_inner_sn as auditor_id, c.dealer_auditor_name as auditor_name, 
+			c.dealer_affirmant_inner_sn as affirment_inner_sn, c.dealer_affirmant_name as affirmant_name,
+			c.dealer_po_sn as po_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, c.audit_time, 
+			c.confirm_time, c.description, 1 as billsType, c.dealer_warehouse_inner_sn as warehouse_inner_sn, c.dealer_warehouse_name as warehouse_name
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		where 1=1 and c.create_organization_type = 1 and c.dealer_inner_sn= #{partA} and c.status in (2,3)
+		<if test="partB != null">and d.name like concat('%', #{partB}, '%')</if>
+		<if test="po_sn != null">and c.dealer_po_sn like concat('%', #{po_sn}, '%')</if>
+		<if test="purchase_department_inner_sn != null">and c.purchase_department_inner_sn= #{purchase_department_inner_sn}</if>
+		<if test="buyer_inner_sn != null">and c.buyer_inner_sn= #{buyer_inner_sn}</if>
+		<if test="start_date != null"> AND DATE_FORMAT(c.`create_time`,'%Y-%m-%d') &gt;= DATE_FORMAT(#{start_date},'%Y-%m-%d')</if>
+		<if test="end_date != null"> AND DATE_FORMAT(c.`create_time`,'%Y-%m-%d') &lt;= DATE_FORMAT(#{end_date},'%Y-%m-%d')</if>
+	</select>
+	
+	<select id="selectPurchaseOrderInfo" parameterType="map" resultMap="PurchaseOrderResult">
+		<include refid="selectDealerVendorPurchaseOrder"/>
+		where 1=1
+			and c.dealer_inner_sn= #{partA}
+			and c.vendor_inner_sn= #{partB}
+			and c.po_so_inner_sn = #{po_so_inner_sn}
+	</select>
+	
+	<resultMap type="SaleOrder" id="SaleOrderResult">
+		<result  property="partA" column="partA"/><!-- 采购方机构编号 -->
+		<result  property="partA_name" column="partA_name"/><!-- 采购方名称 -->
+		<result  property="partB" column="partB"/><!-- 销售方机构编号 -->
+		<result  property="partB_name" column="partB_name"/><!-- 销售方名称 -->
+		<result  property="po_so_inner_sn" column="po_so_inner_sn"/><!-- 订单内部编号 -->
+		<result property="creator_id" column="creator_id"/><!-- 制单人内部编号  -->
+		<result property="creator_name" column="creator_name"/><!-- 制单人名字  -->
+		<result property="auditor_id" column="auditor_id"/><!-- 审核人内部编号  -->
+		<result property="auditor_name" column="auditor_name"/><!-- 审核人名字-->
+		<result property="affirmant_inner_sn" column="affirmant_inner_sn"/><!-- 单据确认人编号  -->
+		<result property="affirmant_name" column="affirmant_name"/><!-- 单据确认人名字  -->
+		<result property="po_sn" column="po_sn"/><!-- 采购订单编号  -->
+		<result property="so_sn" column="so_sn"/><!-- 销售订单编号  -->
+		<result property="alias" column="alias"/><!-- 医院别名  -->
+		<result property="expect_aog_date" column="expect_aog_date"/><!-- 期望到货日期 -->
+		<result property="status" column="status"/><!-- 状态 0-草稿 1-正式 2-已审批 3-确认 4-已终止 5-已完结  -->
+		<result property="create_organization_type" column="create_organization_type"/><!-- 单据生成方 0-采购 1-销售  -->
+		<result property="create_time" column="create_time"/><!-- 单据生成时间  -->
+		<result property="audit_time" column="audit_time"/><!-- 单据审核时间 -->
+		<result property="confirm_time" column="confirm_time"/><!-- 单据确认时间  -->
+		<result property="warehouse_inner_sn" column="warehouse_inner_sn"/><!-- 收货仓库ID  -->
+		<result property="warehouse_name" column="warehouse_name"/><!-- 收货仓库名称  -->
+		<result property="delivery_address" column="delivery_address"/><!-- 收货地址  -->
+		<result property="description" column="description"/><!-- 描述  -->
+		<result property="billsType" column="billsType"/><!-- 单据类型  0-DealerDealer 1-DealerVendor 2-DealerHospital 3-HospitalHospital 4-hospitalDealer 5-hospitalVendor  -->
+	</resultMap>
+	
+	<sql id="selectDealerVendorSaleOrder">
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, 
+			case when c.create_organization_type = '0' THEN c.dealer_creator_inner_sn else c.vendor_creator_inner_sn END as creator_id ,
+			case when c.create_organization_type = '0' THEN c.dealer_creator_name else c.vendor_creator_name END as creator_name,
+			case when c.create_organization_type = '0' THEN c.dealer_auditor_inner_sn else c.vendor_auditor_inner_sn END as auditor_id,
+			case when c.create_organization_type = '0' THEN c.dealer_auditor_name else c.vendor_auditor_name END as auditor_name,
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name, c.dealer_po_sn as po_sn,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, c.audit_time, c.confirm_time, 
+			c.dealer_warehouse_inner_sn as warehouse_inner_sn, c.dealer_warehouse_name as warehouse_name, delivery_address, c.description, 6 as billsType
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join dealer_department dd on c.dealer_inner_sn=dd.dealer_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+	</sql>
+
+	<select id="searchSaleOrderList" parameterType="map" resultMap="SaleOrderResult">
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, "" as alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name, 
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name, 
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 6 as billsType
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join dealer_department dd on c.dealer_inner_sn=dd.dealer_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.create_organization_type = 1 and c.vendor_inner_sn= #{partB}
+		<if test="partA != null">and h.name like concat('%', #{partA}, '%')</if>
+		<if test="so_sn != null">and c.vendor_so_sn like concat('%', #{so_sn}, '%')</if>
+		<if test="status != null">and (c.status in (${status}) and ((c.status=0 and c.vendor_creator_inner_sn=#{uid}) or c.status>0))</if>
+		<if test="otherStatus != null">
+			union distinct
+			select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, "" as alias,
+				c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name, 
+				c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name, 
+				c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+				c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+				c.audit_time, c.confirm_time, c.description, 6 as billsType
+			from dealer_po_vendor_so c
+			left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+			left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+			left join dealer_department dd on c.dealer_inner_sn=dd.dealer_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+			where 1=1 and c.create_organization_type = 0 and c.vendor_inner_sn= #{partB} and c.status in (${otherStatus})
+			<if test="partA != null">and h.name like concat('%', #{partA}, '%')</if>
+			<if test="so_sn != null">and c.vendor_so_sn like concat('%', #{so_sn}, '%')</if>
+		</if>
+		union distinct
+		select c.hospital_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, h.alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name,
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name,
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 7 as billsType
+		from hospital_po_vendor_so c
+		left join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join hospital_department dd on c.hospital_inner_sn=dd.hospital_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.create_organization_type = 1 and c.vendor_inner_sn= #{partB}
+		<if test="partA != null">and h.name like concat('%', #{partA}, '%')</if>
+		<if test="so_sn != null">and c.vendor_so_sn like concat('%', #{so_sn}, '%')</if>
+		<if test="status != null">and (c.status in (${status}) and ((c.status=0 and c.vendor_creator_inner_sn=#{uid}) or c.status>0))</if>
+		<if test="otherStatus != null">
+			union distinct
+			select c.hospital_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, h.alias,
+				c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name,
+				c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name,
+				c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+				c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+				c.audit_time, c.confirm_time, c.description, 7 as billsType
+			from hospital_po_vendor_so c
+			left join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+			left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+			left join hospital_department dd on c.hospital_inner_sn=dd.hospital_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+			where 1=1 and c.create_organization_type = 0 and c.vendor_inner_sn= #{partB} and c.status in (${otherStatus})
+			<if test="partA != null">and h.name like concat('%', #{partA}, '%')</if>
+			<if test="so_sn != null">and c.vendor_so_sn like concat('%', #{so_sn}, '%')</if>
+		</if>
+	</select>
+	
+	<select id="searchSaleOrderList4Phone" parameterType="map" resultMap="SaleOrderResult">
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, "" as alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name, 
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name, 
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 6 as billsType
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join dealer_department dd on c.dealer_inner_sn=dd.dealer_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.create_organization_type = 1 and c.vendor_inner_sn= #{partB}
+		<if test="key != null and key != ''">and (h.name like concat('%', #{key}, '%') or c.vendor_so_sn like concat('%', #{key}, '%'))</if>
+		<if test="status != null">and (c.status in (${status}) and ((c.status=0 and c.vendor_creator_inner_sn=#{uid}) or c.status>0))</if>
+		union distinct
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, "" as alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name, 
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name, 
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 6 as billsType
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join dealer_department dd on c.dealer_inner_sn=dd.dealer_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.create_organization_type = 0 and c.vendor_inner_sn= #{partB} and c.status in (${status1}) and c.status != 0
+		<if test="key != null and key != ''">and (h.name like concat('%', #{key}, '%') or c.vendor_so_sn like concat('%', #{key}, '%'))</if>
+		union distinct
+		select c.hospital_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, h.alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name,
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name,
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 7 as billsType
+		from hospital_po_vendor_so c
+		left join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join hospital_department dd on c.hospital_inner_sn=dd.hospital_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.create_organization_type = 1 and c.vendor_inner_sn= #{partB}
+		<if test="key != null and key != ''">and (h.name like concat('%', #{key}, '%') or c.vendor_so_sn like concat('%', #{key}, '%'))</if>
+		<if test="status != null">and (c.status in (${status}) and ((c.status=0 and c.vendor_creator_inner_sn=#{uid}) or c.status>0))</if>
+		union distinct
+		select c.hospital_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, h.alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name,
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name,
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 7 as billsType
+		from hospital_po_vendor_so c
+		left join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join hospital_department dd on c.hospital_inner_sn=dd.hospital_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.create_organization_type = 0 and c.vendor_inner_sn= #{partB} and c.status in (${status1}) and c.status != 0
+		<if test="key != null and key != ''">and (h.name like concat('%', #{key}, '%') or c.vendor_so_sn like concat('%', #{key}, '%'))</if>
+	</select>
+	
+	<select id="searchSaleOrderList4Phone1" parameterType="map" resultMap="SaleOrderResult">
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, "" as alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name, 
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name, 
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 6 as billsType
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join dealer_department dd on c.dealer_inner_sn=dd.dealer_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.create_organization_type = 1 and c.vendor_inner_sn= #{partB}
+		<if test="key != null and key != ''">and (h.name like concat('%', #{key}, '%') or c.vendor_so_sn like concat('%', #{key}, '%'))</if>
+		<if test="status != null">and (c.status in (${status}) and ((c.status=0 and c.vendor_creator_inner_sn=#{uid}) or c.status>0))</if>
+		union distinct
+		select c.hospital_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, h.alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name,
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name,
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 7 as billsType
+		from hospital_po_vendor_so c
+		left join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join hospital_department dd on c.hospital_inner_sn=dd.hospital_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.create_organization_type = 1 and c.vendor_inner_sn= #{partB}
+		<if test="key != null and key != ''">and (h.name like concat('%', #{key}, '%') or c.vendor_so_sn like concat('%', #{key}, '%'))</if>
+		<if test="status != null">and (c.status in (${status}) and ((c.status=0 and c.vendor_creator_inner_sn=#{uid}) or c.status>0))</if>
+	</select>
+	
+	<select id="searchSaleHistoryOrderList" parameterType="map" resultMap="SaleOrderResult">
+		select c.dealer_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, "" as alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name, 
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name, 
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 6 as billsType
+		from dealer_po_vendor_so c
+		left join dealer h on h.dealer_inner_sn = c.dealer_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join dealer_department dd on c.dealer_inner_sn=dd.dealer_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.status in(${status}) and c.vendor_inner_sn= #{partB}
+		<if test="partA != null">and h.name like concat('%', #{partA}, '%')</if>
+		<if test="so_sn != null">and c.vendor_so_sn like concat('%', #{so_sn}, '%')</if>
+		union all
+		select c.hospital_inner_sn as partA, h.name as partA_name, c.vendor_inner_sn as partB, d.name as partB_name, c.po_so_inner_sn, h.alias,
+			c.vendor_creator_inner_sn as creator_id, c.vendor_creator_name as creator_name,
+			c.vendor_auditor_inner_sn as auditor_id, c.vendor_auditor_name as auditor_name,
+			c.vendor_affirmant_inner_sn as affirment_inner_sn, c.vendor_affirmant_name as affirmant_name,
+			c.vendor_so_sn as so_sn, c.expect_aog_date, c.status, c.create_organization_type, c.create_time, 
+			c.audit_time, c.confirm_time, c.description, 7 as billsType
+		from hospital_po_vendor_so c
+		left join hospital h on h.hospital_inner_sn = c.hospital_inner_sn
+		left join vendor d on  d.vendor_inner_sn = c.vendor_inner_sn
+		left join hospital_department dd on c.hospital_inner_sn=dd.hospital_inner_sn and dd.department_inner_sn = c.purchase_department_inner_sn
+		where 1=1 and c.status in(${status}) and c.vendor_inner_sn= #{partB}
+		<if test="partA != null">and h.name like concat('%', #{partA}, '%')</if>
+		<if test="so_sn != null">and c.vendor_so_sn like concat('%', #{so_sn}, '%')</if>
+	</select>
+	
+	<select id="selectSaleOrderInfo" parameterType="map" resultMap="SaleOrderResult">
+		<include refid="selectDealerVendorSaleOrder"/>
+		where 1=1
+			and c.dealer_inner_sn= #{partA}
+			and c.vendor_inner_sn= #{partB}
+			and c.po_so_inner_sn = #{po_so_inner_sn}
+	</select>
+	
+	<select id="selectSaleOrderDetailList_COUNT" parameterType="map" resultType="long">
+		select count(1) from dual
+	</select>
+	
+	<select id="selectSaleOrderDetailList" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		{call dv_get_dealer_po_vendor_so_sell_need_to_know_information(
+			#{partA_i, mode=IN},
+			#{partB_i, mode=IN},
+			#{po_so_inner_sn_i, mode=IN},
+			#{warehouse_inner_sn_i, mode=IN},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)}
+	</select>
+	
+	<select id="dv_add_dealer_po_vendor_so" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		{call dv_add_dealer_po_vendor_so(
+			#{dealer_inner_sn_i, mode=IN},
+			#{vendor_inner_sn_i, mode=IN},
+			#{buyer_inner_sn_i, mode=IN},
+			#{purchase_department_inner_sn_i, mode=IN},
+			#{dealer_creator_inner_sn_i, mode=IN},
+			#{dealer_auditor_inner_sn_i, mode=IN},
+			#{vendor_creator_inner_sn_i, mode=IN},
+			#{vendor_auditor_inner_sn_i, mode=IN},
+			#{dealer_warehouse_inner_sn_i, mode=IN},
+			#{dealer_po_sn_i, mode=IN},
+			#{vendor_so_sn_i, mode=IN},
+			#{expect_aog_date_i, mode=IN},
+			#{status_i, mode=IN},
+			#{create_organization_type_i, mode=IN},
+			#{create_time_i, mode=IN},
+			#{audit_time_i, mode=IN},
+			#{confirm_time_i, mode=IN},
+			#{delivery_address_i, mode=IN},
+			#{description_i, mode=IN},
+			#{dealer_affirmant_inner_sn_i, mode=IN},
+			#{vendor_affirmant_inner_sn_i, mode=IN},
+			#{buyer_name_i, mode=IN},
+			#{purchase_department_i, mode=IN},
+			#{dealer_creator_name_i, mode=IN},
+			#{dealer_auditor_name_i, mode=IN},
+			#{vendor_creator_name_i, mode=IN},
+			#{vendor_auditor_name_i, mode=IN},
+			#{dealer_warehouse_name_i, mode=IN},
+			#{dealer_affirmant_name_i, mode=IN},
+			#{vendor_affirmant_name_i, mode=IN},
+			#{po_so_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)}
+	</select>
+	
+	<update id="updateOrder" parameterType="map">
+		update dealer_po_vendor_so
+		<set>
+			<if test="buyer_inner_sn != null "> buyer_inner_sn = #{buyer_inner_sn},</if>
+			<if test="purchase_department_inner_sn != null "> purchase_department_inner_sn = #{purchase_department_inner_sn},</if>
+			<if test="dealer_creator_inner_sn != null "> dealer_creator_inner_sn = #{dealer_creator_inner_sn},</if>
+			<if test="dealer_auditor_inner_sn != null "> dealer_auditor_inner_sn = #{dealer_auditor_inner_sn},</if>
+			<if test="vendor_affirmant_inner_sn != null"> vendor_affirmant_inner_sn = #{vendor_affirmant_inner_sn},</if>
+			<if test="vendor_auditor_inner_sn != null"> vendor_auditor_inner_sn = #{vendor_auditor_inner_sn},</if>
+			<if test="warehouse_inner_sn != null"> dealer_warehouse_inner_sn = #{warehouse_inner_sn},</if>
+			<if test="warehouse_inner_sn == -1"> dealer_warehouse_inner_sn = null,</if>
+			<if test="dealer_affirmant_inner_sn != null "> dealer_affirmant_inner_sn = #{dealer_affirmant_inner_sn},</if>
+			<if test="vendor_affirmant_inner_sn != null "> vendor_affirmant_inner_sn = #{vendor_affirmant_inner_sn},</if>
+			<if test="po_sn != null "> dealer_po_sn = #{po_sn},</if>
+			<if test="so_sn != null "> vendor_so_sn = #{so_sn},</if>
+			<if test="expect_aog_date != null and expect_date_int ==0"> expect_aog_date = #{expect_aog_date},</if>
+			<if test="expect_date_int ==1"> expect_aog_date = null,</if>
+			<if test="status != null"> status = #{status},</if>
+			<if test="create_organization_type != null"> create_organization_type = #{create_organization_type},</if>
+			<if test="create_time != null"> create_time = #{create_time},</if>
+			<if test="audit_time != null "> audit_time = #{audit_time},</if>
+			<if test="answer_time != null "> answer_time = #{answer_time},</if>
+			<if test="confirm_time != null "> confirm_time = #{confirm_time},</if>
+			<if test="description != null"> description = #{description},</if>
+			<if test="buyer_name != null"> buyer_name = #{buyer_name},</if>
+			<if test="purchase_department != null"> purchase_department = #{purchase_department},</if>
+			<if test="dealer_creator_name != null"> dealer_creator_name = #{dealer_creator_name},</if>
+			<if test="dealer_auditor_name != null"> dealer_auditor_name = #{dealer_auditor_name},</if>
+			<if test="vendor_creator_name != null"> vendor_creator_name = #{vendor_creator_name},</if>
+			<if test="vendor_auditor_name != null"> vendor_auditor_name = #{vendor_auditor_name},</if>
+			<if test="warehouse_name != null"> dealer_warehouse_name = #{warehouse_name},</if>
+			<if test="delivery_address != null"> delivery_address = #{delivery_address},</if>
+			<if test="dealer_affirmant_name != null"> dealer_affirmant_name = #{dealer_affirmant_name},</if>
+			<if test="vendor_affirmant_name != null"> vendor_affirmant_name = #{vendor_affirmant_name},</if>
+		</set>
+		where 1=1
+			and dealer_inner_sn= #{partA}
+			and vendor_inner_sn= #{partB}
+			and po_so_inner_sn = #{po_so_inner_sn}
+	</update>
+	
+	<delete id="deleteOrder" parameterType="map">
+		delete from dealer_po_vendor_so c
+		where 1=1
+			and c.dealer_inner_sn= #{partA}
+			and c.vendor_inner_sn= #{partB}
+			and c.po_so_inner_sn = #{po_so_inner_sn}
+	</delete>
+	
+	<resultMap type="OrderDetail" id="OrderDetailResult">
+		<result  property="partA" column="dealer_inner_sn"/><!-- 采购方机构编号 -->
+		<result  property="partA_name" column="partA_name"/><!-- 采购方名称 -->
+		<result  property="partB" column="vendor_inner_sn"/><!-- 销售方机构编号 -->
+		<result  property="partB_name" column="partB_name"/><!-- 销售方名称 -->
+		<result  property="po_so_inner_sn" column="po_so_inner_sn"/><!-- 订单内部编号 -->
+		<result  property="detail_inner_sn" column="detail_inner_sn"/><!-- 明细内部编号 -->
+		<result  property="product_vendor_inner_sn" column="product_vendor_inner_sn"/><!-- 产品厂商编号 -->
+		<result  property="product_vendor_name" column="product_vendor_name"/><!-- 产品厂商编号 -->
+		<result  property="product_inner_sn" column="product_inner_sn"/><!-- 产品内部编号 -->
+		<result property="product_name" column="product_name"/>
+		<result property="specification_inner_sn" column="specification_inner_sn"/><!-- 型号规格内部编号  -->
+		<result property="specification" column="specification"/>
+		<result property="unit_inner_sn" column="unit_inner_sn"/><!-- 单位内部编号  -->
+		<result property="unit_name" column="unit_name"/>
+		<result property="quantity" column="quantity"/><!-- 数量  -->
+		<result property="unit_price" column="unit_price"/><!-- 单价  -->
+		<result property="discount" column="discount"/><!-- 折扣  -->
+		<result property="rate" column="rate"/><!-- 税率 -->
+		<result property="sort_number" column="sort_number"/><!-- 排序号  -->
+		<result property="status" column="status"/><!-- 状态 0-待处理 1-已终止 2-已完结  -->
+		<result property="product_type" column="product_type"/><!-- 产品类型 0:经销商(自建)产品   1:厂商产品  -->
+		<result property="batch_number" column="batch_number"/><!-- 批号  -->
+
+		<result property="newest_register_sn" column="newest_register_sn"/>
+	</resultMap>
+	
+	<select id="selectOrderDetailList" parameterType="map" resultMap="OrderDetailResult">
+		select d.dealer_inner_sn, h.name as partA_name, d.vendor_inner_sn, d.product_vendor_name as partB_name, d.po_so_inner_sn, rate, discount, 
+			d.detail_inner_sn, d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, d.product_name, d.batch_number,
+	        d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity, d.unit_price/10000 as unit_price,
+	        d.sort_number, d.status, 1 as product_type,p.`newest_register_sn`
+		from dealer_po_vendor_so_product_detail d
+		inner join dealer h on h.dealer_inner_sn = d.dealer_inner_sn
+
+		left join `product` p ON p.`vendor_inner_sn`=d.`product_vendor_inner_sn` and p.`product_inner_sn`=d.`product_inner_sn`
+
+		where d.dealer_inner_sn = #{partA}  and d.vendor_inner_sn=#{partB} and d.po_so_inner_sn = #{po_so_inner_sn}
+		<if test="detail_inner_sn != null">and d.detail_inner_sn = #{detail_inner_sn}</if>
+		order by d.sort_number
+	</select>
+	
+	<select id="dv_add_dealer_po_vendor_so_product_detail" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call dv_add_dealer_po_vendor_so_product_detail(
+			#{dealer_inner_sn_i, mode=IN},
+			#{vendor_inner_sn_i, mode=IN},
+			#{po_so_inner_sn_i, mode=IN},
+			#{product_vendor_inner_sn_i, mode=IN},
+			#{product_inner_sn_i, mode=IN},
+			#{specification_inner_sn_i, mode=IN},
+			#{unit_inner_sn_i, mode=IN},
+			#{quantity_i, mode=IN},
+			#{unit_price_i, mode=IN},
+			#{discount_i, mode=IN},
+			#{rate_i, mode=IN},
+			#{sort_number_i, mode=IN},
+			#{status_i, mode=IN},
+			#{product_vendor_name_i, mode=IN},
+			#{product_name_i, mode=IN},
+			#{specification_i, mode=IN},
+			#{unit_i, mode=IN},
+			#{batch_number_i, mode=IN},
+			#{detail_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{result_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+		    #{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+		    #{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<update id="updateVendorOrderDetail" parameterType="map">
+		update dealer_po_vendor_so_product_detail
+		set status = #{status}
+		where dealer_inner_sn = #{partA}
+			and vendor_inner_sn = #{partB}
+			and po_so_inner_sn = #{po_so_inner_sn}
+			and detail_inner_sn = #{detail_inner_sn}
+	</update>
+	
+	<delete id="deleteVendorOrderDetail" parameterType="map">
+		delete from dealer_po_vendor_so_product_detail
+		where dealer_inner_sn = #{partA}
+			and vendor_inner_sn = #{partB}
+			and po_so_inner_sn = #{po_so_inner_sn}
+	 		<if test="detail_inner_sn !=null">and detail_inner_sn = #{detail_inner_sn}</if>
+	</delete>
+	
+	<select id="checkExistOrderDetail" parameterType="map" resultType="map">
+		select d.dealer_inner_sn, h.name as partA_name, d.vendor_inner_sn, d.product_vendor_name as partB_name, d.po_so_inner_sn, rate, discount, 
+			d.detail_inner_sn, d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, d.product_name, d.batch_number,
+	        d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit as unit_name, d.quantity/1000 as quantity, d.unit_price/10000 as unit_price,
+	        d.sort_number, d.status, 1 as product_type
+		from dealer_po_vendor_so_product_detail d
+		inner join dealer h on h.dealer_inner_sn = d.dealer_inner_sn
+		where d.dealer_inner_sn = #{partA}  and d.vendor_inner_sn=#{partB} and d.po_so_inner_sn = #{po_so_inner_sn}
+		<if test="checkStatus != null">and d.status in (${checkStatus})</if>
+	</select>
+	
+	<select id="selectOrderProductDetail" parameterType="map" resultType="ContractProduct">
+		select  
+			d.product_vendor_inner_sn, d.product_vendor_name, d.product_inner_sn, d.product_name,
+	        d.specification_inner_sn, d.specification, d.unit_inner_sn, d.unit, d.unit_price/10000 as price, 1 as product_type
+		from dealer_po_vendor_so_product_detail d
+		join dealer_po_vendor_so p using(dealer_inner_sn, vendor_inner_sn, po_so_inner_sn)
+		where p.status in (3, 5) and d.dealer_inner_sn = #{org_id} and d.vendor_inner_sn=#{organization_inner_sn}
+			and dealer_inner_sn = #{org_id}
+			and vendor_inner_sn = #{organization_inner_sn}
+			and product_vendor_inner_sn = #{product_vendor_inner_sn}
+			and product_inner_sn = #{product_inner_sn}
+			and specification_inner_sn = #{specification_inner_sn}
+		order by audit_time desc limit 3
+	</select>
+	
+</mapper>

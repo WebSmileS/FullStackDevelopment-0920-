@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.system.quartz.mapper.RepetitiveVendorMapper">
+
+	<select id="selectAllGoods" parameterType="map" resultType="RepetitiveVendor">
+		select id, vendor_inner_sn, vendor_name, status, msg
+		from repetitive_vendor where status=0 order by id
+	</select>
+	
+	<update id="updateMsgAndStatus" parameterType="map">
+		update repetitive_vendor set status=#{status}, msg = #{msg} where id= #{id}
+	</update>
+	
+	<select id="searchProductList" parameterType="map" resultType="Product">
+		select p.vendor_inner_sn, v.name as vendor_name, code68_type, 
+			p.product_inner_sn, p.release_employee_inner_sn, p.type_inner_sn, pt.type as type_name, 
+			p.code68_sn, c.name as code68_name, p.data_source, p.status, p.release_status, 
+			p.storage_condition, p.health_care_type, p.name, 
+			p.product_vendor_sn, p.type, p.newest_register_sn as cert_no, p.product_uniform_sn, p.specifications, p.description
+		from vendor v
+		right join product p on v.vendor_inner_sn = p.vendor_inner_sn
+		left join code68 c on c.code68_sn = p.code68_sn
+		left join product_type pt on pt.type_inner_sn = p.type_inner_sn
+		where 1=1
+		<if test="vendor_inner_sn != null">and p.vendor_inner_sn = #{vendor_inner_sn}</if>
+	</select>
+	
+	<select id="selectProductSpecListById" parameterType="map" resultType="ProductSpecification">
+		select vendor_inner_sn, product_inner_sn, specification_inner_sn, status, specification, specification_vendor_sn, common_use_unit_inner_sn, common_use_unit
+		from product_specification
+		where 1=1
+			and vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+	</select>
+	
+	<select id="searchProductMDRFList" parameterType="map" resultType="ProductMDRF">
+		select m.vendor_inner_sn, v.name as vendor_name, v.address as vendor_address, m.product_inner_sn, p.name as product_name, 
+        	m.mdrf_inner_sn, m.issue_date, m.begin_date, m.end_date, m.register_sn, m.issue_organization, m.standard, m.production_address,
+        	m.performance_structure, m.application_range, m.contraindication, m.description, m.specifications
+		from product_mdrf m
+		left join vendor v using(vendor_inner_sn)
+		left join product p using(vendor_inner_sn,product_inner_sn)
+		where 1=1 and m.is_delete = 0
+		<if test="vendor_inner_sn != null">and m.vendor_inner_sn = #{vendor_inner_sn}</if>
+		<if test="product_inner_sn != null">and m.product_inner_sn = #{product_inner_sn}</if>
+		<if test="mdrf_inner_sn != null">and m.mdrf_inner_sn = #{mdrf_inner_sn}</if>
+		order by m.end_date desc
+	</select>
+	
+	<delete id="trueDeleteProductSpec" parameterType="map">
+		delete from product_specification
+		where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} 
+		<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+	</delete>
+	
+	<delete id="trueDeleteProductUnit" parameterType="map">
+		delete from product_unit
+		where 1 = 1
+			and vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn}
+			<if test="specification_inner_sn != null">and specification_inner_sn = #{specification_inner_sn}</if>
+			<if test="unit_inner_sn != null">and unit_inner_sn = #{unit_inner_sn}</if>
+	</delete>
+	
+	<delete id="deleteProductImage" parameterType="map">
+		delete from product_image 
+		where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} 
+		<if test="type != null">and type = #{type}</if>
+		<if test="image_inner_sn != null">and image_inner_sn = #{image_inner_sn}</if>
+	</delete>
+	
+	<delete id="deleteMDRFImage" parameterType="map">
+		delete from product_mdrf_image
+		where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} and mdrf_inner_sn = #{mdrf_inner_sn}
+		<if test="image_inner_sn != null">and image_inner_sn=#{image_inner_sn}</if>
+	</delete>
+	
+	<delete id="deleteProductMDRF" parameterType="map">
+		delete from product_mdrf
+		where vendor_inner_sn = #{vendor_inner_sn} and product_inner_sn = #{product_inner_sn} 
+		<if test="mdrf_inner_sn != null">and mdrf_inner_sn = #{mdrf_inner_sn}</if>
+	</delete>
+	
+	<delete id="trueDeleteProduct" parameterType="map">
+		delete from product 
+		where vendor_inner_sn = #{vendor_inner_sn}
+			<if test="product_inner_sn != null">and product_inner_sn = #{product_inner_sn}</if>
+	</delete>
+	
+	<delete id="trueDeleteVendor" parameterType="Long">
+ 		delete from vendor where vendor_inner_sn = #{id}
+ 	</delete>
+</mapper>

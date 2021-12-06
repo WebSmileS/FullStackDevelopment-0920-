@@ -1,0 +1,652 @@
+<template>
+    <div>
+        <a-modal
+            :title="detailMd.title"
+            v-model="isOpen"
+            :maskClosable="false"
+            :width="1100"
+            :centered="true"
+            @cancel="closeDetailModalFn"
+            class="modal-form-input-scoped global-drag finance-invoice-detail-modal"
+        >
+            <div v-globalDrag="{ el: 'finance-invoice-detail-modal' }" class="modal-header-wrap">
+                <h6>
+                    <img src="/images/logo/logo-left.svg" alt="" class="modal-logo-left" />
+                    {{ detailMd.title }}
+                </h6>
+            </div>
+            <template slot="footer">
+                <a-button @click="detailFn('CLOSE')">
+                    {{ closeButtonText }}
+                </a-button>
+                <a-button
+                    v-if="tabsActiveKey === 'PENDING'"
+                    @click="detailFn('AUDIT')"
+                    :loading="detailMd.auditLoading"
+                    type="primary"
+                    >审核</a-button
+                >
+                <a-button
+                    v-if="cancelButtonVisible"
+                    @click="detailFn('CANCEL')"
+                    :loading="detailMd.cancelLoading"
+                    type="danger"
+                    >作废</a-button
+                >
+            </template>
+            <div class="form-container">
+                <!-- 标题区域 -->
+                <caption-text
+                    :captionData="{
+                        ...captionData,
+                        caption: modalTitle
+                    }"
+                ></caption-text>
+
+                <!-- 发票的上半部分 表单区域 -->
+                <invoice-header
+                    :isReadonly="isReadonly"
+                    :isFinanceInvoiceOdoReadonly="isFinanceInvoiceOdoReadonly"
+                    :formData.sync="headerFormData"
+                    :editableItemMap="editableItemMap"
+                    :requiredItemMap="requiredHeaderItemMap"
+                ></invoice-header>
+
+                <!-- 发票的中间部分 表格区域 -->
+                <invoice-table
+                    :isShowActionColumn="false"
+                    :isReadonly="isReadonly"
+                    :isFinanceInvoiceOdoReadonly="isFinanceInvoiceOdoReadonly"
+                    :formData="{
+                        ...headerFormData,
+                        ...footerFormData
+                    }"
+                    :modalTitle="isInbound ? '入库' : '出库'"
+                    :columns="detailColumns"
+                    :datas="detailDatas"
+                    :pagation="detailPagation"
+                ></invoice-table>
+
+                <!-- 发票的下半部分 表单摘要区域 -->
+                <invoice-footer
+                    :isReadonly="isReadonly"
+                    :formData.sync="footerFormData"
+                    :isShowCancel="isShowCancel"
+                ></invoice-footer>
+            </div>
+        </a-modal>
+
+        <!-- 作废原因 -->
+        <invalid-reason-md
+            :isOpen="invalidReasonIsOpen"
+            @saveInvalidReasonData="saveInvalidReasonDataFn"
+        ></invalid-reason-md>
+    </div>
+</template>
+
+<script>
+import invalidReasonMd from '@/views/commonPage/invoiceManage/components/invalidReason';
+import captionText from '@/views/commonPage/invoiceManage/components/captionText';
+import invoiceHeader from '@/views/commonPage/invoiceManage/components/invoiceHeader';
+import invoiceFooter from '@/views/commonPage/invoiceManage/components/invoiceFooter';
+import invoiceTable from '@/views/commonPage/invoiceManage/components/invoiceTable';
+import { pageType, format, rateTypeMap } from '@/views/commonPage/invoiceManage/config/constants';
+
+import { tabPane } from '../mixins/tabPane.js';
+
+import {
+    financeInvoiceInfoAPI,
+    financeInvoiceGrnApprovalAPI,
+    financeInvoiceOdoApprovalAPI,
+    financeInvoiceCancelAPI
+} from '@/service/pageAjax';
+
+import moment from 'moment';
+
+export default {
+    name: 'tableDetail', // 入库|出库发票的详情 = 财务人员使用
+    props: {
+        btnName: {
+            // 按钮行为
+            type: String,
+            required: true
+        },
+        isInbound: {
+            type: Boolean, // 是否是入库发票 === 默认是true
+            default: true
+        },
+        isOpen: {
+            // 模态框窗口是否打开标识， true、false
+            type: Boolean,
+            default: true
+        },
+        tabsActiveKey: {
+            // 模态框窗口tab选项卡当前的key标识，必传
+            type: String,
+            required: true
+        },
+        rowData: {
+            type: Object // 当前表格双击查看当前行的列表数据
+        },
+        isShowCancel: {
+            // 是否是作废单
+            type: Boolean,
+            default: false
+        }
+    },
+    components: {
+        invalidReasonMd,
+        captionText,
+        invoiceHeader,
+        invoiceFooter,
+        invoiceTable
+    },
+    data() {
+        return {
+            detailMd: {
+                title: `${this.$route.meta.title}`,
+                auditLoading: false,
+                cancelLoading: false
+            },
+            detailColumns: [
+                {
+                    title: '厂商名称',
+                    dataIndex: 'system_invoice_sn',
+                    key: 'system_invoice_sn',
+                    width: '150px',
+                    align: 'center'
+                },
+                {
+                    title: '产品名称',
+                    dataIndex: 'organization_name',
+                    key: 'organization_name',
+                    width: '120px',
+                    align: 'center'
+                },
+                {
+                    title: '规格型号',
+                    dataIndex: 'handler_name',
+                    key: 'handler_name',
+                    width: '100px',
+                    align: 'center'
+                },
+                {
+                    title: '单位',
+                    dataIndex: 'department_name',
+                    key: 'department_name',
+                    width: '80px',
+                    align: 'center'
+                },
+                // {
+                //     title: '批号',
+                //     dataIndex: 'invoice_no',
+                //     key: 'invoice_no',
+                //     width: '100px',
+                //     align: 'center'
+                // },
+                {
+                    title: '单价',
+                    dataIndex: 'invocie_date',
+                    key: 'invocie_date',
+                    width: '100px',
+                    align: 'center'
+                },
+                {
+                    title: '数量',
+                    dataIndex: 'invoice_type',
+                    key: 'invoice_type',
+                    width: '80px',
+                    align: 'center'
+                },
+                {
+                    title: '税率',
+                    dataIndex: 'rate',
+                    key: 'rate',
+                    width: '60px',
+                    align: 'center'
+                },
+                {
+                    title: '开票数量',
+                    dataIndex: 'invoice_price',
+                    key: 'invoice_price',
+                    width: '90px',
+                    align: 'center'
+                },
+                {
+                    title: '备注',
+                    dataIndex: 'description',
+                    key: 'description',
+                    width: '120px',
+                    align: 'center'
+                }
+            ],
+            detailDatas: [],
+            detailPagation: {
+                loading: false,
+                total: 0,
+                current: 1,
+                pageSize: 10,
+                pageNum: 1,
+                pageSizes: [10, 20, 30, 40]
+            },
+            invalidReasonIsOpen: false,
+            captionData: {
+                'caption': '',
+                'label': '系统发票号',
+                'value': ''
+            },
+            headerFormData: {
+                bills_type: '',
+                department_inner_sn: '',
+                department_name: '',
+                handler_inner_sn: '',
+                handler_name: '',
+                invoice_date: null,
+                invoice_no: '',
+                invoice_price: '',
+                invoice_status: '',
+                invoice_type: '',
+                organization_inner_sn: '',
+                organization_name: '',
+                rate: rateTypeMap[0].value,
+                system_invoice_sn: '',
+                system_invoice_type: '',
+                system_type: '',
+                id: ''
+            },
+            footerFormData: {
+                description: '',
+                created_by: '--',
+                created_time: '--',
+                confirm_by: '--',
+                confirm_time: '--',
+                cancel_by: '--',
+                cancel_time: '--',
+                cancel_reason: '--',
+                isShowPayment: false // 是否显示付款字段， 默认不显示
+            },
+            isReadonly: false,
+            isFinanceInvoiceOdoReadonly: true, // 是否是财务人员使用的出库发票，如果是将相关机构、经手人和部门和产品明细设置为 只读
+            isfreshParentTableList: false, // 是否刷新父级表格数据
+            invalidReasonData: '' // 作废原因
+        };
+    },
+    methods: {
+        async financeInvoiceGrnApprovalAPIFn() {
+            // 财务人员的出库单 需要 校验表单
+            if (!this.isInbound && this.checkFormFn()) return;
+
+            this.detailMd.auditLoading = true;
+            let postId;
+            let postData;
+            let service;
+
+            if (this.isInbound) {
+                postId = this.rowData.id;
+                service = () => financeInvoiceGrnApprovalAPI(postId);
+            } else {
+                postData = {
+                    decription: this.footerFormData.description || '',
+                    id: this.headerFormData.id || this.rowData.id,
+                    invoice_price: this.headerFormData.invoice_price,
+                    rate: parseFloat(this.headerFormData.rate) / 100
+                };
+                if (this.headerFormData.invoice_type) {
+                    postData.invoice_type = this.headerFormData.invoice_type;
+                }
+                if (this.headerFormData.invoice_no) {
+                    postData.invoice_no = this.headerFormData.invoice_no;
+                }
+                if (this.headerFormData.invoice_date) {
+                    postData.invoice_date = moment(this.headerFormData.invoice_date).format(format);
+                }
+                service = () => financeInvoiceOdoApprovalAPI(postData);
+            }
+
+            service()
+                .then((res) => {
+                    if (parseFloat(res.code) === 0) {
+                        this.isfreshParentTableList = true;
+                        this.closeDetailModalFn();
+                    } else {
+                        this.$message.error(res.msg);
+                    }
+                })
+                .finally(() => {
+                    this.detailMd.auditLoading = false;
+                });
+        },
+        async financeInvoiceCancelAPIFn() {
+            this.detailMd.cancelLoading = true;
+            await financeInvoiceCancelAPI(this.rowData.id, this.invalidReasonData)
+                .then((res) => {
+                    if (parseFloat(res.code) === 0) {
+                        this.isfreshParentTableList = true;
+                        this.closeDetailModalFn();
+                    } else {
+                        this.$message.error(res.msg);
+                    }
+                })
+                .finally(() => {
+                    this.detailMd.cancelLoading = false;
+                });
+        },
+        closeDetailModalFn() {
+            this.$emit('closeDetailModal', false, this.isfreshParentTableList);
+
+            this.invalidReasonData = '';
+            this.detail = [];
+            this.detailDatas = [];
+            this.captionData.value = '';
+            this.captionData.caption = '';
+            this.headerFormData = {
+                bills_type: '',
+                department_inner_sn: '',
+                department_name: '',
+                handler_inner_sn: '',
+                handler_name: '',
+                invoice_date: null,
+                invoice_no: '',
+                invoice_price: '',
+                invoice_status: '',
+                invoice_type: '',
+                organization_inner_sn: '',
+                organization_name: '',
+                rate: rateTypeMap[0].value,
+                system_invoice_sn: '',
+                system_invoice_type: '',
+                system_type: '',
+                id: ''
+            };
+            this.footerFormData = {
+                description: '',
+                created_by: '--',
+                created_time: '--',
+                confirm_by: '--',
+                confirm_time: '--',
+                cancel_by: '--',
+                cancel_time: '--',
+                cancel_reason: '--',
+                isShowPayment: false // 是否显示付款字段， 默认不显示
+            };
+        },
+        getTableDataFn(tableData) {
+            this.detail = tableData;
+        },
+        checkFormFn() {
+            // 校验表单
+            if (this.requiredHeaderItemMap.invoiceType && !this.headerFormData.invoice_type) {
+                this.$warning({
+                    title: '操作提示',
+                    content: `请选择发票类型`,
+                    okText: '知道了',
+                    centered: true,
+                    maskClosable: false
+                });
+                return true;
+            }
+
+            if (
+                this.requiredHeaderItemMap.invoicePrice &&
+                !this.headerFormData.invoice_price &&
+                this.headerFormData.invoice_price !== 0
+            ) {
+                this.$warning({
+                    title: '操作提示',
+                    content: `请填写开票金额`,
+                    okText: '知道了',
+                    centered: true,
+                    maskClosable: false
+                });
+                return true;
+            }
+
+            if (this.requiredHeaderItemMap.invoiceNo && !this.headerFormData.invoice_no) {
+                this.$warning({
+                    title: '操作提示',
+                    content: `请填写发票号`,
+                    okText: '知道了',
+                    centered: true,
+                    maskClosable: false
+                });
+                return true;
+            }
+
+            if (this.requiredHeaderItemMap.invoiceDate && !this.headerFormData.invoice_date) {
+                this.$warning({
+                    title: '操作提示',
+                    content: `请选择开票日期`,
+                    okText: '知道了',
+                    centered: true,
+                    maskClosable: false
+                });
+                return true;
+            }
+
+            if (this.requiredHeaderItemMap.rate && !this.headerFormData.rate && this.headerFormData.rate !== 0) {
+                this.$warning({
+                    title: '操作提示',
+                    content: `请选择发票税率`,
+                    okText: '知道了',
+                    centered: true,
+                    maskClosable: false
+                });
+                return true;
+            }
+
+            return false;
+        },
+        async financeInvoiceInfoDetailAPIFn() {
+            await financeInvoiceInfoAPI(this.rowData.id)
+                .then((res) => {
+                    if (parseFloat(res.code) === 0) {
+                        const { info } = res;
+                        this.captionData.value = info.system_invoice_sn || '--';
+
+                        this.headerFormData = {
+                            bills_type: info.bills_type,
+                            department_inner_sn: info.department_inner_sn || '',
+                            department_name: info.department_name || '',
+                            handler_inner_sn: info.handler_inner_sn || '',
+                            handler_name: info.handler_name || '',
+                            invoice_date: info.invoice_date ? moment(info.invoice_date) : null,
+                            invoice_no: info.invoice_no || '',
+                            invoice_price: info.invoice_price,
+                            invoice_status: info.invoice_status,
+                            invoice_type: info.invoice_type,
+                            organization_inner_sn: info.organization_inner_sn,
+                            organization_name: info.organization_name,
+                            rate: `${parseFloat(info.rate) * 100}`,
+                            system_invoice_sn: info.system_invoice_sn,
+                            system_invoice_type: info.system_invoice_type,
+                            system_type: info.system_type,
+                            id: info.id
+                        };
+
+                        this.footerFormData = {
+                            description: info.description || '',
+                            created_by: info.created_by || '--',
+                            created_time: info.created_time || '--',
+                            confirm_by: info.confirm_by || '--',
+                            confirm_time: info.confirm_time || '--',
+                            cancel_by: info.cancel_by || '--',
+                            cancel_time: info.cancel_time || '--',
+                            cancel_reason: info.cancel_reason || '--',
+                            isShowPayment: false // 是否显示付款字段， 默认不显示
+                        };
+
+                        info.details = info.details.map((item) => ({
+                            ...item,
+                            rate: `${parseFloat(item.rate) * 100}`
+                        }));
+
+                        this.detailDatas = info.details || [];
+                        this.detail = info.details || [];
+                    } else {
+                        this.$message.error(res.msg);
+                    }
+                })
+                .finally(() => {});
+        },
+        saveInvalidReasonDataFn(invalidReasonData) {
+            this.invalidReasonIsOpen = false;
+            if (invalidReasonData) {
+                this.invalidReasonData = invalidReasonData;
+                this.financeInvoiceCancelAPIFn();
+            } else {
+                this.invalidReasonData = '';
+            }
+        },
+        detailFn(status) {
+            switch (status) {
+                case 'CLOSE':
+                    this.closeDetailModalFn();
+                    break;
+                case 'AUDIT':
+                    this.financeInvoiceGrnApprovalAPIFn();
+                    break;
+                case 'CANCEL':
+                    // 填写作废原因
+                    this.invalidReasonIsOpen = true;
+                    break;
+            }
+        }
+    },
+    watch: {
+        isOpen: {
+            handler(newVal) {
+                if (newVal) {
+                    this.$Utils.globalDragCenterFn('finance-invoice-detail-modal');
+
+                    // 财务人员的入库发票 直接将表单置为 只读   ||  出库发票 当前选项卡是待审核或未核销置为 只读
+                    if (
+                        this.isInbound ||
+                        (!this.isInbound &&
+                            this.btnName === 'edit' &&
+                            (this.tabsActiveKey === this.tabPane(0, 'value') ||
+                                this.tabsActiveKey === this.tabPane(1, 'value')))
+                    ) {
+                        this.isReadonly = true;
+                    }
+
+                    // 双击查看详情
+                    if (
+                        (this.btnName === 'audit' || this.btnName === 'cancel' || this.btnName === 'edit') &&
+                        this.rowData &&
+                        Object.keys(this.rowData).length
+                    ) {
+                        this.financeInvoiceInfoDetailAPIFn();
+                    }
+                }
+            },
+            immediate: true
+        }
+    },
+    computed: {
+        modalTitle() {
+            return `${this.isInbound ? pageType['INBOUND'].label : pageType['OUTBOUND'].label}发票`;
+        },
+        editableItemMap() {
+            let editable = false;
+            // 出库发票，并且待审核状态的单据可以修改发票类型、发票号、开票日期、税率
+            if (!this.isInbound && this.rowData && this.rowData['invoice_status'] === 'PENDING') {
+                editable = true;
+            }
+            return {
+                invoiceType: editable,
+                invoiceNo: editable,
+                invoiceDate: editable,
+                rate: editable
+            };
+        },
+        requiredHeaderItemMap() {
+            // 出库发票，发票类型、发票号、开票日期为非必填
+            return {
+                organization: true,
+                handler: false,
+                department: false,
+                invoiceType: true,
+                invoicePrice: true,
+                invoiceNo: true,
+                invoiceDate: true,
+                rate: true
+            };
+        },
+        cancelButtonVisible() {
+            if (this.rowData.invoice_status === 'PARTIAL_WRITE_OFF') {
+                return false;
+            }
+            return this.tabsActiveKey === 'PENDING' || this.tabsActiveKey === 'NOT_WRITTEN_OFF';
+        },
+        closeButtonText() {
+            const texts = ['关闭', '取消'];
+            if (this.rowData) {
+                if (this.rowData.is_cancel === 1) {
+                    return texts[0];
+                }
+                if (this.rowData.invoice_status === 'WRITTEN_OFF') {
+                    return texts[0];
+                }
+                if (this.rowData.invoice_status === 'PARTIAL_WRITE_OFF') {
+                    return texts[0];
+                }
+            }
+            return texts[1];
+        }
+    },
+    mixins: [tabPane]
+};
+</script>
+
+<style lang="less">
+.finance-invoice-detail-modal {
+    .form-caption {
+        position: relative;
+
+        h3 {
+            margin-bottom: 14px;
+            font-size: 24px;
+            color: #444;
+            text-align: center;
+        }
+
+        .form-row {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+    }
+
+    .form-row {
+        &:nth-of-type(n + 2) {
+            padding-top: 14px;
+        }
+    }
+
+    .form-col {
+        display: flex;
+
+        .form-label {
+            position: relative;
+            width: 90px;
+
+            .asterisk {
+                top: 3px;
+            }
+
+            .form-text {
+                padding-left: 10px;
+            }
+        }
+    }
+
+    .form-input {
+        display: flex;
+        flex: 1;
+    }
+
+    .form-table {
+        padding: 20px 0;
+    }
+}
+</style>

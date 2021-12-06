@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	
+	<settings>
+		<setting name="cacheEnabled"             value="true" />  <!-- 全局映射器启用缓存 -->
+		<setting name="useGeneratedKeys"         value="true" />  <!-- 允许 JDBC 支持自动生成主键 -->
+		<setting name="defaultExecutorType"      value="REUSE" /> <!-- 配置默认的执行器 -->
+		<setting name="logImpl"                  value="SLF4J" /> <!-- 指定 MyBatis 所用日志的具体实现 -->
+		<!-- <setting name="mapUnderscoreToCamelCase" value="true"/>  驼峰式命名 -->
+		<setting name="defaultEnumTypeHandler" value="com.yrt.common.utils.mybatis.CustomizeEnumOrdinalTypeHandler"/>
+	</settings>
+	<typeAliases>
+        <package name="com.yrt.system.monitor.operlog.domain"/><!-- 配置默认的执行器 -->
+        <package name="com.yrt.project.modular.category.domain"/><!-- 产品分类 -->
+        <package name="com.yrt.project.modular.area.domain"/><!-- 行政区划 -->
+        <package name="com.yrt.project.modular.organization.domain"/><!-- 机构 -->
+        <package name="com.yrt.project.modular.product.domain"/><!-- 产品 -->
+        <package name="com.yrt.project.modular.warehouse.domain"/><!-- 库存 -->
+        <package name="com.yrt.project.modular.contract.domain"/><!-- 合同 -->
+        <package name="com.yrt.project.modular.applyvoucher.domain"/><!-- 领用申请单 -->
+        <package name="com.yrt.project.modular.initial.domain"/><!-- 期初库存 -->
+        <package name="com.yrt.project.modular.inquiry.domain"/><!-- 询价单 -->
+        <package name="com.yrt.project.modular.plan.domain"/><!-- 采购计划 -->
+        <package name="com.yrt.project.modular.order.domain"/><!-- 订单 -->
+        <package name="com.yrt.project.modular.surgery.domain"/><!-- 骨科 -->
+        <package name="com.yrt.project.modular.warning.domain"/><!-- 预警 -->
+        <package name="com.yrt.project.modular.finance.domain"/><!-- 财务 -->
+        <package name="com.yrt.project.modular.invoice.domain"/><!-- 发票 -->
+        <package name="com.yrt.system.quartz.domain"/><!-- 定时任务 -->
+        <package name="com.yrt.project.modular.external.domain"/><!-- 外部系统调用 -->
+        <package name="com.yrt.project.modular.common.domain"/><!-- 公用 -->
+    </typeAliases>
+</configuration>

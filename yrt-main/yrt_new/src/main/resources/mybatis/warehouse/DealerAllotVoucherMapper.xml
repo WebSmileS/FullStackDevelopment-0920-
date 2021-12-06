@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.DealerAllotVoucherMapper">
+
+
+	<insert id="addAllotVoucher" parameterType="map">
+		INSERT INTO `dealer_allot_voucher`
+		(
+			`dealer_inner_sn`,
+			`av_inner_sn`,
+			`av_sn`,
+			`source_warehouse_inner_sn`,
+			`target_warehouse_inner_sn`,
+			`poster_inner_sn`,
+			`poster_name`,
+			`affirmant_inner_sn`,
+			`affirmant_name`,
+			`create_time`,
+			`expect_date`,
+			`description`)
+		VALUES
+		(#{org_id},
+		 #{av_inner_sn} ,
+		 #{av_sn},
+		 #{source_warehouse_inner_sn},
+		 #{target_warehouse_inner_sn},
+		 #{poster_inner_sn},
+		 #{poster_name},
+		 #{affirmant_inner_sn},
+		 #{affirmant_name},
+		 NOW(),
+		 #{expect_date},
+		 #{description});
+	</insert>
+
+	<insert id="addAllotVoucherDetail" parameterType="map">
+		INSERT INTO `dealer_allot_voucher_product_detail` (
+			`dealer_inner_sn`,
+			`av_inner_sn`,
+			`detail_inner_sn`,
+			`vd_inner_sn`,
+			`vd_name`,
+			`product_type`,
+			`product_inner_sn`,
+			`product_name`,
+			`specification_inner_sn`,
+			`unit_inner_sn`,
+			`unit_name`,
+			`sort_number`,
+			`allot_quantity`,
+			`status`,
+			`specification`,
+			`batch_number`,
+			`unit_price`,`produce_date`,`overdue_date`)
+		VALUES(
+				  #{org_id},
+				  #{av_inner_sn},
+				  #{detail_inner_sn},
+				  #{vd_inner_sn},
+				  #{vd_name},
+				  #{product_type},
+				  #{product_inner_sn},
+				  #{product_name},
+				  #{specification_inner_sn},
+				  #{unit_inner_sn},
+				  #{unit_name},
+				  #{sort_number},
+				  #{allot_quantity}*1000,
+				  #{status},
+				  #{specification},
+				  TRIM(#{batch_number}),
+				  #{unit_price}*10000,#{produce_date},#{overdue_date});
+	</insert>
+
+	<select id="searchAllotVoucher" parameterType="map" resultType="allotVoucher">
+		SELECT
+		`av_inner_sn`,`dealer_inner_sn` AS org_id,`av_sn`,`source_warehouse_inner_sn`,`target_warehouse_inner_sn`,
+		(SELECT `name` FROM `dealer_warehouse_model` WHERE `dealer_inner_sn`=v.`dealer_inner_sn` AND `warehouse_model_inner_sn`=v.`source_warehouse_inner_sn`) AS source_warehouse_name,
+		(SELECT `name` FROM `dealer_warehouse_model` WHERE `dealer_inner_sn`=v.`dealer_inner_sn` AND `warehouse_model_inner_sn`=v.`target_warehouse_inner_sn`) AS target_warehouse_name,
+		`poster_inner_sn`,`poster_name`,`affirmant_inner_sn`,`affirmant_name`,`create_time`,`expect_date`,`description`
+		FROM `dealer_allot_voucher` v
+		WHERE `av_inner_sn`=#{av_inner_sn}
+		AND (
+		(v.`target_warehouse_inner_sn` IN
+		<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+			#{warehouseId}
+		</foreach>)
+		OR
+		(v.`source_warehouse_inner_sn` IN
+		<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+			#{warehouseId}
+		</foreach>)
+		)
+	</select>
+
+	<select id="searchAllotDetails" parameterType="long" resultType="allotVoucherDetail">
+		SELECT
+			`detail_inner_sn`,`av_inner_sn`,`dealer_inner_sn` AS org_id,`vd_inner_sn`,`vd_name`,`product_type`,
+			`product_inner_sn`,`product_name`,`specification_inner_sn`,`specification`,`unit_inner_sn`,`unit_name`,
+			`allot_quantity`/1000 AS allot_quantity,`status`,`batch_number`,`unit_price`/10000 AS unit_price,`sort_number`,
+		       `produce_date`,`overdue_date`
+		FROM `dealer_allot_voucher_product_detail`
+		WHERE `av_inner_sn`=#{av_inner_sn}
+	</select>
+
+	<select id="getAllotDetailStatus" resultType="java.lang.Integer">
+		SELECT `status`
+		FROM `dealer_allot_voucher_product_detail`
+		WHERE	`detail_inner_sn`=#{detail_inner_sn}
+	</select>
+
+	<select id="searchAllotVoucherList" parameterType="map" resultType="allotVoucherDetail">
+		SELECT
+		v.`dealer_inner_sn` AS org_id ,h.`name` AS org_name,
+		v.`av_inner_sn` AS av_inner_sn ,v.`av_sn`,d.`detail_inner_sn`,
+		d.`vd_inner_sn`,d.`vd_name`,d.`product_type`,
+		v.`poster_inner_sn`,v.`poster_name`,
+		v.`affirmant_inner_sn`,v.`affirmant_name`,
+		v.`source_warehouse_inner_sn`,
+		(SELECT `name` FROM `dealer_warehouse_model` WHERE `dealer_inner_sn`=v.`dealer_inner_sn` AND `warehouse_model_inner_sn`=v.`source_warehouse_inner_sn`) AS source_warehouse_name,
+		v.`target_warehouse_inner_sn`,
+		(SELECT `name` FROM `dealer_warehouse_model` WHERE `dealer_inner_sn`=v.`dealer_inner_sn` AND `warehouse_model_inner_sn`=v.`target_warehouse_inner_sn`) AS target_warehouse_name,
+		batch_number,unit_price/10000 AS unit_price,
+		d.`product_inner_sn`,d.`product_name`,d.`specification_inner_sn`,d.`specification`,d.`unit_inner_sn`,d.`unit_name`,d.`produce_date`,d.`overdue_date`,d.`allot_quantity`/1000 AS allot_quantity,
+		d.`status`,v.`expect_date`
+		FROM `dealer_allot_voucher` v
+		INNER JOIN `dealer_allot_voucher_product_detail` d USING(`av_inner_sn`)
+		INNER JOIN `dealer` h ON h.`dealer_inner_sn`=v.`dealer_inner_sn`
+		<where>
+			<if test="tab_id == 0">
+				(
+				v.`source_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				OR
+				v.`target_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				)
+				AND d.`status` IN (0,1,2,3)
+			</if>
+
+			<if test="tab_id == 1">
+				v.`source_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				AND d.`status` IN (0,1)
+			</if>
+
+			<if test="tab_id == 2">
+				v.`target_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				AND d.`status` IN (0,1,2)
+			</if>
+
+			<if test="tab_id == 3">
+				v.`source_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				AND d.`status` IN (2,3,4)
+			</if>
+
+			<if test="tab_id == 4">
+				v.`target_warehouse_inner_sn` IN
+				<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+					#{warehouseId}
+				</foreach>
+				AND d.`status` IN(3,4)
+			</if>
+
+			AND v.`dealer_inner_sn`=#{org_id}
+			<if test="av_inner_sn != null and av_inner_sn != ''">AND v.`av_inner_sn`=#{av_inner_sn}</if>
+			<if test="av_sn != null and av_sn != ''">AND v.`av_sn` LIKE concat('%', #{av_sn}, '%')</if>
+			<if test="detail_inner_sn != null and detail_inner_sn != ''">AND d.`detail_inner_sn`=#{detail_inner_sn}</if>
+			<if test="product_name != null and product_name != ''">AND d.`product_name` LIKE concat('%', #{product_name}, '%')</if>
+			<if test="poster_inner_sn != null and poster_inner_sn !=''">AND v.`poster_inner_sn`= #{poster_inner_sn}</if>
+			<if test="poster_name != null and poster_name !=''">AND v.`poster_name` LIKE concat('%', #{poster_name}, '%')</if>
+			<if test="start_date != null"> AND DATE_FORMAT(v.`expect_date`,'%Y-%m-%d') &gt;= DATE_FORMAT(#{start_date},'%Y-%m-%d')</if>
+			<if test="end_date != null"> AND DATE_FORMAT(v.`expect_date`,'%Y-%m-%d') &lt;= DATE_FORMAT(#{end_date},'%Y-%m-%d')</if>
+			ORDER BY v.create_time DESC
+		</where>
+	</select>
+
+	<update id="updateAllotVoucher" parameterType="map">
+		UPDATE `dealer_allot_voucher`
+		<set>
+			<if test="av_sn != null">`av_sn` = #{av_sn},</if>
+			<if test="source_warehouse_inner_sn != null">`source_warehouse_inner_sn` = #{source_warehouse_inner_sn},</if>
+			<if test="target_warehouse_inner_sn != null">`target_warehouse_inner_sn` = #{target_warehouse_inner_sn},</if>
+
+			<if test="affirmant_inner_sn != null and affirmant_inner_sn != -1">`affirmant_inner_sn` = #{affirmant_inner_sn},</if>
+			<if test="affirmant_inner_sn == -1">`affirmant_inner_sn` = null,</if>
+			<if test="affirmant_name != '' and affirmant_name != null">`affirmant_name` = #{affirmant_name},</if>
+
+			<if test="create_time != null">`create_time` = #{create_time},</if>
+			<if test="expect_date != null">`expect_date` = #{expect_date},</if>
+
+			<if test="description != null">`description`=#{description},</if>
+		</set>
+		WHERE `av_inner_sn` = #{av_inner_sn}
+	</update>
+
+	<delete id="deleteAllotDetails" parameterType="long">
+		DELETE FROM `dealer_allot_voucher_product_detail`
+		WHERE `av_inner_sn` = #{av_inner_sn}
+	</delete>
+
+	<delete id="deleteAllotVoucherDetail" parameterType="long">
+		DELETE FROM `dealer_allot_voucher_product_detail`
+		WHERE `detail_inner_sn` = #{detail_inner_sn}
+	</delete>
+
+
+	<select id="selectTransferAllotList"
+			resultType="com.yrt.project.modular.warehouse.domain.AllotVoucher">
+		SELECT DISTINCT d.dealer_inner_sn,d.av_inner_sn,d.av_sn,d.description,d.create_time,d.expect_date,
+		d.poster_inner_sn, d.poster_name,d.affirmant_inner_sn, d.affirmant_name,
+		d.source_warehouse_inner_sn,d.target_warehouse_inner_sn,d.source_warehouse_name,d.target_warehouse_name
+		FROM (
+		SELECT dealer_inner_sn, av_inner_sn, av_sn,
+		description,create_time,expect_date,
+		source_warehouse_inner_sn,target_warehouse_inner_sn,
+		(SELECT `name` FROM `dealer_warehouse_model` WHERE `dealer_inner_sn`=g.`dealer_inner_sn` AND `warehouse_model_inner_sn`=g.`source_warehouse_inner_sn`) AS source_warehouse_name,
+		(SELECT `name` FROM `dealer_warehouse_model` WHERE `dealer_inner_sn`=g.`dealer_inner_sn` AND `warehouse_model_inner_sn`=g.`target_warehouse_inner_sn`) AS target_warehouse_name,
+		poster_inner_sn, poster_name,affirmant_inner_sn, affirmant_name, detail_inner_sn, allot_quantity
+		FROM dealer_allot_voucher g
+		JOIN (
+		SELECT dealer_inner_sn, av_inner_sn, detail_inner_sn, allot_quantity,status
+		FROM dealer_allot_voucher_product_detail
+		where 1=1 AND product_type=1 <if test="product_name !=null and product_name!='' ">and product_name like concat('%',#{product_name},'%')</if>
+		)  a using(dealer_inner_sn, av_inner_sn)
+		WHERE 1=1 and status IN (1,2) and dealer_inner_sn = #{org_id}
+		<if test="status != null and status >0 ">and status =2</if>
+		) d
+		JOIN dealer h using(dealer_inner_sn)
+
+		<if test="status !=2">
+		LEFT JOIN (
+		SELECT SUM(quantity) AS quantity ,dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c FROM dealer_dealer_odo_product_detail WHERE voucher_type_c=8 GROUP BY dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c)r
+		ON d.dealer_inner_sn=r.dealer_inner_sn and d.av_inner_sn=r.voucher_inner_sn_c and d.detail_inner_sn=r.voucher_detail_inner_sn_c and r.quantity &gt;=d.allot_quantity
+		</if>
+
+		<if test="status ==2">
+			LEFT JOIN (
+			SELECT SUM(quantity) AS quantity ,dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c FROM dealer_dealer_grn_product_detail WHERE voucher_type_c=8 GROUP BY dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c)r
+			ON d.dealer_inner_sn=r.dealer_inner_sn and d.av_inner_sn=r.voucher_inner_sn_c and d.detail_inner_sn=r.voucher_detail_inner_sn_c and r.quantity &gt;=d.allot_quantity
+		</if>
+
+		WHERE d.dealer_inner_sn = #{org_id} and r.dealer_inner_sn is null
+		<if test="av_sn != null">and d.av_sn like concat('%', #{av_sn}, '%')</if>
+		<if test="warehouseIds.size()>0">
+			AND (
+			(d.`target_warehouse_inner_sn` IN
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>)
+			OR
+			(d.`source_warehouse_inner_sn` IN
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>)
+			)
+		</if>
+
+		UNION DISTINCT
+
+		SELECT DISTINCT d.dealer_inner_sn,d.av_inner_sn,d.av_sn,d.description,d.create_time,d.expect_date,
+		d.poster_inner_sn, d.poster_name,d.affirmant_inner_sn, d.affirmant_name,
+		d.source_warehouse_inner_sn,d.target_warehouse_inner_sn,d.source_warehouse_name,d.target_warehouse_name
+		FROM (
+		SELECT dealer_inner_sn, av_inner_sn, av_sn,
+		description,create_time,expect_date,
+		source_warehouse_inner_sn,target_warehouse_inner_sn,
+		(SELECT `name` FROM `dealer_warehouse_model` WHERE `dealer_inner_sn`=g.`dealer_inner_sn` AND `warehouse_model_inner_sn`=g.`source_warehouse_inner_sn`) AS source_warehouse_name,
+		(SELECT `name` FROM `dealer_warehouse_model` WHERE `dealer_inner_sn`=g.`dealer_inner_sn` AND `warehouse_model_inner_sn`=g.`target_warehouse_inner_sn`) AS target_warehouse_name,
+		poster_inner_sn, poster_name,affirmant_inner_sn, affirmant_name, detail_inner_sn, allot_quantity
+		FROM dealer_allot_voucher g
+		JOIN (
+		SELECT dealer_inner_sn, av_inner_sn, detail_inner_sn, allot_quantity,status
+		FROM dealer_allot_voucher_product_detail
+		where 1=1 AND product_type=0 <if test="product_name !=null and product_name!='' ">and product_name like concat('%',#{product_name},'%')</if>
+		)  a using(dealer_inner_sn, av_inner_sn)
+		WHERE 1=1 and status IN (1,2) and dealer_inner_sn = #{org_id}
+		<if test="status != null and status >0 ">and status =2</if>
+		) d
+		JOIN dealer h using(dealer_inner_sn)
+		<if test="status !=2">
+		LEFT JOIN (
+		SELECT SUM(quantity) AS quantity ,dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c FROM dealer_dealer_odo_dealer_product_detail WHERE voucher_type_c=8 GROUP BY dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c)r
+		ON d.dealer_inner_sn=r.dealer_inner_sn and d.av_inner_sn=r.voucher_inner_sn_c and d.detail_inner_sn=r.voucher_detail_inner_sn_c and r.quantity &gt;=d.allot_quantity
+		</if>
+
+		<if test="status ==2">
+			LEFT JOIN (
+			SELECT SUM(quantity) AS quantity ,dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c FROM dealer_dealer_grn_dealer_product_detail WHERE voucher_type_c=8 GROUP BY dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c)r
+			ON d.dealer_inner_sn=r.dealer_inner_sn and d.av_inner_sn=r.voucher_inner_sn_c and d.detail_inner_sn=r.voucher_detail_inner_sn_c and r.quantity &gt;=d.allot_quantity
+		</if>
+
+		WHERE d.dealer_inner_sn = #{org_id} and r.dealer_inner_sn is null
+		<if test="av_sn != null">and d.av_sn like concat('%', #{av_sn}, '%')</if>
+		<if test="warehouseIds.size()>0">
+			AND (
+			(d.`target_warehouse_inner_sn` IN
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>)
+			OR
+			(d.`source_warehouse_inner_sn` IN
+			<foreach item="warehouseId" collection="warehouseIds" separator="," open="(" close=")" index="">
+				#{warehouseId}
+			</foreach>)
+			)
+		</if>
+
+	</select>
+
+
+	<select id="selectOdoTransferAllotDetailList"
+			resultType="com.yrt.project.modular.warehouse.domain.AllotVoucherDetail">
+		SELECT
+		d.dealer_inner_sn, d.av_inner_sn, d.detail_inner_sn,d.vd_inner_sn,d.vd_name,d.product_type,d.product_inner_sn,d.product_name,
+		d.specification_inner_sn,d.specification,d.unit_inner_sn,d.unit_name,d.batch_number,d.sort_number,d.unit_price/10000 AS unit_price,d.`produce_date`,d.`overdue_date`,
+		IFNULL(d.allot_quantity/1000,0) as allot_quantity, IFNULL(r.quantity/1000,0) as outOfStock_quantity,
+		IFNULL((d.allot_quantity-r.quantity)/1000, d.allot_quantity/1000) as toBeOutOfStock_quantity,
+		CASE WHEN r.quantity &gt;= d.allot_quantity THEN 2 ELSE 1 END AS tvStatus
+		FROM	`dealer_allot_voucher_product_detail` d
+		LEFT JOIN (
+		SELECT IFNULL(SUM(quantity),0) AS quantity ,dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c FROM dealer_dealer_odo_product_detail
+		WHERE voucher_type_c=8 AND dealer_inner_sn = #{org_id} AND voucher_inner_sn_c = #{av_inner_sn} GROUP BY dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c)r
+		ON d.dealer_inner_sn=r.dealer_inner_sn and d.av_inner_sn=r.voucher_inner_sn_c and d.detail_inner_sn=r.voucher_detail_inner_sn_c
+		WHERE d.status IN (1,2) AND d.product_type=1 and d.dealer_inner_sn = #{org_id} AND d.av_inner_sn = #{av_inner_sn}
+		UNION ALL
+		SELECT
+		d.dealer_inner_sn, d.av_inner_sn, d.detail_inner_sn,d.vd_inner_sn,d.vd_name,d.product_type,d.product_inner_sn,d.product_name,
+		d.specification_inner_sn,d.specification,d.unit_inner_sn,d.unit_name,d.batch_number,d.sort_number,d.unit_price/10000 AS unit_price,d.`produce_date`,d.`overdue_date`,
+		IFNULL(d.allot_quantity/1000,0) as allot_quantity, IFNULL(r.quantity/1000,0) as outOfStock_quantity,
+		IFNULL((d.allot_quantity-r.quantity)/1000, d.allot_quantity/1000) as toBeOutOfStock_quantity,
+		CASE WHEN r.quantity &gt;= d.allot_quantity THEN 2 ELSE 1 END AS tvStatus
+		FROM	`dealer_allot_voucher_product_detail` d
+		LEFT JOIN (
+		SELECT IFNULL(SUM(quantity),0) AS quantity ,dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c FROM dealer_dealer_odo_dealer_product_detail
+		WHERE voucher_type_c=8 AND dealer_inner_sn = #{org_id} AND voucher_inner_sn_c = #{av_inner_sn} GROUP BY dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c)r
+		ON d.dealer_inner_sn=r.dealer_inner_sn and d.av_inner_sn=r.voucher_inner_sn_c and d.detail_inner_sn=r.voucher_detail_inner_sn_c
+		WHERE d.status IN (1,2) AND d.product_type=0 AND d.dealer_inner_sn = #{org_id} AND d.av_inner_sn = #{av_inner_sn}
+	</select>
+
+	<select id="selectGrnTransferAllotDetailList" resultType="com.yrt.project.modular.warehouse.domain.AllotVoucherDetail">
+		SELECT
+			d.dealer_inner_sn, d.av_inner_sn, d.detail_inner_sn,d.vd_inner_sn,d.vd_name,d.product_type,d.product_inner_sn,d.product_name,
+			d.specification_inner_sn,d.specification,d.unit_inner_sn,d.unit_name,d.batch_number,d.sort_number,d.unit_price/10000 AS unit_price,d.`produce_date`,d.`overdue_date`,
+			IFNULL(d.allot_quantity/1000,0) as allot_quantity, IFNULL(r.quantity/1000,0) as inOfStock_quantity,
+			IFNULL((d.allot_quantity-r.quantity)/1000, d.allot_quantity/1000) as toBeInOfStock_quantity,
+			CASE WHEN r.quantity &gt;= d.allot_quantity THEN 2 ELSE 1 END AS tvStatus
+		FROM	`dealer_allot_voucher_product_detail` d
+		LEFT JOIN (
+			SELECT IFNULL(SUM(quantity),0) AS quantity ,dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c FROM dealer_dealer_grn_product_detail
+			WHERE voucher_type_c=8 AND dealer_inner_sn = #{org_id} AND voucher_inner_sn_c = #{av_inner_sn} GROUP BY dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c
+		)r ON d.dealer_inner_sn=r.dealer_inner_sn and d.av_inner_sn=r.voucher_inner_sn_c and d.detail_inner_sn=r.voucher_detail_inner_sn_c
+		WHERE d.status IN (2,3) AND d.product_type=1 and d.dealer_inner_sn = #{org_id} AND d.av_inner_sn = #{av_inner_sn}
+		UNION ALL
+		SELECT
+			d.dealer_inner_sn, d.av_inner_sn, d.detail_inner_sn,d.vd_inner_sn,d.vd_name,d.product_type,d.product_inner_sn,d.product_name,
+			d.specification_inner_sn,d.specification,d.unit_inner_sn,d.unit_name,d.batch_number,d.sort_number,d.unit_price/10000 AS unit_price,d.`produce_date`,d.`overdue_date`,
+			IFNULL(d.allot_quantity/1000,0) as allot_quantity, IFNULL(r.quantity/1000,0) as inOfStock_quantity,
+			IFNULL((d.allot_quantity-r.quantity)/1000, d.allot_quantity/1000) as toBeInOfStock_quantity,
+			CASE WHEN r.quantity &gt;= d.allot_quantity THEN 2 ELSE 1 END AS tvStatus
+		FROM	`dealer_allot_voucher_product_detail` d
+		LEFT JOIN (
+			SELECT IFNULL(SUM(quantity),0) AS quantity ,dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c FROM dealer_dealer_grn_dealer_product_detail
+			WHERE voucher_type_c=8 AND dealer_inner_sn = #{org_id} AND voucher_inner_sn_c = #{av_inner_sn} GROUP BY dealer_inner_sn, voucher_inner_sn_c, voucher_detail_inner_sn_c
+		)r ON d.dealer_inner_sn=r.dealer_inner_sn and d.av_inner_sn=r.voucher_inner_sn_c and d.detail_inner_sn=r.voucher_detail_inner_sn_c
+		WHERE d.status IN(2,3) AND d.product_type=0 AND d.dealer_inner_sn = #{org_id} AND d.av_inner_sn = #{av_inner_sn}
+	</select>
+
+	<!--这里用allotVoucherDetail映射查询的字段，用av_inner_sn来填充odo_inner_sn-->
+	<select id="findOdo" parameterType="map" resultType="allotVoucherDetail">
+		SELECT
+			dealer_inner_sn,odo_inner_sn AS av_inner_sn,1 AS product_type
+		FROM `dealer_dealer_odo`
+		WHERE	dealer_inner_sn=#{org_id} AND	odo_inner_sn IN (
+			SELECT odo_inner_sn
+			FROM dealer_dealer_odo_product_detail
+			WHERE dealer_inner_sn=#{org_id} AND voucher_inner_sn_c=(
+				SELECT DISTINCT	voucher_inner_sn_c
+				FROM	dealer_dealer_odo_product_detail
+				WHERE	dealer_inner_sn=#{org_id} AND odo_inner_sn=#{odo_inner_sn} AND voucher_type_c=8
+			)
+		)	AND status=2
+
+		UNION ALL
+
+		SELECT
+			dealer_inner_sn,odo_inner_sn AS av_inner_sn,0 AS product_type
+		FROM `dealer_dealer_odo`
+		WHERE	dealer_inner_sn=#{org_id} AND	odo_inner_sn IN (
+			SELECT odo_inner_sn
+			FROM dealer_dealer_odo_dealer_product_detail
+			WHERE dealer_inner_sn=#{org_id} AND voucher_inner_sn_c=(
+				SELECT DISTINCT	voucher_inner_sn_c
+				FROM	dealer_dealer_odo_dealer_product_detail
+				WHERE	dealer_inner_sn=#{org_id} AND odo_inner_sn=#{odo_inner_sn} AND voucher_type_c=8
+			)
+		)	AND status=2
+	</select>
+
+	<!--这里用allotVoucherDetail映射查询的字段，用av_inner_sn来填充grn_inner_sn-->
+	<select id="findGrn" parameterType="map" resultType="allotVoucherDetail">
+		SELECT
+			dealer_inner_sn,grn_inner_sn AS av_inner_sn,1 AS product_type
+		FROM `dealer_dealer_grn`
+		WHERE	dealer_inner_sn=#{org_id} AND	grn_inner_sn IN (
+			SELECT grn_inner_sn
+			FROM dealer_dealer_grn_product_detail
+			WHERE dealer_inner_sn=#{org_id} AND voucher_inner_sn_c=(
+				SELECT DISTINCT	voucher_inner_sn_c
+				FROM	dealer_dealer_grn_product_detail
+				WHERE	dealer_inner_sn=#{org_id} AND grn_inner_sn=#{grn_inner_sn} AND voucher_type_c=8
+			)
+		)	AND status=2
+
+		UNION ALL
+
+		SELECT
+			dealer_inner_sn,grn_inner_sn AS av_inner_sn,0 AS product_type
+		FROM `dealer_dealer_grn`
+		WHERE	dealer_inner_sn=#{org_id} AND	grn_inner_sn IN (
+			SELECT grn_inner_sn
+			FROM dealer_dealer_grn_dealer_product_detail
+			WHERE dealer_inner_sn=#{org_id} AND voucher_inner_sn_c=(
+				SELECT DISTINCT	voucher_inner_sn_c
+				FROM	dealer_dealer_grn_dealer_product_detail
+				WHERE	dealer_inner_sn=#{org_id} AND grn_inner_sn=#{grn_inner_sn} AND voucher_type_c=8
+			)
+		)	AND status=2
+	</select>
+
+	<select id="findOdoDetails" resultType="allotVoucherDetail">
+		SELECT
+			`dealer_inner_sn` AS  org_id,`product_vendor_inner_sn` AS vd_inner_sn,`product_inner_sn`,`specification_inner_sn`,
+			`unit_inner_sn`,quantity/1000 AS outOfStock_quantity,`voucher_inner_sn_c` AS av_inner_sn,
+		     `voucher_detail_inner_sn_c` AS detail_inner_sn,1 AS product_type
+		FROM	`dealer_dealer_odo_product_detail`
+		WHERE dealer_inner_sn=#{org_id} AND voucher_type_c=8 AND odo_inner_sn=#{odo_inner_sn}
+
+		UNION ALL
+
+		SELECT
+			`dealer_inner_sn` AS  org_id,`product_dealer_inner_sn` AS vd_inner_sn,`product_inner_sn`,`specification_inner_sn`,
+			`unit_inner_sn`,quantity/1000 AS outOfStock_quantity,`voucher_inner_sn_c` AS av_inner_sn,
+			`voucher_detail_inner_sn_c` AS detail_inner_sn,0 AS product_type
+		FROM	`dealer_dealer_odo_dealer_product_detail`
+		WHERE dealer_inner_sn=#{org_id} AND voucher_type_c=8 AND odo_inner_sn=#{odo_inner_sn}
+	</select>
+
+	<select id="findGrnDetails" resultType="allotVoucherDetail">
+		SELECT
+			`dealer_inner_sn` AS  org_id,`product_vendor_inner_sn` AS vd_inner_sn,`product_inner_sn`,`specification_inner_sn`,
+			`unit_inner_sn`,quantity/1000 AS inOfStock_quantity,`voucher_inner_sn_c` AS av_inner_sn,
+			`voucher_detail_inner_sn_c` AS detail_inner_sn,1 AS product_type
+		FROM	`dealer_dealer_grn_product_detail`
+		WHERE dealer_inner_sn=#{org_id} AND voucher_type_c=8 AND grn_inner_sn=#{grn_inner_sn}
+
+		UNION ALL
+
+		SELECT
+			`dealer_inner_sn` AS  org_id,`product_dealer_inner_sn` AS vd_inner_sn,`product_inner_sn`,`specification_inner_sn`,
+			`unit_inner_sn`,quantity/1000 AS inOfStock_quantity,`voucher_inner_sn_c` AS av_inner_sn,
+			`voucher_detail_inner_sn_c` AS detail_inner_sn,0 AS product_type
+		FROM	`dealer_dealer_grn_dealer_product_detail`
+		WHERE dealer_inner_sn=#{org_id} AND voucher_type_c=8 AND grn_inner_sn=#{grn_inner_sn}
+	</select>
+
+	<select id="findFromOdo" parameterType="map" resultType="allotVoucherDetail">
+		SELECT
+			dealer_inner_sn,odo_inner_sn
+		FROM `dealer_dealer_odo`
+		WHERE	dealer_inner_sn=#{org_id} AND	odo_inner_sn IN (
+		    SELECT odo_inner_sn
+		    FROM dealer_dealer_odo_product_detail
+		    WHERE dealer_inner_sn=#{org_id} AND voucher_inner_sn_c=(
+		        SELECT	voucher_inner_sn_c
+				FROM	dealer_dealer_odo_product_detail
+		        WHERE	dealer_inner_sn=#{org_id} AND odo_inner_sn=#{odo_inner_sn} AND voucher_type_c=8
+			)
+		)	AND status=2
+
+		UNION ALL
+
+		SELECT
+			dealer_inner_sn,odo_inner_sn
+		FROM `dealer_dealer_odo`
+		WHERE	dealer_inner_sn=#{org_id} AND	odo_inner_sn IN (
+			SELECT odo_inner_sn
+			FROM dealer_dealer_odo_dealer_product_detail
+			WHERE dealer_inner_sn=#{org_id} AND voucher_inner_sn_c=(
+				SELECT	voucher_inner_sn_c
+				FROM	dealer_dealer_odo_dealer_product_detail
+				WHERE	dealer_inner_sn=#{org_id} AND odo_inner_sn=#{odo_inner_sn} AND voucher_type_c=8
+			)
+		)	AND status=2
+	</select>
+
+	<select id="findOdoIds" parameterType="map" resultType="long">
+		SELECT DISTINCT
+			`voucher_inner_sn_c`
+		FROM `dealer_dealer_odo_product_detail`
+		WHERE	`dealer_inner_sn`=#{org_id} AND `voucher_type_c`=8 AND `odo_inner_sn`=#{odo_inner_sn}
+		UNION
+		SELECT DISTINCT
+			`voucher_inner_sn_c`
+		FROM `dealer_dealer_odo_dealer_product_detail`
+		WHERE	`dealer_inner_sn`=#{org_id} AND `voucher_type_c`=8 AND `odo_inner_sn`=#{odo_inner_sn}
+	</select>
+
+	<select id="findGrnIds" parameterType="map" resultType="long">
+		SELECT DISTINCT
+			`voucher_inner_sn_c`
+		FROM `dealer_dealer_grn_product_detail`
+		WHERE	`dealer_inner_sn`=#{org_id} AND `voucher_type_c`=8 AND `grn_inner_sn`=#{grn_inner_sn}
+		UNION DISTINCT
+		SELECT DISTINCT
+			`voucher_inner_sn_c`
+		FROM `dealer_dealer_grn_dealer_product_detail`
+		WHERE	`dealer_inner_sn`=#{org_id} AND `voucher_type_c`=8 AND `grn_inner_sn`=#{grn_inner_sn}
+	</select>
+
+	<update id="updateStatusAtPutOut" parameterType="long">
+		UPDATE `dealer_allot_voucher_product_detail`
+		SET `status`=2
+		WHERE `detail_inner_sn` = #{detail_inner_sn} AND `status`=1
+	</update>
+
+	<update id="updateStatusAtPutIn" parameterType="long">
+		UPDATE `dealer_allot_voucher_product_detail`
+		SET `status`=3
+		WHERE `detail_inner_sn` = #{detail_inner_sn} AND `status`=2
+	</update>
+
+	<select id="findFromGrn" parameterType="map" resultType="allotVoucherDetail">
+		SELECT
+			dealer_inner_sn AS org_id,
+			voucher_inner_sn_c AS av_inner_sn,voucher_detail_inner_sn_c AS detail_inner_sn,
+			product_inner_sn,specification_inner_sn, unit_inner_sn,1 AS product_type,product_vendor_inner_sn AS vd_inner_sn,
+			quantity/1000 AS outOfStock_quantity
+		FROM `dealer_dealer_grn_product_detail`
+		WHERE	`voucher_detail_inner_sn_c`=(
+			SELECT
+				`voucher_detail_inner_sn_c`
+			FROM `dealer_dealer_grn_product_detail`
+			WHERE `dealer_inner_sn`=#{org_id}  AND `voucher_type_c`=8 AND `grn_inner_sn`=#{grn_inner_sn}
+		)
+
+		UNION ALL
+
+		SELECT
+			dealer_inner_sn AS org_id,
+			voucher_inner_sn_c AS av_inner_sn,voucher_detail_inner_sn_c AS detail_inner_sn,
+			product_inner_sn,specification_inner_sn, unit_inner_sn,0 AS product_type,product_dealer_inner_sn AS vd_inner_sn,
+			quantity/1000 AS outOfStock_quantity
+		FROM `dealer_dealer_grn_dealer_product_detail`
+		WHERE	`voucher_detail_inner_sn_c`=(
+			SELECT
+				`voucher_detail_inner_sn_c`
+			FROM `dealer_dealer_grn_dealer_product_detail`
+			WHERE `dealer_inner_sn`=#{org_id}  AND `voucher_type_c`=8 AND `grn_inner_sn`=#{grn_inner_sn}
+		)
+	</select>
+</mapper>

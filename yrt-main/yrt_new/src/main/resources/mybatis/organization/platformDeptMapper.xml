@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.organization.mapper.PlatformDeptMapper">
+
+	<resultMap type="PlatformDept" id="PlatformDeptResult">
+		<id     property="department_inner_sn" column="department_inner_sn"/> <!-- 部门内部编号 -->
+	 	<result property="parent_department_inner_sn" column="parent_department_inner_sn"/><!-- 上级部门内部编号 -->
+		<result property="director_inner_sn" column="director_inner_sn"/><!-- 主管员工内部编号  -->
+		<result property="director_name" column="director_name"/><!-- 主管员工内部编号  -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<result  property="name" column="name"/><!-- 名称 -->
+		<result  property="department_sn" column="department_sn"/><!-- 部门编号 -->
+		<result  property="phone" column="phone"/><!-- 电话 -->
+		<result  property="description" column="description"/><!-- 描述 -->
+		<result property="is_leaf" column="is_leaf"/>	
+	</resultMap>
+	
+	<sql id="selectPlatformDept">
+        select department_inner_sn, parent_department_inner_sn, e.employee_inner_sn as director_inner_sn, e.name as director_name, d.status, d.name, department_sn, d.phone, 
+        	d.description, case when department_inner_sn in (select distinct parent_department_inner_sn from platform_department) then 0 else 1 end as is_leaf
+ 		from platform_department d
+ 		left join platform_employee e on d.director_inner_sn = e.employee_inner_sn and e.is_delete=0
+    </sql>
+	
+
+	<select id="selectPlatformDeptChildrenList" parameterType="Long" resultMap="PlatformDeptResult">
+		<include refid="selectPlatformDept"/>
+		where d.is_delete = 0 and parent_department_inner_sn = #{id}
+	</select>
+	
+	<select id="selectPlatformDeptInfo" parameterType="Long" resultMap="PlatformDeptResult">
+		<include refid="selectPlatformDept"/>
+		where department_inner_sn = #{id}
+	</select>
+	
+	<select id="selectTopLevelPlatformDeptlist"  resultMap="PlatformDeptResult">
+		<include refid="selectPlatformDept"/>
+		where d.is_delete = 0 and parent_department_inner_sn is null
+	</select>
+	
+	<insert id = "insertPlatformDept" parameterType="PlatformDept"  useGeneratedKeys="true" keyProperty="department_inner_sn" keyColumn="department_inner_sn" >
+		insert into platform_department	(	parent_department_inner_sn,
+											director_inner_sn,
+											name,
+											department_sn,
+											phone,
+											description)
+ 			values(
+ 			#{parent_department_inner_sn},
+ 			#{director_inner_sn},
+ 			#{name},
+ 			#{department_sn},
+ 			#{phone},
+ 			#{description}
+ 			)
+	</insert>
+
+	<update id="updatePlatformDept" parameterType="PlatformDept">
+        update platform_department
+        <set>
+        	<if test="parent_department_inner_sn != null">parent_department_inner_sn = #{parent_department_inner_sn},</if>
+ 			<if test="director_inner_sn != null">director_inner_sn = #{director_inner_sn},</if>
+ 			<if test="status != null">status = #{status},</if>
+ 			<if test="name != null and name != ''">name = #{name},</if>
+ 			<if test="department_sn != null">department_sn = #{department_sn},</if>
+ 			<if test="phone != null">phone = #{phone},</if>
+ 			<if test="description != null">description = #{description},</if>
+ 		</set>
+ 		where department_inner_sn = #{department_inner_sn}
+    </update>
+ 
+    
+    <update id="deletePlatformDept" parameterType="Long">
+ 		update platform_department set is_delete = 1 where department_inner_sn = #{id}
+ 	</update>
+ 	
+ 	<delete id="trueDeletePlatformDept" parameterType="Long">
+ 		delete from platform_department where department_inner_sn = #{id}
+ 	</delete>
+ 	
+ 	<!-- 平台人员管理 -->
+		<resultMap type="PlatformEmployee" id="EmployeeResult">
+		<result  property="employee_inner_sn" column="employee_inner_sn"/><!-- 员工内部编号 -->
+		<result property="parent_employee_inner_sn" column="parent_employee_inner_sn"/><!-- 上级员工内部编号 -->
+		<result property="sex" column="sex"/><!-- 性别  -->
+		<result property="status" column="status"/><!-- 状态  -->
+		<result  property="personal_certificate_type" column="personal_certificate_type"/><!-- 个人证件类别 -->
+		<result  property="degree" column="degree"/><!-- 学历 -->
+		<result  property="marriage_status" column="marriage_status"/><!-- 婚姻状况 -->
+		<!-- <result  property="is_delete" column="is_delete"/> --><!-- 已删除 -->
+		<result  property="birthday" column="birthday"/><!-- 生日 -->
+		<result  property="entry_date" column="entry_date"/><!-- 入职日期 -->
+		<result  property="departure_date" column="departure_date"/><!-- 离职日期 -->
+		<result  property="name" column="name"/><!-- 姓名* -->
+		<result  property="employee_sn" column="employee_sn"/><!-- 员工编号 -->
+		<result  property="nation" column="nation"/><!-- 民族 -->
+		<result  property="position" column="position"/><!-- 职位 -->
+		<result  property="personal_certificate_sn" column="personal_certificate_sn"/><!-- 个人证件号 -->
+		<result  property="phone" column="phone"/><!-- 电话 -->
+		<result  property="email" column="email"/><!-- 电子邮件 -->
+		<result  property="qq" column="qq"/><!-- QQ -->
+		<result  property="description" column="description"/><!-- 描述 -->
+		<result  property="photo_url" column="photo_url"/><!-- 照片URL -->
+		<result  property="department_inner_sn" column="department_inner_sn"/><!-- 员工部门id列表（逗号分隔） -->
+		<result  property="department_name" column="department_name"/><!-- 员工部门名称列表（逗号分隔） -->
+		<result  property="user_inner_sn" column="user_inner_sn"/><!-- 员工登录账户id -->
+		<result  property="login_account_status" column="login_account_status"/><!-- 员工登录账户状态 -->		
+	</resultMap>
+	
+	<sql id="selectPlatformEmployee">
+		select  employee_inner_sn, parent_employee_inner_sn, user_inner_sn, login_account_status, sex, e.status, personal_certificate_type, degree,
+			marriage_status, birthday, entry_date, departure_date, e.name, employee_sn, nation, position, personal_certificate_sn,
+			e.phone, email, qq, e.description, photo_url,group_concat(department_inner_sn) as department_inner_sn
+			,group_concat(d.name) as department_name
+		from  platform_employee e
+		left join platform_employee_platform_department r using(employee_inner_sn) 
+		left join platform_department d using (department_inner_sn)
+	</sql>
+	
+	<insert id="insertPlatformEmployee" parameterType="map" useGeneratedKeys="true" keyProperty="employee_inner_sn" keyColumn="employee_inner_sn">
+        insert into platform_employee 
+        	(parent_employee_inner_sn, sex,status,personal_certificate_type, degree,
+			marriage_status, birthday, entry_date, departure_date, name, employee_sn, nation, position, personal_certificate_sn,
+			phone, email, qq, description, photo_url, user_inner_sn, login_account_status)
+        values (
+            #{parent_employee_inner_sn},
+            #{sex},
+            #{status},
+            #{personal_certificate_type},
+            #{degree},
+            #{marriage_status},
+            #{birthday},
+            #{entry_date},
+            #{departure_date},
+            #{name},
+            #{employee_sn},
+            #{nation},
+            #{position},
+            #{personal_certificate_sn},
+            #{phone},
+            #{email},
+            #{qq},
+            #{description},
+            #{photo_url},
+            #{user_inner_sn},
+            #{login_account_status}
+         )  
+	</insert>
+	
+	<select id="selectPlatformEmployeeList" parameterType = "SearchForm" resultMap="EmployeeResult">
+		<include refid="selectPlatformEmployee"/>
+		where e.is_delete = 0  
+		<if test="name != null and name != ''">and e.name like concat('%', #{name}, '%')</if>
+		group by employee_inner_sn
+	</select>
+	
+	<select id="selectPlatformEmployeeInfoById" parameterType="long" resultMap="EmployeeResult">
+		<include refid="selectPlatformEmployee"/>
+		where employee_inner_sn = #{employee_inner_sn}
+		group by employee_inner_sn
+	</select>
+	
+	
+	<select id="selectTopPlatformEmployeeList"  resultMap="EmployeeResult">
+		<include refid="selectPlatformEmployee"/>
+		where e.is_delete = 0  
+		and parent_employee_inner_sn is null
+		group by employee_inner_sn
+	</select>
+	
+	<select id="selectPlatformEmployeeChildrenList" parameterType="long" resultMap="EmployeeResult">
+		<include refid="selectPlatformEmployee"/>
+		where e.is_delete = 0 and parent_employee_inner_sn  = #{parent_employee_inner_sn}
+		group by employee_inner_sn
+	</select>
+	
+	<update id="updatePlatformEmployee" parameterType="map">
+		update platform_employee
+		<set>
+			<if test="parent_employee_inner_sn != null">parent_employee_inner_sn = #{parent_employee_inner_sn},</if>
+			<if test="parent_employee_inner_sn == null and parent_employee_inner_sn_null ==1">parent_employee_inner_sn = null,</if>
+			<if test="sex != null">sex = #{sex},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="personal_certificate_type != null">personal_certificate_type = #{personal_certificate_type},</if>
+ 			<if test="degree != null">degree = #{degree},</if>
+ 			<if test="marriage_status != null">marriage_status = #{marriage_status},</if>
+ 			<if test="birthday != null">birthday = #{birthday},</if>
+ 			<if test="birthday == null and birthday_null == 1">birthday = null,</if>
+ 			<if test="entry_date != null">entry_date = #{entry_date},</if>
+ 			<if test="entry_date == null and entry_date_null == 1">entry_date = null,</if>
+ 			<if test="departure_date != null">departure_date = #{departure_date},</if>
+ 			<if test="departure_date == null and departure_date_null == 1">departure_date = null,</if>
+ 			<if test="name != null and name != ''">name = #{name},</if>
+ 			<if test="employee_sn != null">employee_sn = #{employee_sn},</if>
+ 			<if test="nation != null">nation = #{nation},</if>
+ 			<if test="position != null">position = #{position},</if>
+ 			<if test="personal_certificate_sn != null">personal_certificate_sn = #{personal_certificate_sn},</if>
+ 			<if test="phone != null">phone = #{phone},</if>
+ 			<if test="email != null">email = #{email},</if>
+ 			<if test="qq != null">qq = #{qq},</if>
+ 			<if test="description != null">description = #{description},</if>
+ 			<if test="photo_url != null">photo_url = #{photo_url},</if>
+ 			<if test="user_inner_sn != null and user_inner_sn != -1">user_inner_sn = #{user_inner_sn},</if>
+ 			<if test="user_inner_sn == -1">user_inner_sn = null,</if>
+ 			<if test="login_account_status != null">login_account_status = #{login_account_status},</if>
+		</set>
+		where employee_inner_sn = #{employee_inner_sn}
+	</update>
+	
+	<update id="deletePlatformEmployee" parameterType="long">
+		update platform_employee set is_delete = 1
+		where employee_inner_sn = #{employee_inner_sn}
+	</update>
+	
+	<delete id ="deletePlatformDeptRelEmp" parameterType = "long">
+		delete from platform_employee_platform_department
+		where employee_inner_sn = #{employee_inner_sn}
+	</delete>
+	
+	<insert id ="insertPlatformDeptRelEmp" parameterType = "map">
+			insert into platform_employee_platform_department(employee_inner_sn,department_inner_sn)
+			values(#{employee_innser_sn},#{department_innser_sn})
+	</insert>
+</mapper>

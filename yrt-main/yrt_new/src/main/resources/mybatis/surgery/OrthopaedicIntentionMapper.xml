@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.surgery.mapper.OrthopaedicIntentionMapper">
+
+	<resultMap type="OrthopaedicIntention" id="OrthopaedicIntentionResult">
+		<result  property="hospital_inner_sn" column="hospital_inner_sn"/><!-- 医院内部编号 -->
+		<result  property="hospital_name" column="hospital_name"/><!-- 医院名称 -->
+		<result  property="hospital_alias" column="hospital_alias"/><!-- 医院别名 -->
+		<result  property="dealer_inner_sn" column="dealer_inner_sn"/><!-- 经销商内部编号 -->
+		<result  property="dealer_name" column="dealer_name"/><!-- 经销商名称 -->
+		<result  property="begin_date" column="begin_date"/><!-- 开始日期 -->
+		<result  property="end_date" column="end_date"/><!-- 截止日期 -->
+		<result  property="description" column="description"/><!-- 描述 -->
+		<result  property="status" column="status"/><!-- 状态 -->
+		<result property="t0_status" column="t0_status"/><!-- 颅骨状态  -->
+		<result property="t0_name" column="t0_name"/><!-- 颅骨名称  -->
+		<result property="t1_status" column="t1_status"/><!-- 脊柱状态  -->
+		<result property="t1_name" column="t1_name"/><!-- 脊柱名称  -->
+		<result property="t2_status" column="t2_status"/><!-- 关节状态  -->
+		<result property="t2_name" column="t2_name"/><!-- 关节名称 -->
+		<result property="t3_status" column="t3_status"/><!-- 创伤状态  -->
+		<result property="t3_name" column="t3_name"/><!-- 创伤名称  -->
+	</resultMap>
+	
+	<sql id="selectOrthopaedicIntention">	
+		select h.hospital_inner_sn, hh.name as hospital_name, hh.alias as hospital_alias,h.dealer_inner_sn,dd.name as dealer_name, h.begin_date, h.end_date, h.description, 1 as status,
+	        max(case r.type_inner_sn when 0 then r.status else 0 end) t0_status,
+	        max(case r.type_inner_sn when 0 then t.name else '' end) t0_name,
+	        max(case r.type_inner_sn when 1 then r.status else 0 end) t1_status,
+	        max(case r.type_inner_sn when 1 then t.name else '' end) t1_name,
+	        max(case r.type_inner_sn when 2 then r.status else 0 end) t2_status,
+	        max(case r.type_inner_sn when 2 then t.name else '' end) t2_name,
+	        max(case r.type_inner_sn when 3 then r.status else 0 end) t3_status,
+	        max(case r.type_inner_sn when 3 then t.name else '' end) t3_name,
+            (
+              select 
+                concat('[', group_concat(json_object('brand_inner_sn', b.brand_inner_sn, 'name', b.name, 'status', br.status)), ']')
+              from orthopaedic_operation_intention_rel_brand br
+              left join orthopaedic_ois_brand b using(brand_inner_sn)
+              where hospital_inner_sn = h.hospital_inner_sn 
+              and dealer_inner_sn = h.dealer_inner_sn 
+            ) rel_brands_json
+		from hospital_dealer_orthopaedic_operation_intention h
+		left join h_d_o_o_i_o_o_t_t r using(hospital_inner_sn,dealer_inner_sn)
+		left join orthopaedic_operation_top_type t using(type_inner_sn)
+		left join hospital hh using(hospital_inner_sn)
+		left join dealer dd using(dealer_inner_sn)
+	</sql>
+
+	<select id="searchIntention" parameterType="OrthopaedicIntention" resultMap="OrthopaedicIntentionResult">
+		<include refid="selectOrthopaedicIntention"/>
+		where 1=1
+		<if test="hospital_inner_sn != null">and h.hospital_inner_sn= #{hospital_inner_sn}</if>
+		<if test="hospital_name != null">and hh.name like concat('%', #{hospital_name}, '%')</if>
+		<if test="hospital_alias != null">and hh.alias like concat('%', #{hospital_alias}, '%')</if>
+		<if test="dealer_inner_sn != null">and h.dealer_inner_sn= #{dealer_inner_sn}</if>
+		<if test="dealer_name != null">and dd.name like concat('%', #{dealer_name}, '%')</if>
+		<if test="status != null">and h.status =#{status}</if>
+		group by h.hospital_inner_sn,h.dealer_inner_sn
+	</select>
+	
+	<select id="selectIntentionInfo" parameterType="OrthopaedicIntentionKey" resultMap="OrthopaedicIntentionResult">
+		<include refid="selectOrthopaedicIntention"/>
+		where 1=1
+		<if test="hospital_inner_sn != null">and h.hospital_inner_sn= #{hospital_inner_sn}</if>
+		<if test="dealer_inner_sn != null">and h.dealer_inner_sn = #{dealer_inner_sn}</if>
+		group by h.hospital_inner_sn,h.dealer_inner_sn
+	</select>
+	
+	<insert id="insertOrthopaedicIntention" parameterType="OrthopaedicIntention">
+		insert into hospital_dealer_orthopaedic_operation_intention(hospital_inner_sn, dealer_inner_sn, begin_date, end_date, description)
+        values (#{hospital_inner_sn}, #{dealer_inner_sn}, #{begin_date}, #{end_date}, #{description})
+	</insert>
+	
+	<update id = "updateIntention" parameterType = "OrthopaedicIntention">
+		update hospital_dealer_orthopaedic_operation_intention
+		<set>
+			<if test="begin_date != null"> begin_date = #{begin_date},</if>
+			<if test="end_date != null "> end_date = #{end_date},</if>
+			<if test="status != null"> status = #{status},</if>
+			<if test="description != null "> description = #{description},</if>
+		</set>
+		where hospital_inner_sn = #{hospital_inner_sn}
+			and dealer_inner_sn = #{dealer_inner_sn}
+	</update>
+	
+    <delete id = "deleteIntention" parameterType = "OrthopaedicIntentionKey">
+        delete from hospital_dealer_orthopaedic_operation_intention
+        where hospital_inner_sn = #{hospital_inner_sn}
+            and dealer_inner_sn = #{dealer_inner_sn}
+    </delete>
+    
+    <!-- ref types -->
+	<insert id="insertIntentionRefType" parameterType="map">
+		insert into h_d_o_o_i_o_o_t_t(hospital_inner_sn, dealer_inner_sn, type_inner_sn, status)
+        values (#{hospital_inner_sn}, #{dealer_inner_sn}, #{type_inner_sn}, #{status})
+	</insert>
+	
+	<update id = "updateIntentionRefType" parameterType = "map">
+		update h_d_o_o_i_o_o_t_t
+		<set>
+			<if test="status != null"> status = #{status},</if>
+		</set>
+		where hospital_inner_sn = #{hospital_inner_sn}
+			and dealer_inner_sn = #{dealer_inner_sn}
+			and type_inner_sn = #{type_inner_sn}
+	</update>
+	
+	<delete id = "deleteIntentionRefType" parameterType = "OrthopaedicIntentionKey">
+		delete from h_d_o_o_i_o_o_t_t
+		where hospital_inner_sn = #{hospital_inner_sn}
+			and dealer_inner_sn = #{dealer_inner_sn}
+	</delete>
+	
+    <!-- ref brands -->
+    <insert id="insertIntentionRefBrand" parameterType="map">
+        insert into orthopaedic_operation_intention_rel_brand(hospital_inner_sn, dealer_inner_sn, brand_inner_sn, status)
+        values (#{hospital_inner_sn}, #{dealer_inner_sn}, #{brand_inner_sn}, #{status})
+    </insert>
+    
+    <delete id = "deleteIntentionRefBrand" parameterType = "OrthopaedicIntentionKey">
+        delete from orthopaedic_operation_intention_rel_brand
+        where hospital_inner_sn = #{hospital_inner_sn}
+            and dealer_inner_sn = #{dealer_inner_sn}
+    </delete>
+    
+    <!--  -->
+    <resultMap id="keyValueResult" type="com.yrt.common.lang.KeyValue">
+        <constructor>
+            <arg column="k" javaType="Object"/>
+            <arg column="v" javaType="Object"/>
+        </constructor>
+    </resultMap>
+    <select id="selectAvailableDealer" parameterType="map" resultMap="keyValueResult">
+        select distinct
+          r.dealer_inner_sn as k, 
+          d.name as v
+        from hospital_dealer_orthopaedic_operation_intention r
+        join h_d_o_o_i_o_o_t_t tr 
+           on tr.status = 1 <!-- 有意向 -->
+           and tr.hospital_inner_sn = r.hospital_inner_sn 
+           and tr.dealer_inner_sn = r.dealer_inner_sn
+        join orthopaedic_operation_intention_rel_brand br 
+           on br.hospital_inner_sn = r.hospital_inner_sn 
+           and br.dealer_inner_sn = r.dealer_inner_sn
+		join dealer d on d.dealer_inner_sn = r.dealer_inner_sn
+        where 
+           r.hospital_inner_sn = #{hospital_inner_sn} 
+           and tr.type_inner_sn = #{type_inner_sn} 
+           and br.brand_inner_sn = #{brand_inner_sn}
+           and curdate() between r.begin_date and r.end_date
+    </select>
+    
+    <select id="selectAvailableBrand" parameterType="map" resultMap="keyValueResult">
+        select distinct
+          b.brand_inner_sn as k, 
+          b.name as v
+        from hospital_dealer_orthopaedic_operation_intention r
+        join orthopaedic_operation_intention_rel_brand br 
+           on br.hospital_inner_sn = r.hospital_inner_sn 
+           and br.dealer_inner_sn = r.dealer_inner_sn
+        join orthopaedic_ois_brand b on b.brand_inner_sn = br.brand_inner_sn
+        where 
+           r.hospital_inner_sn = #{hospital_inner_sn} 
+           and curdate() between r.begin_date and r.end_date
+    </select>
+    <select id="selectAvailableType" parameterType="map" resultMap="keyValueResult">
+        select distinct
+          t.type_inner_sn as k, 
+          t.name as v
+        from hospital_dealer_orthopaedic_operation_intention r
+        join h_d_o_o_i_o_o_t_t tr 
+           on tr.status = 1 <!-- 有意向 -->
+           and tr.hospital_inner_sn = r.hospital_inner_sn 
+           and tr.dealer_inner_sn = r.dealer_inner_sn
+        join orthopaedic_operation_top_type t on t.type_inner_sn = tr.type_inner_sn
+        where 
+           r.hospital_inner_sn = #{hospital_inner_sn} 
+           and curdate() between r.begin_date and r.end_date
+    </select>
+    
+    <select id="selectAvailableHospital" parameterType="map" resultMap="keyValueResult">
+        select distinct
+          r.hospital_inner_sn as k, 
+          h.name as v
+        from hospital_dealer_orthopaedic_operation_intention r
+        join h_d_o_o_i_o_o_t_t tr 
+           on tr.status = 1 <!-- 有意向 -->
+           and tr.hospital_inner_sn = r.hospital_inner_sn 
+           and tr.dealer_inner_sn = r.dealer_inner_sn
+        join hospital h on h.hospital_inner_sn = r.hospital_inner_sn
+        where 
+           r.dealer_inner_sn = #{dealer_inner_sn} 
+           and curdate() between r.begin_date and r.end_date
+    </select>
+    
+</mapper>

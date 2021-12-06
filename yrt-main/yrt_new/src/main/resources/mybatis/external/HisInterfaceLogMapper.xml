@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.external.mapper.HisInterfaceLogMapper">
+  <resultMap id="BaseResultMap" type="com.yrt.project.modular.external.domain.HisInterfaceLog">
+    <!--@mbg.generated-->
+    <!--@Table his_interface_log-->
+    <id column="inner_sn" jdbcType="BIGINT" property="innerSn" />
+    <result column="organization_inner_sn" jdbcType="INTEGER" property="organizationInnerSn" />
+    <result column="organization_type" jdbcType="TINYINT" property="organizationType" />
+    <result column="voucher_type" jdbcType="TINYINT" property="voucherType" />
+    <result column="url" jdbcType="VARCHAR" property="url" />
+    <result column="message_s" jdbcType="LONGVARCHAR" property="messageS" />
+    <result column="message_r" jdbcType="LONGVARCHAR" property="messageR" />
+    <result column="time_s" jdbcType="TIMESTAMP" property="timeS" />
+    <result column="time_r" jdbcType="TIMESTAMP" property="timeR" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    inner_sn, organization_inner_sn, organization_type, voucher_type, url, message_s, 
+    message_r, time_s, time_r
+  </sql>
+</mapper>

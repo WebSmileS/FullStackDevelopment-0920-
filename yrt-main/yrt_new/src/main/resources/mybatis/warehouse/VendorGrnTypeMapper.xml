@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yrt.project.modular.warehouse.mapper.VendorGrnTypeMapper">
+
+	<!-- 厂商入库单类别 -->
+	<resultMap type="GrnType" id="GrnTypeResult">
+		<id      property="org_id" column="vendor_inner_sn"/><!-- 厂商商内部编号 -->
+		<result  property="type_inner_sn" column="type_inner_sn"/><!-- 类别内部编号 -->
+		<result  property="name" column="name"/><!-- 名称 -->
+		<result  property="status" column="status"/><!-- 状态 -->
+		<result  property="is_preset" column="is_preset"/><!-- 是否预置 -->
+	</resultMap>
+	
+	<sql id="selectGrnType">
+		select vendor_inner_sn, type_inner_sn, name, status, is_preset
+		from vendor_grn_type
+	</sql>
+	
+	<select id="selectGrnTypeList" parameterType="map" resultMap="GrnTypeResult">
+		<include refid="selectGrnType"/>
+		where is_delete = 0
+			and vendor_inner_sn = #{org_id}
+			<if test="status != null">and status = #{status}</if>
+	</select>
+	
+	<select id="selectGrnTypeInfo" parameterType="map" resultMap="GrnTypeResult">
+		<include refid="selectGrnType"/>
+		where is_delete = 0
+			and vendor_inner_sn = #{org_id}
+			and type_inner_sn = #{type_inner_sn}
+	</select>
+	
+	<select id="insertGrnType" parameterType="map" statementType="CALLABLE"  useCache="false" flushCache="true" resultType="map">
+		call v_add_vendor_grn_type(
+            #{org_id ,mode=IN},
+            #{status_i ,mode=IN},
+            #{is_delete_i ,mode=IN},
+            #{name_i ,mode=IN},
+            #{type_inner_sn_o ,mode=OUT,jdbcType=NUMERIC},
+            #{result_o ,mode=OUT,jdbcType=NUMERIC},
+			#{error_code_o ,mode=OUT,jdbcType=NUMERIC},
+			#{sql_state_o ,mode=OUT,jdbcType=VARCHAR},
+			#{message_string_o ,mode=OUT,jdbcType=VARCHAR}
+         )
+	</select>
+	
+	<update id="updateGrnType" parameterType="map">
+		update vendor_grn_type
+		<set>
+			<if test="name != null and name != ''">name = #{name},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="is_preset != null">is_preset = #{is_preset},</if>
+		</set>
+		where is_delete = 0
+			and vendor_inner_sn = #{org_id} and type_inner_sn = #{type_inner_sn} 
+	</update>
+	
+	<update id="deleteGrnType" parameterType="map">
+		update vendor_grn_type 
+			set is_delete = 1
+		where is_preset = 0 and vendor_inner_sn = #{org_id} and type_inner_sn = #{type_inner_sn} 
+	</update>
+	
+	<select id="checkUseList" parameterType="map" resultType="map">
+		select vendor_inner_sn, grn_inner_sn, organization_inner_sn
+		from vendor_dealer_grn
+		where vendor_inner_sn = #{org_id} and type_inner_sn = #{type_inner_sn}
+		UNION ALL
+		select vendor_inner_sn, grn_inner_sn, organization_inner_sn
+		from vendor_hospital_grn
+		where vendor_inner_sn = #{org_id} and type_inner_sn = #{type_inner_sn}
+		UNION ALL
+		select vendor_inner_sn, grn_inner_sn, organization_inner_sn
+		from vendor_vendor_grn
+		where vendor_inner_sn = #{org_id} and type_inner_sn = #{type_inner_sn}
+	</select>
+</mapper>
